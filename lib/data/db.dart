@@ -85,6 +85,15 @@ class AppDb {
       'walk_points', {'walk_id': walkId, 'seq': seq, 'lat': p.lat, 'lng': p.lng},
       conflictAlgorithm: ConflictAlgorithm.ignore);
 
+  Future<void> addPoints(String walkId, List<LatLng> path) async {
+    final b = _db.batch();
+    for (var i = 0; i < path.length; i++) {
+      b.insert('walk_points', {'walk_id': walkId, 'seq': i + 1, 'lat': path[i].lat, 'lng': path[i].lng},
+          conflictAlgorithm: ConflictAlgorithm.ignore);
+    }
+    await b.commit(noResult: true);
+  }
+
   Future<void> saveSpot(Spot s) => _db.insert('spots', s.toRow(), conflictAlgorithm: ConflictAlgorithm.replace);
 
   Future<void> deleteSpot(String id) => _db.delete('spots', where: 'id = ?', whereArgs: [id]);

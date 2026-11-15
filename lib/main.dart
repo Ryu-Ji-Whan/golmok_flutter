@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'data/remote.dart';
 import 'data/store.dart';
 import 'screens/home.dart';
 import 'screens/login.dart';
@@ -8,6 +9,7 @@ import 'theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Remote.init(); // 서버(Supabase) 연결. 키가 없거나 오프라인이면 폰 DB만 쓴다.
   final store = await AppStore.load(); // 폰 안 데이터베이스에서 기록을 불러온다
   runApp(GolmokApp(store: store));
 }

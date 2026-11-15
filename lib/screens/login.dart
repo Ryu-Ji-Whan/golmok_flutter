@@ -4,6 +4,7 @@ import '../data/models.dart';
 import '../data/store.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
+import 'email_auth.dart';
 import 'signup.dart';
 
 /// ①-2 로그인 (데모: 실제 소셜 로그인 없이 1.2초 뒤 진행)
@@ -94,6 +95,10 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(height: 24),
             const StickerImg('a04', size: 170),
             const Spacer(),
+            PrimaryButton('이메일로 계속하기', icon: Icons.mail_outline, height: 54, onPressed: _loading == null
+                ? () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EmailAuthScreen()))
+                : null),
+            const SizedBox(height: 10),
             for (final (id, label, bg, fg, border) in _providers) ...[
               SizedBox(
                 height: 54,
@@ -121,7 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Text('$returningLabel 들어오면 ${returning.nickname}님 계정으로 돌아가요',
                   textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, color: C.forest)),
             const SizedBox(height: 4),
-            const Text('데모 버전: 실제 소셜 로그인 없이 회원가입 화면으로 넘어가요',
+            const Text('이메일 계정은 서버에 저장돼요. 카카오·Apple·Google은 아직 데모라 이 폰에만 저장돼요',
                 textAlign: TextAlign.center, style: TextStyle(fontSize: 11, color: C.muted)),
           ]),
         ),

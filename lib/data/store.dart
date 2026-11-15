@@ -8,6 +8,7 @@ import 'content.dart';
 import 'db.dart';
 import 'geo.dart';
 import 'models.dart';
+import 'remote.dart';
 
 final _rand = math.Random();
 String newId(String prefix) =>
@@ -87,10 +88,64 @@ class AppStore extends ChangeNotifier {
   }
 
   // ── 계정 ──
-  Future<void> signup(Profile p, List<String> gift) async {
+  /// 서버에 닉네임이 겹치면 오류 문장을 돌려주고 가입하지 않는다.
+  Future<String?> signup(Profile p, List<String> gift) async {
+    if (Remote.signedIn) {
+      final err = await Remote.saveProfile(p);
+      if (err != null) return err;
+    }
     profile = p;
     await _db.saveProfile(p);
     await own(gift);
+    if (Remote.signedIn) {
+      // 로그인 전에 이 폰에서 걸었던 기록도 내 계정으로 올린다.
+      await Remote.uploadAll(
+        walks: walks,
+        spots: spots,
+        explored: explored,
+        marks: {'owned': owned, 'stamp': stamps, 'reward': rewards, 'store': visitedStores},
+        coupons: coupons,
+      );
+    }
+    return null;
+  }
+
+  /// 이메일로 로그인한 뒤: 서버에 내 데이터가 있으면 이 폰을 그 데이터로 바꾼다.
+  /// 서버에 프로필이 있으면 true(바로 산책 화면), 없으면 false(회원가입 이어서).
+  Future<bool> afterRemoteLogin() async {
+    final d = await Remote.fetchAll();
+    if (d == null || d.profile == null) return false;
+    stopTracking();
+    await _db.wipe();
+    profile = d.profile;
+    await _db.saveProfile(d.profile!);
+    for (final w in d.walks) {
+      await _db.saveWalk(w);
+      await _db.addPoints(w.id, w.path);
+    }
+    for (final s in d.spots) {
+      await _db.saveSpot(s);
+    }
+    await _db.addExplored(d.explored);
+    owned = {...starterStickers, ...?d.marks['owned']};
+    stamps = d.marks['stamp'] ?? {};
+    rewards = d.marks['reward'] ?? {};
+    visitedStores = d.marks['store'] ?? {};
+    await _db.addMarks('owned', owned);
+    await _db.addMarks('stamp', stamps);
+    await _db.addMarks('reward', rewards);
+    await _db.addMarks('store', visitedStores);
+    for (final c in d.coupons) {
+      await _db.saveCoupon(c);
+    }
+    walks = d.walks.where((w) => w.endedAt != null).toList();
+    activeWalk = null;
+    spots = d.spots;
+    explored = d.explored;
+    coupons = d.coupons;
+    if (home != null) await _db.setKv('home', '${home!.lat},${home!.lng}');
+    notifyListeners();
+    return true;
   }
 
   Future<void> logout() async {
@@ -99,6 +154,7 @@ class AppStore extends ChangeNotifier {
       profile = profile!.copyWith(loggedIn: false);
       await _db.saveProfile(profile!);
     }
+    await Remote.signOut();
     notifyListeners();
   }
 
@@ -111,14 +167,20 @@ class AppStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateProfile({String? nickname, String? characterId, String? areaName}) async {
-    profile = profile!.copyWith(nickname: nickname, characterId: characterId, areaName: areaName);
+  /// 서버에 닉네임이 겹치면 오류 문장을 돌려준다.
+  Future<String?> updateProfile({String? nickname, String? characterId, String? areaName}) async {
+    final next = profile!.copyWith(nickname: nickname, characterId: characterId, areaName: areaName);
+    final err = await Remote.saveProfile(next);
+    if (err != null) return err;
+    profile = next;
     await _db.saveProfile(profile!);
     notifyListeners();
+    return null;
   }
 
   Future<void> reset() async {
     stopTracking();
+    await Remote.signOut();
     await _db.wipe();
     profile = null;
     walks = [];
@@ -210,6 +272,7 @@ class AppStore extends ChangeNotifier {
       explored.addAll(fresh);
       _freshCells.addAll(fresh);
       await _db.addExplored(fresh);
+      Remote.addExplored(fresh);
     }
     final w = activeWalk;
     if (w != null) {
@@ -247,6 +310,8 @@ class AppStore extends ChangeNotifier {
     walks.insert(0, w);
     activeWalk = null;
     notifyListeners();
+    Remote.saveWalk(w);
+    Remote.flushExplored();
     return w;
   }
 
@@ -276,6 +341,7 @@ class AppStore extends ChangeNotifier {
     spots.insert(0, s);
     await _db.saveSpot(s);
     notifyListeners();
+    Remote.saveSpot(s);
     return s;
   }
 
@@ -283,12 +349,14 @@ class AppStore extends ChangeNotifier {
     spots = [for (final x in spots) x.id == s.id ? s : x];
     await _db.saveSpot(s);
     notifyListeners();
+    Remote.saveSpot(s);
   }
 
   Future<void> deleteSpot(String id) async {
     spots.removeWhere((x) => x.id == id);
     await _db.deleteSpot(id);
     notifyListeners();
+    Remote.deleteSpot(id);
   }
 
   Spot? spotById(String id) {
@@ -303,6 +371,7 @@ class AppStore extends ChangeNotifier {
     owned.addAll(ids);
     await _db.addMarks('owned', ids);
     notifyListeners();
+    Remote.addMarks('owned', ids);
   }
 
   LatLng campaignPos(CampaignSpot s) => offset(home ?? defaultCenter, s.north, s.east);
@@ -314,6 +383,7 @@ class AppStore extends ChangeNotifier {
     stamps.add(spotId);
     await _db.addMarks('stamp', [spotId]);
     notifyListeners();
+    Remote.addMarks('stamp', [spotId]);
   }
 
   bool get campaignDone => Campaign.spots.every((s) => stamps.contains(s.id));
@@ -321,9 +391,11 @@ class AppStore extends ChangeNotifier {
   Future<void> claimReward(String rewardId, List<String> stickerIds, {Coupon? coupon}) async {
     rewards.add(rewardId);
     await _db.addMarks('reward', [rewardId]);
+    Remote.addMarks('reward', [rewardId]);
     if (coupon != null) {
       coupons.insert(0, coupon);
       await _db.saveCoupon(coupon);
+      Remote.saveCoupon(coupon);
     }
     await own(stickerIds);
   }
@@ -331,9 +403,11 @@ class AppStore extends ChangeNotifier {
   Future<Coupon> visitStore(Store store) async {
     visitedStores.add(store.id);
     await _db.addMarks('store', [store.id]);
+    Remote.addMarks('store', [store.id]);
     final c = Coupon(id: newId('cp'), storeId: store.id, title: store.benefit, issuedAt: DateTime.now());
     coupons.insert(0, c);
     await _db.saveCoupon(c);
+    Remote.saveCoupon(c);
     await own([store.sticker]);
     return c;
   }
@@ -343,6 +417,7 @@ class AppStore extends ChangeNotifier {
       if (c.id == id) {
         c.usedAt = DateTime.now();
         await _db.saveCoupon(c);
+        Remote.saveCoupon(c);
       }
     }
     notifyListeners();

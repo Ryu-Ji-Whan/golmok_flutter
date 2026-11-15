@@ -31,8 +31,9 @@ class _MyMapTabState extends State<MyMapTab> {
   }
 
   Future<void> _ready() async {
+    final center = StoreScope.read(context).center;
     await _sync();
-    await _map.goTo(StoreScope.read(context).center, zoom: 15.5);
+    await _map.goTo(center, zoom: 15.5);
   }
 
   @override

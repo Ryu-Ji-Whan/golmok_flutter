@@ -13,6 +13,7 @@ dependencies:
   sqflite: ^2.3.3            # 폰 안 데이터베이스
   path: ^1.9.0
   geolocator: ^13.0.1        # 산책 위치
+  supabase_flutter: ^2.8.0   # 서버: 이메일 계정, 기록 동기화, 피드, 리더보드
 
 dev_dependencies:
   flutter_test:

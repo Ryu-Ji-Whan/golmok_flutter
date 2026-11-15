@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/content.dart';
+import '../data/remote.dart';
 import '../data/store.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
@@ -13,10 +14,13 @@ class _Row {
   final bool me;
 }
 
-/// 리더보드 순위 (이웃 예시 + 나)
-List<_Row> leaderboard(AppStore s) {
+/// 리더보드 순위 (서버의 실제 이웃 + 예시 이웃 + 나)
+List<_Row> leaderboard(AppStore s, [List<RemoteRank> remote = const []]) {
+  final me = s.profile?.nickname;
   final rows = [
-    for (final n in neighbors) _Row(n.name, n.character, n.cells, false),
+    for (final r in remote)
+      if (r.nickname != me) _Row(r.nickname, r.character, r.cells, false),
+    for (final n in neighbors) _Row('${n.name} (예시)', n.character, n.cells, false),
     _Row(s.profile?.nickname ?? '나', s.profile?.characterId ?? 'a00', s.weeklyCells, true),
   ]..sort((a, b) => b.cells.compareTo(a.cells));
   return rows;
@@ -25,20 +29,42 @@ List<_Row> leaderboard(AppStore s) {
 int myRank(AppStore s) => leaderboard(s).indexWhere((r) => r.me) + 1;
 
 /// ⑤ 동네 리더보드
-class TownTab extends StatelessWidget {
+class TownTab extends StatefulWidget {
   const TownTab({super.key});
+
+  @override
+  State<TownTab> createState() => _TownTabState();
+}
+
+class _TownTabState extends State<TownTab> {
+  List<RemoteRank> _remote = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final area = StoreScope.read(context).profile?.areaName ?? '';
+    final r = await Remote.leaderboard(area);
+    if (mounted) setState(() => _remote = r);
+  }
 
   @override
   Widget build(BuildContext context) {
     final s = StoreScope.of(context);
-    final rows = leaderboard(s);
-    final rank = myRank(s);
+    final rows = leaderboard(s, _remote);
+    final rank = rows.indexWhere((r) => r.me) + 1;
     final area = (s.profile?.areaName ?? '').split(' ').last;
     final leaderPack = packs.firstWhere((p) => p.id == 'leader');
     final claimed = s.rewards.contains('leader');
     return Scaffold(
       appBar: AppBar(title: Text('$area 리더보드')),
-      body: ListView(padding: const EdgeInsets.fromLTRB(16, 4, 16, 24), children: [
+      body: RefreshIndicator(
+        color: C.forest,
+        onRefresh: _load,
+        child: ListView(padding: const EdgeInsets.fromLTRB(16, 4, 16, 24), children: [
         CardBox(
           color: C.forest,
           child: Row(children: [
@@ -99,8 +125,13 @@ class TownTab extends StatelessWidget {
           ]),
         ),
         const SizedBox(height: 8),
-        const Text('이웃 점수는 예시예요.', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: C.muted)),
+        Text(
+          Remote.signedIn ? '"(예시)"가 붙은 이웃은 예시예요. 당겨서 새로고침할 수 있어요.' : '이웃 점수는 예시예요. 이메일로 로그인하면 실제 이웃이 보여요.',
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 12, color: C.muted),
+        ),
       ]),
+      ),
     );
   }
 }

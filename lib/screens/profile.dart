@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/content.dart';
 import '../data/geo.dart';
+import '../data/remote.dart';
 import '../data/stickers.dart';
 import '../data/store.dart';
 import '../theme.dart';
@@ -26,7 +27,9 @@ class ProfileScreen extends StatelessWidget {
         ],
       ),
     );
-    if (name != null && name.length >= 2) await s.updateProfile(nickname: name);
+    if (name == null || name.length < 2) return;
+    final err = await s.updateProfile(nickname: name);
+    if (err != null && context.mounted) toast(context, err);
   }
 
   void _pickCharacter(BuildContext context, AppStore s) => showModalBottomSheet<void>(
@@ -75,6 +78,8 @@ class ProfileScreen extends StatelessWidget {
                 Text(p?.nickname ?? '손님', style: jua(24)),
                 Text(p?.areaName ?? '동네 미설정', style: const TextStyle(fontSize: 13, color: C.muted)),
                 Text('가입 ${p == null ? '-' : formatDate(p.joinedAt)}', style: const TextStyle(fontSize: 12, color: C.muted)),
+                Text(Remote.signedIn ? '${Remote.email} · 서버에 저장 중' : '이 폰에만 저장 중',
+                    style: TextStyle(fontSize: 12, color: Remote.signedIn ? C.leafText : C.muted)),
               ]),
             ),
             if (!guest) IconButton(tooltip: '닉네임 바꾸기', onPressed: () => _rename(context, s), icon: const Icon(Icons.edit_outlined)),
@@ -113,7 +118,7 @@ class ProfileScreen extends StatelessWidget {
           child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('데모 버전 안내', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
             SizedBox(height: 4),
-            Text('로그인·결제·리더보드 이웃·피드 글은 예시예요. 산책 경로, 안개 걷기, 스티커 기록은 실제로 동작하고 이 폰의 데이터베이스에만 저장돼요.',
+            Text('결제와 카카오·Apple·Google 로그인은 예시예요. 산책 경로, 안개 걷기, 스티커 기록은 이 폰의 데이터베이스에 저장되고, 이메일로 로그인하면 서버에도 저장돼요.',
                 style: TextStyle(fontSize: 12, color: C.muted, height: 1.5)),
           ]),
         ),

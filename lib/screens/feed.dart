@@ -1,24 +1,75 @@
 import 'package:flutter/material.dart';
 
 import '../data/content.dart';
+import '../data/geo.dart';
+import '../data/models.dart';
+import '../data/remote.dart';
 import '../data/store.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
 import 'spot_detail.dart';
 
-/// ④-2 골목 피드 (내가 공유한 기록 + 예시 이웃 글)
-class FeedTab extends StatelessWidget {
+String _ago(DateTime t) {
+  final d = DateTime.now().difference(t);
+  if (d.inMinutes < 1) return '방금';
+  if (d.inMinutes < 60) return '${d.inMinutes}분 전';
+  if (d.inHours < 24) return '${d.inHours}시간 전';
+  if (d.inDays < 7) return '${d.inDays}일 전';
+  return formatDate(t);
+}
+
+/// ④-2 골목 피드 (서버의 실제 공유 글 또는 내가 공유한 기록 + 예시 이웃 글)
+class FeedTab extends StatefulWidget {
   const FeedTab({super.key});
+
+  @override
+  State<FeedTab> createState() => _FeedTabState();
+}
+
+class _FeedTabState extends State<FeedTab> {
+  List<RemoteFeedPost> _remote = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final r = await Remote.feed();
+    if (mounted) setState(() => _remote = r);
+  }
 
   @override
   Widget build(BuildContext context) {
     final s = StoreScope.of(context);
     final p = s.profile;
-    final mine = s.spots.where((x) => x.shared).toList();
+    final online = Remote.signedIn;
+    // 로그인했으면 서버 글(내 공유 글 포함), 아니면 이 폰의 공유 기록
+    final mine = online ? <Spot>[] : s.spots.where((x) => x.shared).toList();
     final area = (p?.areaName ?? '').split(' ').last;
     return Scaffold(
       appBar: AppBar(title: Text('$area 골목 피드')),
-      body: ListView(padding: const EdgeInsets.fromLTRB(16, 4, 16, 24), children: [
+      body: RefreshIndicator(
+        color: C.forest,
+        onRefresh: _load,
+        child: ListView(padding: const EdgeInsets.fromLTRB(16, 4, 16, 24), children: [
+        for (final r in _remote)
+          _Post(
+            author: r.nickname,
+            character: r.character,
+            meta: '${r.area.split(' ').last} · ${_ago(r.createdAt)}',
+            sticker: r.sticker,
+            title: r.title,
+            body: r.memo,
+            likes: s.likedPosts.contains(r.id) ? 1 : 0,
+            liked: s.likedPosts.contains(r.id),
+            comments: 0,
+            onLike: () => s.toggleLike(r.id),
+            onTap: s.spotById(r.id) == null
+                ? null
+                : () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => SpotDetailScreen(spotId: r.id))),
+          ),
         for (final sp in mine)
           _Post(
             author: p?.nickname ?? '나',
@@ -47,9 +98,15 @@ class FeedTab extends StatelessWidget {
             onLike: () => s.toggleLike(f.id),
           ),
         const SizedBox(height: 8),
-        const Text('예시 이웃 글이에요. 내 기록은 "저장된 기록 → 골목 피드에 공유하기"로 올릴 수 있어요.',
-            textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: C.muted)),
+        Text(
+          online
+              ? '위는 실제 이웃 글, 아래 3개는 예시 글이에요. 당겨서 새로고침할 수 있어요.'
+              : '예시 이웃 글이에요. 이메일로 로그인하면 실제 이웃 글이 보여요.',
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 12, color: C.muted),
+        ),
       ]),
+      ),
     );
   }
 }

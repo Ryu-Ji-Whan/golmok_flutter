@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/content.dart';
 import '../data/models.dart';
+import '../data/remote.dart';
 import '../data/store.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
@@ -114,7 +115,12 @@ class _TermsScreenState extends State<TermsScreen> {
     return _StepScaffold(
       step: 1,
       title: '골목대장 이용을 위해\n약관에 동의해 주세요',
-      button: PrimaryButton('다음', onPressed: d.requiredOk ? () => _push(context, NicknameScreen(draft: d)) : null),
+      button: PrimaryButton('다음', onPressed: d.requiredOk
+          ? () => Navigator.of(context).push(MaterialPageRoute(
+                settings: const RouteSettings(name: NicknameScreen.routeName),
+                builder: (_) => NicknameScreen(draft: d),
+              ))
+          : null),
       children: [
         CardBox(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -146,6 +152,7 @@ class _TermsScreenState extends State<TermsScreen> {
 // ── ①-D 닉네임 (2/4) ──
 class NicknameScreen extends StatefulWidget {
   const NicknameScreen({super.key, required this.draft});
+  static const routeName = 'signup-nickname';
   final SignupDraft draft;
 
   @override
@@ -155,10 +162,29 @@ class NicknameScreen extends StatefulWidget {
 class _NicknameScreenState extends State<NicknameScreen> {
   late final _ctrl = TextEditingController(text: widget.draft.nickname);
   static final _allowed = RegExp(r'^[가-힣a-zA-Z0-9]+$');
+  String? _serverTaken; // 서버에서 이미 쓰는 것으로 확인된 닉네임
+  bool _checking = false;
+
+  Future<void> _next() async {
+    final t = _ctrl.text.trim();
+    if (Remote.signedIn) {
+      setState(() => _checking = true);
+      final taken = await Remote.nicknameTaken(t);
+      if (!mounted) return;
+      setState(() {
+        _checking = false;
+        _serverTaken = taken ? t : null;
+      });
+      if (taken) return;
+    }
+    widget.draft.nickname = t;
+    _push(context, CharacterScreen(draft: widget.draft));
+  }
 
   String? get _error {
     final t = _ctrl.text.trim();
     if (t.isEmpty) return null;
+    if (t == _serverTaken) return '이미 쓰고 있는 닉네임이에요';
     if (t.length < 2 || t.length > 10) return '2~10자로 지어 주세요';
     if (!_allowed.hasMatch(t)) return '한글, 영문, 숫자만 쓸 수 있어요';
     if (takenNicknames.contains(t)) return '이미 쓰고 있는 닉네임이에요';
@@ -179,12 +205,7 @@ class _NicknameScreenState extends State<NicknameScreen> {
       step: 2,
       title: '골목에서 불릴\n닉네임을 지어 주세요',
       subtitle: '피드와 리더보드에 보이는 이름이에요',
-      button: PrimaryButton('다음', onPressed: ok
-          ? () {
-              widget.draft.nickname = t;
-              _push(context, CharacterScreen(draft: widget.draft));
-            }
-          : null),
+      button: PrimaryButton(_checking ? '확인 중…' : '다음', onPressed: ok && !_checking ? _next : null),
       children: [
         TextField(
           controller: _ctrl,
@@ -405,7 +426,8 @@ class DoneScreen extends StatelessWidget {
 
   Future<void> _start(BuildContext context) async {
     final nav = Navigator.of(context);
-    await StoreScope.read(context).signup(
+    final messenger = ScaffoldMessenger.of(context);
+    final err = await StoreScope.read(context).signup(
       Profile(
         nickname: draft.nickname.isEmpty ? '골목냥이' : draft.nickname,
         characterId: draft.characterId,
@@ -416,6 +438,12 @@ class DoneScreen extends StatelessWidget {
       ),
       welcomeStickers,
     );
+    if (err != null) {
+      // 서버에서 닉네임이 겹친 경우: 닉네임 단계로 돌아간다
+      messenger.showSnackBar(SnackBar(content: Text('$err. 다른 닉네임을 골라 주세요')));
+      nav.popUntil((r) => r.settings.name == NicknameScreen.routeName || r.isFirst);
+      return;
+    }
     nav.popUntil((r) => r.isFirst);
   }
 
