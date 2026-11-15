@@ -1,0 +1,160 @@
+import 'package:flutter/material.dart';
+
+import '../data/geo.dart';
+import '../data/models.dart';
+import '../data/store.dart';
+import '../theme.dart';
+import '../widgets/cartoon_map.dart';
+import '../widgets/ui.dart';
+import 'spot_detail.dart';
+import 'walk.dart';
+
+/// ③-2 내 지도: 지금까지 밝힌 골목 + 지난 산책 경로 + 붙인 스티커
+class MyMapTab extends StatefulWidget {
+  const MyMapTab({super.key, required this.active});
+  final bool active;
+
+  @override
+  State<MyMapTab> createState() => _MyMapTabState();
+}
+
+class _MyMapTabState extends State<MyMapTab> {
+  final _map = MapHandle();
+  int _view = 0; // 0 = 장소, 1 = 산책
+
+  Future<void> _sync() async {
+    final s = StoreScope.read(context);
+    await _map.setExplored(s.explored);
+    await _map.setOldPaths([for (final w in s.walks) w.path]);
+    await _map.setMarks(buildMarks(s, extras: false));
+    await _map.setMe(s.center);
+  }
+
+  Future<void> _ready() async {
+    await _sync();
+    await _map.goTo(StoreScope.read(context).center, zoom: 15.5);
+  }
+
+  @override
+  void didUpdateWidget(MyMapTab old) {
+    super.didUpdateWidget(old);
+    if (widget.active && !old.active) _sync(); // 탭을 다시 열 때 새 기록 반영
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = StoreScope.of(context);
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('내 지도'),
+        actions: [Padding(padding: const EdgeInsets.only(right: 16), child: Pill('밝힌 골목 ${s.explored.length}칸'))],
+      ),
+      body: Column(children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(R.big),
+            child: Container(
+              height: 300,
+              decoration: BoxDecoration(border: Border.all(color: C.ink, width: 2), borderRadius: BorderRadius.circular(R.big)),
+              child: CartoonMap(handle: _map, onReady: _ready, onTap: (k, id) => openMark(context, k, id)),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+          child: SegmentedButton<int>(
+            segments: [
+              ButtonSegment(value: 0, label: Text('기록한 장소 ${s.spots.length}')),
+              ButtonSegment(value: 1, label: Text('산책 기록 ${s.walks.length}')),
+            ],
+            selected: {_view},
+            showSelectedIcon: false,
+            onSelectionChanged: (v) => setState(() => _view = v.first),
+            style: SegmentedButton.styleFrom(selectedBackgroundColor: C.mint, selectedForegroundColor: C.forest),
+          ),
+        ),
+        Expanded(child: _view == 0 ? _spotList(s) : _walkList(s)),
+      ]),
+    );
+  }
+
+  Widget _empty(String text) => Center(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const StickerImg('a02', size: 90),
+          const SizedBox(height: 8),
+          Text(text, textAlign: TextAlign.center, style: const TextStyle(color: C.muted, height: 1.5)),
+        ]),
+      );
+
+  Widget _spotList(AppStore s) {
+    if (s.spots.isEmpty) return _empty('아직 붙인 스티커가 없어요\n산책하다 마음에 드는 곳에 붙여 보세요');
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      itemCount: s.spots.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      itemBuilder: (_, i) {
+        final sp = s.spots[i];
+        return CardBox(
+          padding: const EdgeInsets.all(12),
+          onTap: () {
+            _map.goTo(sp.pos, zoom: 17);
+            Navigator.of(context).push(MaterialPageRoute(builder: (_) => SpotDetailScreen(spotId: sp.id)));
+          },
+          child: Row(children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(color: C.cream, borderRadius: BorderRadius.circular(14)),
+              alignment: Alignment.center,
+              child: StickerImg(sp.stickerId, size: 46),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(sp.title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700), maxLines: 1, overflow: TextOverflow.ellipsis),
+                const SizedBox(height: 2),
+                Text('${formatDate(sp.createdAt)} · ${visibilityLabel[sp.visibility]}${sp.shared ? ' · 피드 공유' : ''}',
+                    style: const TextStyle(fontSize: 12, color: C.muted)),
+              ]),
+            ),
+            if (sp.photo != null) const Icon(Icons.photo_outlined, color: C.leaf, size: 20),
+            const Icon(Icons.chevron_right, color: C.muted),
+          ]),
+        );
+      },
+    );
+  }
+
+  Widget _walkList(AppStore s) {
+    if (s.walks.isEmpty) return _empty('아직 끝낸 산책이 없어요\n산책 탭에서 첫 산책을 시작해 보세요');
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      itemCount: s.walks.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      itemBuilder: (_, i) {
+        final w = s.walks[i];
+        return CardBox(
+          padding: const EdgeInsets.all(14),
+          onTap: w.path.isEmpty ? null : () => _map.goTo(w.path.first, zoom: 16),
+          child: Row(children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(color: C.mint, borderRadius: BorderRadius.circular(14)),
+              child: const Icon(Icons.route, color: C.forest),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('${formatDate(w.startedAt)} 산책', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+                Text('${formatDistance(w.distanceM)} · ${formatDuration(w.duration)} · 새 골목 ${w.newCells}칸',
+                    style: const TextStyle(fontSize: 12, color: C.muted)),
+              ]),
+            ),
+          ]),
+        );
+      },
+    );
+  }
+}
