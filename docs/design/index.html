@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>골목대장 디자인 시안</title>
+<meta name="description" content="골목대장 앱 화면 시안 33개와 디자인 시스템">
+<meta property="og:title" content="골목대장 디자인 시안">
+<meta property="og:description" content="걸은 골목이 지도로 남는 동네 산책 앱 · 화면 33개와 디자인 시스템">
+<link rel="icon" href="img/a00.webp">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&family=Gaegu&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --forest:#0E5A3C; --leaf:#2F8A61; --leafText:#2F7A56; --cream:#FFF9ED; --orange:#F39A45; --orangeText:#A4500B;
+    --pink:#EE7C8B; --ink:#24322C; --muted:#5E6A63; --line:#E3DCCB; --lineSoft:#EDE6D6; --mint:#E4F2E8;
+    --peach:#FDE7D3; --sand:#F2EEE4; --danger:#B3263A; --white:#fff;
+    --s: .82;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--cream); color: var(--ink); font-family: 'Noto Sans KR', sans-serif; word-break: keep-all; }
+  a { color: var(--leaf); }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+
+  header.top { padding: 56px 0 24px; display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-end; justify-content: space-between; }
+  .eyebrow { margin: 0; font-size: 14px; font-weight: 700; color: var(--leafText); }
+  h1 { margin: 4px 0 8px; font-family: 'Jua', sans-serif; font-weight: 400; font-size: clamp(44px, 8vw, 72px); line-height: 1.05; color: var(--forest); }
+  .lead { margin: 0; font-size: 16px; color: var(--muted); line-height: 1.6; max-width: 560px; }
+  .hero-stickers { display: flex; align-items: flex-end; gap: 4px; }
+  .hero-stickers img { width: 84px; height: 84px; object-fit: contain; filter: drop-shadow(3px 3px 0 rgba(36,50,44,.18)); }
+
+  nav.chips { position: sticky; top: 0; z-index: 5; background: rgba(255,249,237,.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--lineSoft); }
+  nav.chips .wrap { display: flex; gap: 8px; overflow-x: auto; padding-top: 12px; padding-bottom: 12px; }
+  nav.chips a { flex: none; padding: 8px 16px; border-radius: 999px; background: var(--white); border: 1px solid var(--line); color: var(--forest); font-weight: 700; font-size: 14px; text-decoration: none; }
+  nav.chips a:hover { background: var(--mint); }
+
+  section { padding: 48px 0 8px; scroll-margin-top: 64px; }
+  h2 { margin: 0 0 6px; font-family: 'Jua', sans-serif; font-weight: 400; font-size: 34px; color: var(--forest); }
+  .sub { margin: 0 0 24px; color: var(--muted); font-size: 15px; }
+  h3 { margin: 0 0 12px; font-size: 15px; color: var(--muted); }
+
+  /* 디자인 시스템 */
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .card { background: var(--white); border-radius: 22px; padding: 20px; box-shadow: 0 4px 12px rgba(36,50,44,.08); }
+  .sw { display: flex; align-items: center; gap: 12px; padding: 6px 0; }
+  .sw i { width: 44px; height: 44px; border-radius: 12px; flex: none; border: 1px solid rgba(36,50,44,.08); }
+  .sw b { display: block; font-size: 14px; }
+  .sw span { font-size: 12px; color: var(--muted); font-family: ui-monospace, Menlo, monospace; }
+  .type-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--lineSoft); }
+  .type-row:last-child { border-bottom: 0; }
+  .type-row small { color: var(--muted); font-size: 12px; white-space: nowrap; }
+  .btn { display: flex; align-items: center; justify-content: center; height: 56px; width: 100%; border-radius: 28px; border: 0; font: 700 17px 'Noto Sans KR', sans-serif; margin-bottom: 10px; }
+  .btn.primary { background: var(--forest); color: #fff; box-shadow: 0 6px 14px rgba(14,90,60,.25); }
+  .btn.outline { background: #fff; color: var(--forest); border: 1px solid var(--line); font-size: 15px; }
+  .btn.off { background: var(--line); color: var(--muted); }
+  .field label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+  .field input { width: 100%; height: 48px; padding: 0 16px; border: 1px solid var(--line); border-radius: 14px; font: 400 14px 'Noto Sans KR', sans-serif; color: var(--ink); }
+  .pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .pill { padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+  .radii { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; text-align: center; font-size: 12px; color: var(--muted); }
+  .radii i { display: block; width: 52px; height: 52px; margin: 0 auto 6px; background: var(--mint); border: 1px solid #D4EBDD; }
+  .stickers { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 8px; margin-top: 12px; }
+  .stickers img { width: 100%; aspect-ratio: 1; object-fit: contain; background: var(--cream); border-radius: 14px; padding: 6px; }
+
+  /* 화면 */
+  .row { display: flex; gap: 28px; overflow-x: auto; padding: 8px 4px 28px; scroll-snap-type: x proximity; }
+  .screen { flex: none; scroll-snap-align: start; }
+  .screen .label { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 13px; font-weight: 700; color: var(--muted); width: calc(390px * var(--s)); }
+  .screen .label a { font-weight: 500; font-size: 12px; white-space: nowrap; }
+  .phone { width: calc(390px * var(--s)); height: calc(844px * var(--s)); border-radius: calc(40px * var(--s)); overflow: hidden; border: 3px solid var(--ink); background: #fff; box-shadow: 6px 6px 0 rgba(36,50,44,.15); }
+  .phone iframe { width: 390px; height: 844px; border: 0; transform: scale(var(--s)); transform-origin: 0 0; display: block; }
+  .hint { font-size: 13px; color: var(--muted); margin: -12px 0 12px; }
+
+  footer { padding: 48px 0 64px; color: var(--muted); font-size: 13px; text-align: center; }
+  @media (max-width: 600px) { :root { --s: .7; } .wrap { padding: 0 16px; } .hero-stickers img { width: 60px; height: 60px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <p class="eyebrow">동네 산책 · 골목 기록 앱</p>
+      <h1>골목대장 디자인 시안</h1>
+      <p class="lead">걸은 골목이 지도로 남는 산책 앱의 화면 33개와 디자인 시스템이에요. 화면 안의 버튼은 실제로 눌러 볼 수 있고, "크게 보기"를 누르면 한 화면씩 볼 수 있어요.</p>
+    </div>
+    <div class="hero-stickers" aria-hidden="true">
+      <img src="img/c13.webp" alt=""><img src="img/a04.webp" alt=""><img src="img/a00.webp" alt="">
+    </div>
+  </header>
+</div>
+
+<nav class="chips" aria-label="바로 가기">
+  <div class="wrap">
+    <a href="#system">디자인 시스템</a>
+    <a href="#start">① 시작·회원가입</a>
+    <a href="#walk">② 산책·기록</a>
+    <a href="#town">③–⑦ 내 지도·동네</a>
+    <a href="https://github.com/Ryu-Ji-Whan/golmok_flutter">GitHub</a>
+  </div>
+</nav>
+
+<main class="wrap">
+  <section id="system" aria-labelledby="h-system">
+    <h2 id="h-system">디자인 시스템</h2>
+    <p class="sub">시안 33개 화면에서 실제로 쓰인 값을 모았어요. 괄호 안은 앱 코드(lib/theme.dart)의 이름이에요.</p>
+    <div class="grid">
+      <div class="card">
+        <h3>브랜드 그린</h3>
+        <div class="sw"><i style="background:#0E5A3C"></i><div><b>포레스트 · 주 버튼, 제목</b><span>#0E5A3C (forest)</span></div></div>
+        <div class="sw"><i style="background:#2F8A61"></i><div><b>리프 · 아이콘, 링크</b><span>#2F8A61 (leaf)</span></div></div>
+        <div class="sw"><i style="background:#2F7A56"></i><div><b>리프 글자 · 단계 표시</b><span>#2F7A56 (leafText)</span></div></div>
+        <div class="sw"><i style="background:#1B5E3F"></i><div><b>경로 · 지도 위 선</b><span>#1B5E3F (route)</span></div></div>
+        <div class="sw"><i style="background:#E4F2E8"></i><div><b>민트 · 칩, 배지 바탕</b><span>#E4F2E8 (mint)</span></div></div>
+      </div>
+      <div class="card">
+        <h3>바탕 · 선 · 글자</h3>
+        <div class="sw"><i style="background:#FFF9ED"></i><div><b>크림 · 화면 바탕</b><span>#FFF9ED (cream)</span></div></div>
+        <div class="sw"><i style="background:#F2EEE4"></i><div><b>샌드 · 안내 상자</b><span>#F2EEE4 (sand)</span></div></div>
+        <div class="sw"><i style="background:#E3DCCB"></i><div><b>선 · 테두리, 비활성</b><span>#E3DCCB (line)</span></div></div>
+        <div class="sw"><i style="background:#24322C"></i><div><b>잉크 · 본문, 지도 외곽선</b><span>#24322C (ink)</span></div></div>
+        <div class="sw"><i style="background:#5E6A63"></i><div><b>뮤트 · 보조 글자</b><span>#5E6A63 (muted)</span></div></div>
+      </div>
+      <div class="card">
+        <h3>포인트 · 상태</h3>
+        <div class="sw"><i style="background:#F39A45"></i><div><b>오렌지 · 강조 면 (글자엔 X)</b><span>#F39A45 (orange)</span></div></div>
+        <div class="sw"><i style="background:#A4500B"></i><div><b>오렌지 글자</b><span>#A4500B (orangeText)</span></div></div>
+        <div class="sw"><i style="background:#FDE7D3"></i><div><b>피치 · 캐릭터 원, 쿠폰</b><span>#FDE7D3 (peach)</span></div></div>
+        <div class="sw"><i style="background:#EE7C8B"></i><div><b>핑크 · 좋아요</b><span>#EE7C8B (pink)</span></div></div>
+        <div class="sw"><i style="background:#B3263A"></i><div><b>위험 · 탈퇴, 오류</b><span>#B3263A (danger)</span></div></div>
+      </div>
+    </div>
+
+    <div class="grid" style="margin-top:16px">
+      <div class="card">
+        <h3>글꼴</h3>
+        <div class="type-row"><span style="font-family:'Jua';font-size:40px;color:var(--forest);line-height:1.2">골목대장</span><small>Jua · 44 / 26 / 22</small></div>
+        <div class="type-row"><span style="font-size:22px;font-weight:700">화면 제목</span><small>22 Bold</small></div>
+        <div class="type-row"><span style="font-size:17px;font-weight:700">카드 제목 · 큰 버튼</span><small>17 Bold</small></div>
+        <div class="type-row"><span style="font-size:15px">본문 설명 글이에요</span><small>15 Regular</small></div>
+        <div class="type-row"><span style="font-size:13px;font-weight:500;color:var(--leafText)">① 단계 표시</span><small>13 Medium</small></div>
+        <div class="type-row"><span style="font-size:12px;color:var(--muted)">보조 설명, 날짜</span><small>12 Regular</small></div>
+        <div class="type-row"><span style="font-family:'Gaegu';font-size:22px">손글씨 메모 느낌</span><small>Gaegu · 사진 위 글씨</small></div>
+      </div>
+      <div class="card">
+        <h3>버튼 · 입력창 · 칩</h3>
+        <button class="btn primary" type="button">첫 산책 시작하기</button>
+        <button class="btn outline" type="button">나중에 할게요</button>
+        <button class="btn off" type="button" disabled>다음 (비활성)</button>
+        <div class="field"><label for="f1">장소 이름</label><input id="f1" value="저녁마다 고양이가 모이는 벤치"></div>
+        <div class="pills">
+          <span class="pill" style="background:var(--mint);color:var(--forest)">보관함 +3</span>
+          <span class="pill" style="background:var(--peach);color:var(--orangeText)">쿠폰 1장</span>
+          <span class="pill" style="background:#fff;border:1px solid var(--line)">전체 공개</span>
+          <span class="pill" style="background:var(--forest);color:#fff">선택됨</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3>모서리 · 그림자 · 스티커</h3>
+        <div class="radii">
+          <div><i style="border-radius:14px"></i>14 입력</div>
+          <div><i style="border-radius:18px"></i>18 카드</div>
+          <div><i style="border-radius:22px"></i>22 큰 카드</div>
+          <div><i style="border-radius:26px 26px 0 0"></i>28 시트</div>
+          <div><i style="border-radius:999px"></i>버튼</div>
+        </div>
+        <p style="font-size:12px;color:var(--muted);margin:14px 0 0">카드 그림자 0 4 12 잉크 12% · 주 버튼 그림자 0 6 14 포레스트 25%</p>
+        <div class="stickers">
+          <img src="img/a11.webp" alt="꽃"><img src="img/c01.webp" alt="골목 참새"><img src="img/a00.webp" alt="산책 고양이"><img src="img/a12.webp" alt="노을">
+          <img src="img/a13.webp" alt="커피"><img src="img/a14.webp" alt="나무"><img src="img/b00.webp" alt="카페"><img src="img/a15.webp" alt="발자국">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="start" aria-labelledby="h-start">
+    <h2 id="h-start">① 시작 · 로그인 · 회원가입</h2>
+    <p class="sub">처음 열었을 때부터 첫 산책을 시작하기까지 11개 화면</p>
+    <p class="hint">옆으로 밀어서 더 보기 →</p>
+    <div class="row" data-screens="Main:①-1 온보딩|Login:①-2 로그인|AuthLoading:①-A 로그인 진행·실패|SignupOverview:①-3 회원가입 한눈에|SignupTerms:①-B 약관 동의 (1/4)|SignupTermsDetail:①-C 약관 상세|SignupNickname:①-D 닉네임 (2/4)|SignupCharacter:①-E 대표 캐릭터 (3/4)|SignupLocation:①-F 위치 권한 (4/4)|SignupArea:①-G 내 동네 (4/4)|SignupDone:①-H 가입 완료"></div>
+  </section>
+
+  <section id="walk" aria-labelledby="h-walk">
+    <h2 id="h-walk">② 산책 · 기록 · 사진 꾸미기</h2>
+    <p class="sub">걸으면서 안개를 걷고, 스티커를 붙이고, 사진을 꾸미는 13개 화면</p>
+    <p class="hint">옆으로 밀어서 더 보기 →</p>
+    <div class="row" data-screens="WalkStart:①-4 산책 시작|Explore:②-1 산책 중 지도|Record:②-2 스티커 붙여 기록|PhotoAdd:②-3a 사진 넣기|PhotoPermission:②-3b 카메라 권한 거부|PhotoEditEmpty:②-3c 처음 열림|PhotoEdit:②-3 사진 꾸미기|PhotoLimit:②-3d 스티커 20개 제한|PhotoSaved:②-3e 갤러리 저장|PhotoSaveFail:②-3f 저장 실패|PhotoLeave:②-3g 닫기 확인|PhotoDone:②-3h 기록에 반영|Decorate:②-4 지도 꾸미기"></div>
+  </section>
+
+  <section id="town" aria-labelledby="h-town">
+    <h2 id="h-town">③–⑦ 내 지도 · 공유 · 동네</h2>
+    <p class="sub">기록을 모아 보고, 이웃과 나누고, 동네 이벤트에 참여하는 9개 화면</p>
+    <p class="hint">옆으로 밀어서 더 보기 →</p>
+    <div class="row" data-screens="Detail:③-1 저장된 기록|MyMap:③-2 내 지도|Share:④-1 기록 공유하기|Feed:④-2 골목 피드|Leaderboard:⑤ 동네 리더보드|StickerShop:⑥ 스티커 상점|Campaign:⑦-1 기관 캠페인|Shops:⑦-2 제휴 가게 이벤트|Profile:부록 · 프로필·설정"></div>
+  </section>
+</main>
+
+<footer class="wrap">
+  골목대장 · <a href="https://github.com/Ryu-Ji-Whan/golmok_flutter">GitHub에서 앱 코드 보기</a>
+</footer>
+
+<script>
+  // 화면 카드 만들기 (보일 때 불러온다)
+  for (const row of document.querySelectorAll('.row')) {
+    for (const item of row.dataset.screens.split('|')) {
+      const [file, title] = item.split(':');
+      const fig = document.createElement('figure');
+      fig.className = 'screen';
+      fig.style.margin = '0';
+      fig.innerHTML =
+        '<figcaption class="label"><span></span><a target="_blank" rel="noopener">크게 보기 ↗</a></figcaption>' +
+        '<div class="phone"><iframe loading="lazy"></iframe></div>';
+      fig.querySelector('span').textContent = title;
+      fig.querySelector('a').href = 'screens/' + file + '.dc.html';
+      const f = fig.querySelector('iframe');
+      f.title = title;
+      f.src = 'screens/' + file + '.dc.html';
+      row.appendChild(fig);
+    }
+  }
+</script>
+</body>
+</html>

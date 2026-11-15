@@ -11,6 +11,10 @@
 
 <p align="center"><b>동네 골목을 걸으면 안개가 걷히고, 마음에 드는 곳엔 스티커를 붙여 나만의 지도를 만드는 산책 앱이에요.</b></p>
 
+<p align="center">
+  <a href="https://ryu-ji-whan.github.io/golmok_flutter/design/"><img src="https://img.shields.io/badge/%F0%9F%8E%A8%20%EB%94%94%EC%9E%90%EC%9D%B8%20%EC%8B%9C%EC%95%88%20%EB%B3%B4%EA%B8%B0-%ED%99%94%EB%A9%B4%2033%EA%B0%9C-F39A45?style=for-the-badge" alt="디자인 시안 보기 - 화면 33개"></a>
+</p>
+
 ---
 
 ## 📲 바로 써 보기
