@@ -9,6 +9,7 @@ name: Build Flutter app
 on:
   push:
     branches: [main]
+    paths-ignore: ['README.md', 'docs/**', 'supabase/**']   # 설명·문서만 바꿨을 때는 다시 빌드하지 않는다
   workflow_dispatch:
 
 permissions:
