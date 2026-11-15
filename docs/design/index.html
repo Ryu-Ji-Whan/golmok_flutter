@@ -70,6 +70,8 @@
   .phone { width: calc(390px * var(--s)); height: calc(844px * var(--s)); border-radius: calc(40px * var(--s)); overflow: hidden; border: 3px solid var(--ink); background: #fff; box-shadow: 6px 6px 0 rgba(36,50,44,.15); }
   .phone iframe { width: 390px; height: 844px; border: 0; transform: scale(var(--s)); transform-origin: 0 0; display: block; }
   .hint { font-size: 13px; color: var(--muted); margin: -12px 0 12px; }
+  .place { border: 1px solid var(--line); background: #fff; color: var(--forest); cursor: pointer; font-family: inherit; min-height: 36px; padding: 6px 14px; }
+  .place[aria-pressed="true"] { background: var(--forest); color: #fff; border-color: var(--forest); }
 
   footer { padding: 48px 0 64px; color: var(--muted); font-size: 13px; text-align: center; }
   @media (max-width: 600px) { :root { --s: .7; } .wrap { padding: 0 16px; } .hero-stickers img { width: 60px; height: 60px; } }
@@ -92,6 +94,7 @@
 <nav class="chips" aria-label="바로 가기">
   <div class="wrap">
     <a href="#system">디자인 시스템</a>
+    <a href="#map">만화풍 지도</a>
     <a href="#start">① 시작·회원가입</a>
     <a href="#walk">② 산책·기록</a>
     <a href="#town">③–⑦ 내 지도·동네</a>
@@ -172,6 +175,24 @@
     </div>
   </section>
 
+  <section id="map" aria-labelledby="h-map">
+    <h2 id="h-map">만화풍 지도 (실제 동작)</h2>
+    <p class="sub">앱에 들어간 지도 스타일이에요. 아래 화면 시안의 지도 부분은 예전 자리 표시 그림이라, 실제 앱에서는 이 지도로 그려져요. 끌고 확대해 보세요.</p>
+    <div class="pills" style="margin:0 0 12px" id="places">
+      <button type="button" class="pill place" data-c="127.0140,37.2826" aria-pressed="true">수원 행궁동</button>
+      <button type="button" class="pill place" data-c="126.9897,37.5743" aria-pressed="false">서울 익선동</button>
+      <button type="button" class="pill place" data-c="129.0106,35.0975" aria-pressed="false">부산 감천마을</button>
+      <button type="button" class="pill place" data-c="127.1530,35.8150" aria-pressed="false">전주 한옥마을</button>
+      <label class="pill" style="background:#fff;border:1px solid var(--line);display:flex;gap:6px;align-items:center;cursor:pointer">
+        <input type="checkbox" id="wobble" checked> 손그림 흔들림
+      </label>
+    </div>
+    <div style="height:min(70vh,560px);border:3px solid var(--ink);border-radius:22px;overflow:hidden;box-shadow:6px 6px 0 rgba(36,50,44,.15)">
+      <iframe id="mapframe" src="map/" title="만화풍 지도" style="width:100%;height:100%;border:0;display:block" loading="lazy"></iframe>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin:8px 0 0">지도 데이터 © OpenStreetMap 기여자 · 타일 OpenFreeMap · 대한민국 어디서나 같은 스타일로 그려져요</p>
+  </section>
+
   <section id="start" aria-labelledby="h-start">
     <h2 id="h-start">① 시작 · 로그인 · 회원가입</h2>
     <p class="sub">처음 열었을 때부터 첫 산책을 시작하기까지 11개 화면</p>
@@ -199,6 +220,18 @@
 </footer>
 
 <script>
+  // 만화풍 지도: 동네 버튼, 흔들림 켜고 끄기 (같은 사이트 안이라 지도 함수를 바로 부른다)
+  const mapWin = () => document.getElementById('mapframe').contentWindow;
+  for (const b of document.querySelectorAll('.place')) {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.place').forEach((x) => x.setAttribute('aria-pressed', 'false'));
+      b.setAttribute('aria-pressed', 'true');
+      const [lng, lat] = b.dataset.c.split(',').map(Number);
+      mapWin().goTo && mapWin().goTo(lng, lat, 16.3);
+    });
+  }
+  document.getElementById('wobble').addEventListener('change', (e) => mapWin().setWobble && mapWin().setWobble(e.target.checked));
+
   // 화면 카드 만들기 (보일 때 불러온다)
   for (const row of document.querySelectorAll('.row')) {
     for (const item of row.dataset.screens.split('|')) {

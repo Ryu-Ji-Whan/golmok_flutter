@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>골목대장 지도</title>
+<!--
+  만화풍 지도 (C안: 파스텔 + 굵은 외곽선 + 건물 그림자 + 무늬 + 손그림 흔들림)
+  - 지도 데이터: OpenStreetMap / 타일: OpenFreeMap (무료, 키 없음)
+  - 그리는 엔진: MapLibre GL JS
+  Flutter와 주고받는 방법
+  - Flutter → 지도: window.goTo(경도, 위도, 확대), window.setWobble(true/false)
+  - 지도 → Flutter: Golmok 채널로 {"type":"ready"} / {"type":"move", lat, lng, zoom}
+-->
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<style>
+  html, body, #map { margin: 0; width: 100%; height: 100%; background: #FFF9ED; }
+  .wobble .maplibregl-canvas { filter: url(#wobble); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="wobble">
+    <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="3" result="n"></feTurbulence>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="4" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap>
+  </filter>
+</svg>
+<div id="map" class="wobble"></div>
+<script>
+function post(o) { if (window.Golmok) Golmok.postMessage(JSON.stringify(o)); }
+
+const INK = '#24322C';
+const C = {
+  land: '#FFF9ED', residential: '#FBF1DC', grass: '#CFEBD5', wood: '#A8D8B4', park: '#C3E6CB',
+  water: '#A6D6F2', building: '#FDE3CC', road: '#FFFFFF', major: '#FFE19A', path: '#C2620F',
+};
+const nameKo = ['coalesce', ['get', 'name:ko'], ['get', 'name']];
+const z = (a, b) => ['interpolate', ['exponential', 1.5], ['zoom'], 12, a, 18, b];
+const MINOR = ['minor', 'service', 'track'];
+const MAJOR = ['motorway', 'trunk', 'primary', 'secondary', 'tertiary'];
+const CAS = 3.5;
+const halo = (c, w) => ({ 'text-color': c, 'text-halo-color': '#FFFFFF', 'text-halo-width': w });
+
+const style = {
+  version: 8,
+  glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
+  sources: { omt: { type: 'vector', url: 'https://tiles.openfreemap.org/planet' } },
+  layers: [
+    { id: 'land', type: 'background', paint: { 'background-color': C.land } },
+    { id: 'residential', type: 'fill', source: 'omt', 'source-layer': 'landuse', filter: ['==', ['get', 'class'], 'residential'], paint: { 'fill-color': C.residential } },
+    { id: 'landcover', type: 'fill', source: 'omt', 'source-layer': 'landcover', paint: { 'fill-color': ['match', ['get', 'class'], 'wood', C.wood, C.grass] } },
+    { id: 'park', type: 'fill', source: 'omt', 'source-layer': 'park', paint: { 'fill-pattern': 'grass-dots' } },
+    { id: 'park-line', type: 'line', source: 'omt', 'source-layer': 'park', paint: { 'line-color': '#5FAE78', 'line-width': 2 } },
+    { id: 'water', type: 'fill', source: 'omt', 'source-layer': 'water', paint: { 'fill-pattern': 'waves' } },
+    { id: 'water-line', type: 'line', source: 'omt', 'source-layer': 'water', paint: { 'line-color': INK, 'line-width': 2.2 } },
+    { id: 'waterway', type: 'line', source: 'omt', 'source-layer': 'waterway', paint: { 'line-color': C.water, 'line-width': z(1, 6) } },
+    { id: 'building-shadow', type: 'fill', source: 'omt', 'source-layer': 'building', minzoom: 14, paint: { 'fill-color': INK, 'fill-opacity': 0.85, 'fill-translate': [3, 3] } },
+    { id: 'building', type: 'fill', source: 'omt', 'source-layer': 'building', minzoom: 13, paint: { 'fill-color': C.building } },
+    { id: 'building-line', type: 'line', source: 'omt', 'source-layer': 'building', minzoom: 14, paint: { 'line-color': INK, 'line-width': 1.4 } },
+    { id: 'path', type: 'line', source: 'omt', 'source-layer': 'transportation', minzoom: 14, filter: ['==', ['get', 'class'], 'path'], layout: { 'line-cap': 'round' }, paint: { 'line-color': C.path, 'line-width': z(0.8, 2.5), 'line-dasharray': [1.5, 1.5] } },
+    { id: 'minor-casing', type: 'line', source: 'omt', 'source-layer': 'transportation', filter: ['in', ['get', 'class'], ['literal', MINOR]], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': INK, 'line-width': z(0.5 + CAS * 0.6, 10 + CAS) } },
+    { id: 'major-casing', type: 'line', source: 'omt', 'source-layer': 'transportation', filter: ['in', ['get', 'class'], ['literal', MAJOR]], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': INK, 'line-width': z(1.5 + CAS * 0.6, 18 + CAS) } },
+    { id: 'minor', type: 'line', source: 'omt', 'source-layer': 'transportation', filter: ['in', ['get', 'class'], ['literal', MINOR]], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': C.road, 'line-width': z(0.5, 10) } },
+    { id: 'major', type: 'line', source: 'omt', 'source-layer': 'transportation', filter: ['in', ['get', 'class'], ['literal', MAJOR]], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': C.major, 'line-width': z(1.5, 18) } },
+    { id: 'road-label', type: 'symbol', source: 'omt', 'source-layer': 'transportation_name', minzoom: 15, layout: { 'symbol-placement': 'line', 'text-field': nameKo, 'text-font': ['Noto Sans Regular'], 'text-size': 13 }, paint: halo(INK, 2) },
+    { id: 'water-label', type: 'symbol', source: 'omt', 'source-layer': 'water_name', layout: { 'text-field': nameKo, 'text-font': ['Noto Sans Regular'], 'text-size': 14 }, paint: halo('#1F5F86', 2) },
+    { id: 'poi-label', type: 'symbol', source: 'omt', 'source-layer': 'poi', minzoom: 16, filter: ['<=', ['get', 'rank'], 20], layout: { 'text-field': nameKo, 'text-font': ['Noto Sans Regular'], 'text-size': 12, 'text-max-width': 7 }, paint: halo('#5E6A63', 1.6) },
+    { id: 'place-label', type: 'symbol', source: 'omt', 'source-layer': 'place', layout: { 'text-field': nameKo, 'text-font': ['Noto Sans Bold'], 'text-size': ['match', ['get', 'class'], 'city', 22, 'town', 19, 17] }, paint: halo('#0E5A3C', 2.5) },
+  ],
+};
+
+function pattern(id) {
+  const s = 32, cv = document.createElement('canvas');
+  cv.width = cv.height = s;
+  const g = cv.getContext('2d');
+  if (id === 'waves') {
+    g.fillStyle = C.water; g.fillRect(0, 0, s, s);
+    g.strokeStyle = 'rgba(255,255,255,0.85)'; g.lineWidth = 2; g.lineCap = 'round';
+    for (const y of [9, 25]) {
+      const off = y === 25 ? 8 : 0;
+      g.beginPath();
+      for (let x = -8; x <= s + 8; x += 1) g.lineTo(x + off, y + Math.sin((x / s) * Math.PI * 2) * 2.5);
+      g.stroke();
+    }
+  } else {
+    g.fillStyle = C.park; g.fillRect(0, 0, s, s);
+    g.strokeStyle = '#5FAE78'; g.lineWidth = 1.6; g.lineCap = 'round';
+    for (const [x, y] of [[7, 10], [23, 26]]) {
+      g.beginPath(); g.moveTo(x - 3, y); g.lineTo(x - 1, y - 4); g.moveTo(x, y); g.lineTo(x, y - 5); g.moveTo(x + 3, y); g.lineTo(x + 1, y - 4); g.stroke();
+    }
+  }
+  return g.getImageData(0, 0, s, s);
+}
+
+let map;
+let ready = false;
+const queue = [];
+// 지도가 준비되기 전에 Flutter가 보낸 명령은 모아 뒀다가 준비되면 실행한다.
+function whenReady(fn) { if (ready) fn(); else queue.push(fn); }
+
+// ── 안개: Flutter의 lib/data/geo.dart 와 같은 격자(50m 칸) ──
+const CELL_M = 50, M_PER_DEG_LAT = 111320;
+const D_LAT = CELL_M / M_PER_DEG_LAT;
+const D_LNG = CELL_M / (M_PER_DEG_LAT * Math.cos(37.5 * Math.PI / 180));
+let explored = new Set();
+let fogOn = false; // 소개 페이지: 걸은 기록이 없어서 안개를 끈다
+function fogGeoJSON() {
+  const feats = [];
+  if (!fogOn || !map) return { type: 'FeatureCollection', features: feats };
+  const c = map.getCenter();
+  const ci = Math.floor(c.lat / D_LAT), cj = Math.floor(c.lng / D_LNG), n = 30;
+  for (let i = ci - n; i <= ci + n; i++) {
+    let run = null;
+    for (let j = cj - n; j <= cj + n + 1; j++) {
+      const fog = j <= cj + n && !explored.has(i + ':' + j);
+      if (fog && run === null) run = j;
+      if (!fog && run !== null) {
+        const a = i * D_LAT, b = (i + 1) * D_LAT, l0 = run * D_LNG, l1 = j * D_LNG;
+        feats.push({ type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[l0, a], [l1, a], [l1, b], [l0, b], [l0, a]]] } });
+        run = null;
+      }
+    }
+  }
+  return { type: 'FeatureCollection', features: feats };
+}
+function renderFog() { const s = map && map.getSource('fog'); if (s) s.setData(fogGeoJSON()); }
+
+const line = (coords) => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: coords } });
+let spotMarkers = [];
+
+window.goTo = (lng, lat, zoom) => whenReady(() => map.flyTo({ center: [lng, lat], zoom: zoom || map.getZoom(), speed: 1.6 }));
+window.setWobble = (on) => document.getElementById('map').classList.toggle('wobble', !!on);
+window.setFog = (on) => { fogOn = !!on; whenReady(renderFog); };
+window.setExplored = (keys) => { explored = new Set(keys); whenReady(renderFog); };
+window.addExplored = (keys) => { keys.forEach((k) => explored.add(k)); whenReady(renderFog); };
+/** 산책 경로. coords = [[경도, 위도], ...] */
+window.setPath = (coords) => whenReady(() => map.getSource('path').setData(line(coords.length > 1 ? coords : [])));
+/** 지난 산책 경로들 (내 지도). paths = [[[경도, 위도], ...], ...] */
+window.setOldPaths = (paths) => whenReady(() => map.getSource('oldpaths').setData({ type: 'FeatureCollection', features: paths.filter((p) => p.length > 1).map(line) }));
+window.setMe = (lng, lat) => whenReady(() => map.getSource('me').setData({ type: 'Feature', geometry: { type: 'Point', coordinates: [lng, lat] } }));
+/** 스티커 표시. items = [{id, lng, lat, sticker, kind}] — kind: 'spot' | 'stamp' | 'store' | 'stamped' */
+window.setSpots = (items) => whenReady(() => {
+  spotMarkers.forEach((m) => m.remove());
+  spotMarkers = items.map((it) => {
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.setAttribute('aria-label', it.label || '기록');
+    const size = it.kind === 'spot' ? 46 : 40;
+    el.style.cssText = 'width:' + size + 'px;height:' + size + 'px;padding:0;border:0;background:none;cursor:pointer;filter:drop-shadow(2px 2px 0 #24322C)' + (it.kind === 'stamp' ? ';opacity:.55' : '');
+    const img = document.createElement('img');
+    img.src = 'stickers/' + it.sticker + '.webp';
+    img.alt = '';
+    img.style.cssText = 'width:100%;height:100%;object-fit:contain';
+    el.appendChild(img);
+    el.addEventListener('click', (e) => { e.stopPropagation(); post({ type: 'tap', kind: it.kind, id: it.id }); });
+    return new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat([it.lng, it.lat]).addTo(map);
+  });
+});
+
+document.fonts.load('20px Jua').finally(() => {
+  map = new maplibregl.Map({
+    container: 'map',
+    style,
+    center: [127.0140, 37.2826],
+    zoom: 16.3,
+    localIdeographFontFamily: "'Jua', sans-serif",
+    attributionControl: { compact: true },
+    dragRotate: false,
+    pitchWithRotate: false,
+  });
+  map.touchZoomRotate.disableRotation();
+  map.on('styleimagemissing', (e) => { if (!map.hasImage(e.id)) map.addImage(e.id, pattern(e.id)); });
+  map.once('load', () => {
+    const empty = { type: 'FeatureCollection', features: [] };
+    map.addSource('fog', { type: 'geojson', data: empty });
+    map.addSource('oldpaths', { type: 'geojson', data: empty });
+    map.addSource('path', { type: 'geojson', data: empty });
+    map.addSource('me', { type: 'geojson', data: empty });
+    // 안개는 지명 글자보다 아래, 길과 건물보다 위
+    map.addLayer({ id: 'fog', type: 'fill', source: 'fog', paint: { 'fill-color': '#60625C', 'fill-opacity': 0.55, 'fill-antialias': false } }, 'road-label');
+    map.addLayer({ id: 'oldpaths', type: 'line', source: 'oldpaths', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#2F8A61', 'line-width': 4, 'line-opacity': 0.7 } });
+    map.addLayer({ id: 'path-casing', type: 'line', source: 'path', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': INK, 'line-width': 9 } });
+    map.addLayer({ id: 'path', type: 'line', source: 'path', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#F39A45', 'line-width': 5 } });
+    map.addLayer({ id: 'me-halo', type: 'circle', source: 'me', paint: { 'circle-radius': 18, 'circle-color': '#0E5A3C', 'circle-opacity': 0.18 } });
+    map.addLayer({ id: 'me', type: 'circle', source: 'me', paint: { 'circle-radius': 8, 'circle-color': '#0E5A3C', 'circle-stroke-color': '#FFFFFF', 'circle-stroke-width': 3 } });
+    ready = true;
+    renderFog();
+    queue.splice(0).forEach((fn) => fn());
+    post({ type: 'ready' });
+  });
+  map.on('moveend', () => {
+    renderFog();
+    const c = map.getCenter();
+    post({ type: 'move', lat: c.lat, lng: c.lng, zoom: map.getZoom() });
+  });
+});
+</script>
+</body>
+</html>
