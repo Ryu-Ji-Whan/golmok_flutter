@@ -17,7 +17,7 @@
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <style>
   html, body, #map { margin: 0; width: 100%; height: 100%; background: #FFF9ED; }
-  .wobble .maplibregl-canvas { filter: url(#wobble); }
+  .wobble .maplibregl-canvas, .wobble .fog-canvas { filter: url(#wobble); }
 </style>
 </head>
 <body>
@@ -105,27 +105,100 @@ const CELL_M = 50, M_PER_DEG_LAT = 111320;
 const D_LAT = CELL_M / M_PER_DEG_LAT;
 const D_LNG = CELL_M / (M_PER_DEG_LAT * Math.cos(37.5 * Math.PI / 180));
 let explored = new Set();
-let fogOn = false; // 소개 페이지: 걸은 기록이 없어서 안개를 끈다
-function fogGeoJSON() {
-  const feats = [];
-  if (!fogOn || !map) return { type: 'FeatureCollection', features: feats };
-  const c = map.getCenter();
-  const ci = Math.floor(c.lat / D_LAT), cj = Math.floor(c.lng / D_LNG), n = 30;
-  for (let i = ci - n; i <= ci + n; i++) {
-    let run = null;
-    for (let j = cj - n; j <= cj + n + 1; j++) {
-      const fog = j <= cj + n && !explored.has(i + ':' + j);
-      if (fog && run === null) run = j;
-      if (!fog && run !== null) {
-        const a = i * D_LAT, b = (i + 1) * D_LAT, l0 = run * D_LNG, l1 = j * D_LNG;
-        feats.push({ type: 'Feature', geometry: { type: 'Polygon', coordinates: [[[l0, a], [l1, a], [l1, b], [l0, b], [l0, a]]] } });
-        run = null;
-      }
+let fogOn = true;
+
+// 안개는 지도 위에 얹은 투명한 캔버스에 그린다.
+// 밝힌 칸마다 크기가 조금씩 다른 동그라미로 구멍을 뚫어서, 안개 가장자리가 구름처럼 몽글몽글해진다.
+const FOG_COLOR = 'rgba(112, 120, 114, 0.58)';
+let fogCanvas = null, fogCtx = null, fogQueued = false;
+
+// 칸마다 늘 같은 값이 나오는 0~1 난수 (그릴 때마다 모양이 바뀌지 않게)
+function hash01(i, j, salt) {
+  let h = (i * 374761393 + j * 668265263 + salt * 2147483647) | 0;
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
+}
+
+function setupFogCanvas() {
+  fogCanvas = document.createElement('canvas');
+  fogCanvas.className = 'fog-canvas';
+  fogCanvas.setAttribute('aria-hidden', 'true');
+  fogCanvas.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none';
+  const mc = map.getCanvas();
+  mc.parentNode.insertBefore(fogCanvas, mc.nextSibling); // 지도 바로 위, 스티커 표시보다 아래
+  fogCtx = fogCanvas.getContext('2d');
+  resizeFog();
+}
+
+function resizeFog() {
+  if (!fogCanvas) return;
+  const r = window.devicePixelRatio || 1;
+  const c = map.getContainer();
+  fogCanvas.width = Math.round(c.clientWidth * r);
+  fogCanvas.height = Math.round(c.clientHeight * r);
+  drawFog();
+}
+
+function renderFog() {
+  if (fogQueued) return;
+  fogQueued = true;
+  requestAnimationFrame(() => { fogQueued = false; drawFog(); });
+}
+
+function drawFog() {
+  if (!fogCtx || !map) return;
+  const ctx = fogCtx, r = window.devicePixelRatio || 1;
+  const W = fogCanvas.width, H = fogCanvas.height;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  if (!fogOn) return;
+  ctx.setTransform(r, 0, 0, r, 0, 0);
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = FOG_COLOR;
+  ctx.fillRect(0, 0, W / r, H / r);
+
+  // 지금 화면에 보이는 칸만 그린다
+  const b = map.getBounds();
+  const i0 = Math.floor(b.getSouth() / D_LAT) - 2, i1 = Math.floor(b.getNorth() / D_LAT) + 2;
+  const j0 = Math.floor(b.getWest() / D_LNG) - 2, j1 = Math.floor(b.getEast() / D_LNG) + 2;
+  const cells = [];
+  if ((i1 - i0 + 1) * (j1 - j0 + 1) < 60000) {
+    for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) if (explored.has(i + ':' + j)) cells.push([i, j]);
+  } else {
+    for (const k of explored) {
+      const [i, j] = k.split(':').map(Number);
+      if (i >= i0 && i <= i1 && j >= j0 && j <= j1) cells.push([i, j]);
     }
   }
-  return { type: 'FeatureCollection', features: feats };
+  if (!cells.length) return;
+
+  // 1미터가 화면에서 몇 픽셀인지
+  const lat = map.getCenter().lat;
+  const mPerPx = 40075016.686 * Math.cos(lat * Math.PI / 180) / (512 * Math.pow(2, map.getZoom()));
+  const cellPx = CELL_M / mPerPx;
+  const holes = cells.map(([i, j]) => {
+    const p = map.project([(j + 0.5 + (hash01(i, j, 1) - 0.5) * 0.3) * D_LNG, (i + 0.5 + (hash01(i, j, 2) - 0.5) * 0.3) * D_LAT]);
+    return [p.x, p.y, cellPx * (0.78 + hash01(i, j, 3) * 0.3)];
+  });
+
+  // 동그라미로 안개를 걷어 낸다
+  ctx.globalCompositeOperation = 'destination-out';
+  ctx.fillStyle = '#000';
+  ctx.beginPath();
+  for (const [x, y, rad] of holes) { ctx.moveTo(x + rad, y); ctx.arc(x, y, rad, 0, Math.PI * 2); }
+  ctx.fill();
+
+  // 남은 안개의 가장자리에만 하얀 테두리 (구름 느낌)
+  if (cellPx > 6) {
+    ctx.globalCompositeOperation = 'source-atop';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+    ctx.lineWidth = Math.min(5, Math.max(1.5, cellPx * 0.07));
+    ctx.beginPath();
+    for (const [x, y, rad] of holes) { const rr = rad + ctx.lineWidth * 0.4; ctx.moveTo(x + rr, y); ctx.arc(x, y, rr, 0, Math.PI * 2); }
+    ctx.stroke();
+  }
+  ctx.globalCompositeOperation = 'source-over';
 }
-function renderFog() { const s = map && map.getSource('fog'); if (s) s.setData(fogGeoJSON()); }
 
 const line = (coords) => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: coords } });
 let spotMarkers = [];
@@ -174,12 +247,10 @@ document.fonts.load('20px Jua').finally(() => {
   map.on('styleimagemissing', (e) => { if (!map.hasImage(e.id)) map.addImage(e.id, pattern(e.id)); });
   map.once('load', () => {
     const empty = { type: 'FeatureCollection', features: [] };
-    map.addSource('fog', { type: 'geojson', data: empty });
     map.addSource('oldpaths', { type: 'geojson', data: empty });
     map.addSource('path', { type: 'geojson', data: empty });
     map.addSource('me', { type: 'geojson', data: empty });
-    // 안개는 지명 글자보다 아래, 길과 건물보다 위
-    map.addLayer({ id: 'fog', type: 'fill', source: 'fog', paint: { 'fill-color': '#60625C', 'fill-opacity': 0.55, 'fill-antialias': false } }, 'road-label');
+    setupFogCanvas();
     map.addLayer({ id: 'oldpaths', type: 'line', source: 'oldpaths', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#2F8A61', 'line-width': 4, 'line-opacity': 0.7 } });
     map.addLayer({ id: 'path-casing', type: 'line', source: 'path', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': INK, 'line-width': 9 } });
     map.addLayer({ id: 'path', type: 'line', source: 'path', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#F39A45', 'line-width': 5 } });
@@ -190,12 +261,44 @@ document.fonts.load('20px Jua').finally(() => {
     queue.splice(0).forEach((fn) => fn());
     post({ type: 'ready' });
   });
+  map.on('move', renderFog);
+  map.on('resize', resizeFog);
   map.on('moveend', () => {
-    renderFog();
     const c = map.getCenter();
     post({ type: 'move', lat: c.lat, lng: c.lng, zoom: map.getZoom() });
   });
 });
+
+// ── 미리보기: 주소 끝에 ?demo=walk 를 붙이면 골목을 걷는 흉내를 내며 안개를 걷는다 (앱에서는 쓰지 않음) ──
+if (new URLSearchParams(location.search).get('demo') === 'walk') {
+  const cellsAround = (lat, lng, radius) => {
+    const ci = Math.floor(lat / D_LAT), cj = Math.floor(lng / D_LNG), n = Math.ceil(radius / CELL_M) + 1, out = [];
+    for (let di = -n; di <= n; di++) for (let dj = -n; dj <= n; dj++) {
+      const dy = ((ci + di + 0.5) * D_LAT - lat) * M_PER_DEG_LAT;
+      const dx = ((cj + dj + 0.5) * D_LNG - lng) * M_PER_DEG_LAT * Math.cos(lat * Math.PI / 180);
+      if (Math.hypot(dx, dy) <= radius + CELL_M / 2) out.push((ci + di) + ':' + (cj + dj));
+    }
+    return out;
+  };
+  whenReady(() => {
+    let lat = 37.2826, lng = 127.0140, heading = 0.6;
+    const path = [[lng, lat]];
+    const step = () => {
+      heading += (Math.random() - 0.5) * 0.8;
+      lat += Math.cos(heading) * 12 / M_PER_DEG_LAT;
+      lng += Math.sin(heading) * 12 / (M_PER_DEG_LAT * Math.cos(lat * Math.PI / 180));
+      path.push([lng, lat]);
+      window.addExplored(cellsAround(lat, lng, 100));
+      window.setPath(path);
+      window.setMe(lng, lat);
+      if (path.length % 15 === 0) map.easeTo({ center: [lng, lat], duration: 800 });
+    };
+    window.addExplored(cellsAround(lat, lng, 100));
+    window.setMe(lng, lat);
+    for (let k = 0; k < 40; k++) step();
+    setInterval(step, 400);
+  });
+}
 </script>
 </body>
 </html>
