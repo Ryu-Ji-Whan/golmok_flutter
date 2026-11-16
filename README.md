@@ -3,123 +3,138 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/Ryu-Ji-Whan/golmok_flutter/releases/latest"><img src="https://img.shields.io/github/v/release/Ryu-Ji-Whan/golmok_flutter?label=%EC%B5%9C%EC%8B%A0%20%EB%B2%84%EC%A0%84&color=0E5A3C" alt="최신 버전"></a>
+  <img src="https://img.shields.io/badge/Android-3DDC84?logo=android&logoColor=white" alt="Android">
+  <img src="https://img.shields.io/badge/iPhone-000000?logo=apple&logoColor=white" alt="iPhone">
   <a href="https://github.com/Ryu-Ji-Whan/golmok_flutter/actions/workflows/build.yml"><img src="https://github.com/Ryu-Ji-Whan/golmok_flutter/actions/workflows/build.yml/badge.svg" alt="빌드 상태"></a>
-  <a href="https://github.com/Ryu-Ji-Whan/golmok_flutter/releases/latest"><img src="https://img.shields.io/github/v/release/Ryu-Ji-Whan/golmok_flutter?label=%EC%B5%9C%EC%8B%A0%20%EB%B9%8C%EB%93%9C&color=0E5A3C" alt="최신 빌드"></a>
-  <img src="https://img.shields.io/badge/Flutter-02569B?logo=flutter&logoColor=white" alt="Flutter">
-  <img src="https://img.shields.io/badge/Supabase-3ECF8E?logo=supabase&logoColor=white" alt="Supabase">
 </p>
 
-<p align="center"><b>동네 골목을 걸으면 안개가 걷히고, 마음에 드는 곳엔 스티커를 붙여 나만의 지도를 만드는 산책 앱이에요.</b></p>
+<h3 align="center">매일 걷는 동네, 아직 안 가 본 골목이 더 많지 않나요?</h3>
 
 <p align="center">
-  <a href="https://ryu-ji-whan.github.io/golmok_flutter/design/"><img src="https://img.shields.io/badge/%F0%9F%8E%A8%20%EB%94%94%EC%9E%90%EC%9D%B8%20%EC%8B%9C%EC%95%88%20%EB%B3%B4%EA%B8%B0-%ED%99%94%EB%A9%B4%2033%EA%B0%9C-F39A45?style=for-the-badge" alt="디자인 시안 보기 - 화면 33개"></a>
+<b>골목대장</b>은 걸은 만큼 동네 지도의 안개가 걷히는 산책 앱이에요.<br>
+마음에 드는 골목엔 스티커와 사진을 붙여 두고, 같은 동네 사람들과 이번 주 누가 더 많이 걸었는지 겨뤄 보세요.
+</p>
+
+<p align="center">
+  <a href="https://github.com/Ryu-Ji-Whan/golmok_flutter/releases/latest"><img src="https://img.shields.io/badge/%EC%95%B1%20%EB%B0%9B%EA%B8%B0-Android%20%C2%B7%20iPhone-0E5A3C?style=for-the-badge" alt="앱 받기"></a>
+  <a href="https://ryu-ji-whan.github.io/golmok_flutter/design/"><img src="https://img.shields.io/badge/%ED%99%94%EB%A9%B4%20%EB%91%98%EB%9F%AC%EB%B3%B4%EA%B8%B0-33%EA%B0%9C-F39A45?style=for-the-badge" alt="화면 둘러보기"></a>
 </p>
 
 ---
 
-## 📲 바로 써 보기
-
-| 기기 | 방법 |
-|---|---|
-| **Android** | [최신 빌드](https://github.com/Ryu-Ji-Whan/golmok_flutter/releases/latest)에서 `golmok-flutter.apk`를 받아 설치 |
-| **iPhone** | 같은 곳에서 `golmok-flutter-unsigned.ipa`를 받아 PC의 [Sideloadly](https://sideloadly.io)로 내 Apple ID 서명 후 설치 |
-
-> 책상에서도 시험할 수 있어요. 산책을 시작한 뒤 **데모 걷기**를 켜면 1초에 8m씩 걷는 흉내를 내요.
-
-## ✨ 이런 앱이에요
+## ✨ 이런 걸 할 수 있어요
 
 <table>
   <tr>
-    <td align="center" width="25%"><img src="assets/map/stickers/a00.webp" width="88" alt=""><br><b>안개 걷기</b><br><sub>걸은 골목 주변 40m의<br>안개가 걷혀요</sub></td>
-    <td align="center" width="25%"><img src="assets/map/stickers/a18.webp" width="88" alt=""><br><b>스티커 기록</b><br><sub>고양이 벤치, 골목 책방…<br>지금 자리에 붙여요</sub></td>
-    <td align="center" width="25%"><img src="assets/map/stickers/c13.webp" width="88" alt=""><br><b>골목 피드</b><br><sub>찍은 사진과 스티커 기록을<br>이웃과 나눠요</sub></td>
-    <td align="center" width="25%"><img src="assets/map/stickers/a04.webp" width="88" alt=""><br><b>동네 대장</b><br><sub>이번 주 밝힌 칸으로<br>이웃과 순위를 겨뤄요</sub></td>
+    <td align="center" width="33%"><img src="assets/map/stickers/a00.webp" width="96" alt=""><br><b>걸으면 안개가 걷혀요</b><br><sub>처음엔 동네가 안개에 덮여 있어요.<br>걸은 골목 주변 40m가 동글동글 밝아져요.</sub></td>
+    <td align="center" width="33%"><img src="assets/map/stickers/a18.webp" width="96" alt=""><br><b>골목에 스티커를 붙여요</b><br><sub>고양이 벤치, 작은 책방, 노을 언덕…<br>사진을 찍어 그 자리에 남겨요.</sub></td>
+    <td align="center" width="33%"><img src="assets/map/stickers/a04.webp" width="96" alt=""><br><b>동네 대장에 도전해요</b><br><sub>실제로 걸은 동네에서<br>이번 주 걸은 거리로 순위를 겨뤄요.</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="assets/map/stickers/c13.webp" width="96" alt=""><br><b>골목 피드</b><br><sub>마음에 든 장소를 이웃과 나눠요.<br>정확한 위치는 보이지 않아요.</sub></td>
+    <td align="center"><img src="assets/map/stickers/a11.webp" width="96" alt=""><br><b>스티커 모으기</b><br><sub>고양이·참새·골목 풍경 스티커 55종.<br>가입 선물과 동네 대장 한정 스티커도 있어요.</sub></td>
+    <td align="center"><img src="assets/map/stickers/c04.webp" width="96" alt=""><br><b>내 산책 기록</b><br><sub>산책마다 걸은 경로 그림과 거리·시간이 남아<br>내 지도로 한눈에 모아 봐요.</sub></td>
   </tr>
 </table>
 
-## 🗺️ 화면 구성
+### 🗺️ 만화풍 지도
 
-**온보딩 → 로그인 → 회원가입 4단계 (약관 · 닉네임 · 캐릭터 · 위치/동네) → 가입 완료 → 아래 탭 5개**
+전국 어디서나 동화책 같은 지도로 그려져요. 파스텔 색에 굵은 외곽선, 건물 그림자, 물결과 풀 무늬, 손으로 그린 듯 살짝 흔들리는 선.
+→ [지도 직접 움직여 보기](https://ryu-ji-whan.github.io/golmok_flutter/design/#map)
 
-| 🚶 산책 | 🗺️ 내 지도 | 💬 피드 | 🏆 동네 | 🛍️ 상점 |
-|---|---|---|---|---|
-| 지도 · 산책 시작/끝<br>여기 기록하기<br>산책 요약 | 밝힌 골목 · 지난 경로<br>기록 목록 → 저장된 기록<br>→ 피드에 공유 | 이웃이 공유한 기록<br>좋아요 | 이번 주 리더보드<br>대장 보상 | 스티커 팩 |
+## 👟 이렇게 써요
 
-그 밖에 **프로필** (닉네임·캐릭터 바꾸기, 스티커 보관함, 로그아웃)
+1. **가입하기** — 아이디·비밀번호·이메일로 가입하거나 카카오로 시작해요. 로그인 없이 둘러볼 수도 있어요.
+2. **내 동네 정하기** — 주로 생활하는 동네를 검색하거나, 현재 위치로 찾아요. (전국 어느 동이든)
+3. **산책 시작** — 지도에서 **산책 시작**을 누르고 걸어요. 걸은 길이 주황 선으로 그려지고 안개가 걷혀요.
+4. **여기 기록하기** — 마음에 드는 곳에서 스티커를 고르고 사진·메모를 남겨요.
+5. **산책 끝내기** — 오늘 걸은 경로 그림과 거리가 나와요. 기록은 내 지도에 쌓여요.
+6. **동네 탭** — 지금 있는 동네, 내 동네, 이번 주 걸은 동네마다 내 순위를 확인해요.
 
-| 흐름 | 화면 파일 |
+## 🏆 동네 리더보드는 이렇게 정해져요
+
+- **실제로 걸은 동네 기준** — 수원 행궁동을 걸으면 행궁동 순위에, 서울 연남동을 걸으면 연남동 순위에 들어가요.
+- **동(읍·면) 단위**, 순위는 **최근 7일 동안 그 동네에서 걸은 거리**예요.
+- **내 동네**는 가입할 때 정한 주 생활 동네예요. 동네 대장 한정 스티커는 내 동네에서만 받을 수 있어요.
+- 리더보드가 부담스러우면 **"리더보드에 내 이름 숨기기"**를 켜면 돼요.
+
+## 🔒 내 위치는 이렇게 지켜요
+
+| 무엇 | 누가 볼 수 있나요 |
 |---|---|
-| 온보딩 · 로그인 · 이메일 계정 | [`onboarding.dart`](lib/screens/onboarding.dart) · [`login.dart`](lib/screens/login.dart) · [`email_auth.dart`](lib/screens/email_auth.dart) |
-| 회원가입 (약관~가입 완료) | [`signup.dart`](lib/screens/signup.dart) |
-| 산책 지도 · 산책 요약 | [`walk.dart`](lib/screens/walk.dart) |
-| 스티커 붙여 기록 · 사진 넣기 | [`record.dart`](lib/screens/record.dart) |
-| 내 지도 · 저장된 기록 · 공유 | [`mymap.dart`](lib/screens/mymap.dart) · [`spot_detail.dart`](lib/screens/spot_detail.dart) |
-| 골목 피드 · 동네 리더보드 | [`feed.dart`](lib/screens/feed.dart) · [`town.dart`](lib/screens/town.dart) |
-| 스티커 상점 | [`shop.dart`](lib/screens/shop.dart) |
-| 프로필 · 설정 | [`profile.dart`](lib/screens/profile.dart) |
+| 걸은 경로, 정확한 위치 | **나만** (내 폰과 내 계정) |
+| 피드에 공유한 기록 | 이웃 — 스티커·제목·메모·동네 이름만, **좌표는 안 보여요** |
+| 리더보드 | 이웃 — 닉네임과 걸은 거리만 (숨기기 가능) |
+| 사진 | 지금은 **내 폰에만** 저장돼요 |
 
-## 🎨 디자인 시스템
+로그인하면 기록이 내 계정에 저장돼서 폰을 바꿔도 이어져요. 로그인 없이 쓰면 이 폰에만 남아요.
 
-### 색
+## 📲 설치하기
+
+| 기기 | 방법 |
+|---|---|
+| **Android** | [최신 버전](https://github.com/Ryu-Ji-Whan/golmok_flutter/releases/latest)에서 `golmok-flutter.apk`를 받아 설치 (출처를 알 수 없는 앱 설치 허용 필요) |
+| **iPhone** | 같은 곳에서 `golmok-flutter-unsigned.ipa`를 받아 컴퓨터의 [Sideloadly](https://sideloadly.io)로 내 Apple ID로 설치 (무료 계정은 7일마다 다시 설치) |
+
+> 아직 앱스토어·플레이스토어에 올리기 전인 **미리보기 버전**이에요. 책상에서 시험해 보려면 산책 중에 **데모 걷기**를 켜 보세요.
+
+## 🛣️ 앞으로
+
+- [ ] 사진 꾸미기 — 사진 위에 스티커 여러 개 붙이고 저장·공유
+- [ ] 지도 꾸미기 — 내 지도를 꾸며 한 장으로 남기기
+- [ ] 사진을 내 계정에 저장 (폰을 바꿔도 사진 유지)
+- [ ] 비밀번호 찾기, Google · Apple 로그인
+- [ ] 앱스토어 · 플레이스토어 출시
+
+---
+
+<details>
+<summary><b>🎨 디자인</b> — 색, 글꼴, 디자인 시안, 바꾸는 곳</summary>
+
+<br>
+
+**디자인 시안 사이트:** 화면 33개, 디자인 시스템, 움직이는 만화풍 지도 → [ryu-ji-whan.github.io/golmok_flutter/design](https://ryu-ji-whan.github.io/golmok_flutter/design/)
 
 | | 이름 | 값 | 쓰는 곳 |
 |---|---|---|---|
 | ![](https://img.shields.io/badge/%20%20%20%20%20-0E5A3C?style=for-the-badge) | 포레스트 | `#0E5A3C` | 주 버튼, 제목 |
 | ![](https://img.shields.io/badge/%20%20%20%20%20-2F8A61?style=for-the-badge) | 리프 | `#2F8A61` | 아이콘, 링크 |
-| ![](https://img.shields.io/badge/%20%20%20%20%20-E4F2E8?style=for-the-badge) | 민트 | `#E4F2E8` | 칩, 배지 바탕 |
 | ![](https://img.shields.io/badge/%20%20%20%20%20-FFF9ED?style=for-the-badge) | 크림 | `#FFF9ED` | 화면 바탕 |
-| ![](https://img.shields.io/badge/%20%20%20%20%20-F39A45?style=for-the-badge) | 오렌지 | `#F39A45` | 강조 면, 산책 경로 |
-| ![](https://img.shields.io/badge/%20%20%20%20%20-FDE7D3?style=for-the-badge) | 피치 | `#FDE7D3` | 캐릭터 원 |
-| ![](https://img.shields.io/badge/%20%20%20%20%20-EE7C8B?style=for-the-badge) | 핑크 | `#EE7C8B` | 좋아요 |
-| ![](https://img.shields.io/badge/%20%20%20%20%20-24322C?style=for-the-badge) | 잉크 | `#24322C` | 본문 글자, 지도 외곽선 |
-| ![](https://img.shields.io/badge/%20%20%20%20%20-5E6A63?style=for-the-badge) | 뮤트 | `#5E6A63` | 보조 글자 |
-| ![](https://img.shields.io/badge/%20%20%20%20%20-E3DCCB?style=for-the-badge) | 선 | `#E3DCCB` | 테두리, 비활성 버튼 |
+| ![](https://img.shields.io/badge/%20%20%20%20%20-F39A45?style=for-the-badge) | 오렌지 | `#F39A45` | 강조, 산책 경로 |
+| ![](https://img.shields.io/badge/%20%20%20%20%20-24322C?style=for-the-badge) | 잉크 | `#24322C` | 글자, 지도 외곽선 |
 
-### 글꼴 · 모양
-
-- **제목** — [Jua](https://fonts.google.com/specimen/Jua) (44 / 26 / 22) · **본문** — 기기 기본 한글 글꼴 (17 · 15 · 14 · 13 · 12)
-- **모서리** — 입력창 14 · 카드 18 · 큰 카드 22 · 바텀시트 28 · 버튼은 알약 모양
-- **그림자** — 카드 `0 4 12 잉크 12%` · 주 버튼 `0 6 14 포레스트 25%`
-
-### 만화풍 지도
-
-무료 지도 데이터([OpenStreetMap](https://www.openstreetmap.org) · [OpenFreeMap](https://openfreemap.org))에 직접 만든 스타일을 입혔어요.
-파스텔 색 + 굵은 잉크 외곽선 + 건물 그림자 + 물결·풀 무늬 + 손그림처럼 살짝 흔들리는 선. 대한민국 어디서나 같은 스타일로 그려져요.
-
-<p>
-  <img src="assets/map/stickers/a00.webp" width="56" alt=""><img src="assets/map/stickers/a02.webp" width="56" alt=""><img src="assets/map/stickers/a04.webp" width="56" alt=""><img src="assets/map/stickers/a21.webp" width="56" alt=""><img src="assets/map/stickers/c01.webp" width="56" alt=""><img src="assets/map/stickers/c13.webp" width="56" alt=""><img src="assets/map/stickers/a11.webp" width="56" alt=""><img src="assets/map/stickers/a13.webp" width="56" alt=""><img src="assets/map/stickers/a18.webp" width="56" alt=""><img src="assets/map/stickers/b00.webp" width="56" alt=""><img src="assets/map/stickers/b02.webp" width="56" alt=""><img src="assets/map/stickers/b03.webp" width="56" alt="">
-</p>
-<sub>스티커 55종 · <a href="assets/map/stickers">전체 보기</a></sub>
-
-## 🙌 디자인 도움이 필요한 곳
-
-- [ ] **앱 아이콘 다듬기 · 시작 화면** — 참새 핀 아이콘(<img src="assets/icon/icon.png" width="20" alt="">)이 들어가 있어요
-- [ ] **사진 꾸미기** — 사진 위에 스티커 여러 개 붙이기, 갤러리 저장, SNS 공유
-- [ ] **지도 꾸미기** — 내 지도를 꾸며서 한 장으로 남기기
-- [ ] **빈 화면 · 오류 화면** — 기록이 없을 때, 위치 권한이 없을 때, 인터넷이 끊겼을 때
-- [ ] **지도 스타일 다듬기** — 색, 선 두께, 지명 글자 크기
-- [ ] **스티커 추가** — 계절·동네 한정 스티커
-
-### 디자인을 바꾸면 반영되는 곳
+- **글꼴** — 제목 [Jua](https://fonts.google.com/specimen/Jua), 본문 기기 기본 한글 글꼴
+- **모서리** — 입력창 14 · 카드 18 · 큰 카드 22 · 버튼은 알약 모양
+- **앱 아이콘** — 초록 지도 핀 속 참새 <img src="assets/icon/icon.png" width="20" alt="">
 
 | 바꿀 것 | 파일 |
 |---|---|
 | 앱 색 · 모서리 · 그림자 | [`lib/theme.dart`](lib/theme.dart) |
-| 버튼 · 카드 · 배지 같은 공통 부품 | [`lib/widgets/ui.dart`](lib/widgets/ui.dart) |
+| 버튼 · 카드 같은 공통 부품 | [`lib/widgets/ui.dart`](lib/widgets/ui.dart) |
 | 지도 색 · 선 · 무늬 | [`assets/map/cartoon_map.html`](assets/map/cartoon_map.html) 안의 `C = { … }` |
-| 스티커 그림 (webp, 정사각형) | [`assets/map/stickers/`](assets/map/stickers) |
-| 스티커 이름 · 분류 | [`lib/data/stickers.dart`](lib/data/stickers.dart) |
+| 스티커 그림 · 이름 | [`assets/map/stickers/`](assets/map/stickers) · [`lib/data/stickers.dart`](lib/data/stickers.dart) |
+| 앱 아이콘 | [`assets/icon/`](assets/icon) |
 
-## 🛠️ 개발자용
+</details>
 
 <details>
-<summary>구조와 빌드 방법</summary>
+<summary><b>🛠️ 개발자용</b> — 구조, 서버, 빌드</summary>
 
-- **지도** — `assets/map/cartoon_map.html` (MapLibre GL JS)을 WebView로 띄우고 `lib/widgets/cartoon_map.dart`에서 안개·경로·스티커를 보낸다
-- **폰 안 데이터베이스** — SQLite (`lib/data/db.dart`). 오프라인에서도 기록이 남는다
-- **서버** — Supabase (`lib/data/remote.dart`, 표 구조 `supabase/schema.sql`). 이메일 계정, 기록 동기화, 피드, 리더보드
-- **상태** — `lib/data/store.dart` (저장할 때마다 폰 DB → 서버 순서로 올림)
-- **빌드** — `main`에 올리면 GitHub Actions가 `android/`·`ios/` 폴더를 새로 만들고 APK·IPA를 [Releases](https://github.com/Ryu-Ji-Whan/golmok_flutter/releases)에 올린다
+<br>
+
+| 부분 | 쓰는 것 | 파일 |
+|---|---|---|
+| 앱 | Flutter | [`lib/`](lib) |
+| 지도 | MapLibre GL JS + OpenFreeMap (WebView) | [`assets/map/cartoon_map.html`](assets/map/cartoon_map.html), [`lib/widgets/cartoon_map.dart`](lib/widgets/cartoon_map.dart) |
+| 폰 안 저장 | SQLite (오프라인에서도 기록) | [`lib/data/db.dart`](lib/data/db.dart) |
+| 서버 | Supabase — 아이디·이메일·카카오 로그인, 기록 동기화, 피드, 리더보드 | [`lib/data/remote.dart`](lib/data/remote.dart), [`supabase/`](supabase) |
+| 동네 이름 | OpenStreetMap Nominatim | [`lib/data/places.dart`](lib/data/places.dart) |
+| 빌드 | GitHub Actions → Releases에 APK · IPA | [`.github/workflows/build.yml`](.github/workflows/build.yml) |
+
+- **화면:** 온보딩 · 로그인 · 회원가입([`login.dart`](lib/screens/login.dart), [`account_signup.dart`](lib/screens/account_signup.dart), [`signup.dart`](lib/screens/signup.dart)), 산책([`walk.dart`](lib/screens/walk.dart)), 기록([`record.dart`](lib/screens/record.dart), [`spot_detail.dart`](lib/screens/spot_detail.dart)), 내 지도([`mymap.dart`](lib/screens/mymap.dart)), 피드([`feed.dart`](lib/screens/feed.dart)), 동네([`town.dart`](lib/screens/town.dart)), 상점([`shop.dart`](lib/screens/shop.dart)), 프로필([`profile.dart`](lib/screens/profile.dart))
+- **서버 DB:** [`supabase/schema.sql`](supabase/schema.sql) 다음 [`supabase/migrations/`](supabase/migrations)를 번호 순서대로 실행. 아이디 로그인은 Edge Function [`login-with-username`](supabase/functions/login-with-username/index.ts)
+- **빌드:** `main`에 push하면 `android/`·`ios/`를 새로 만들어 빌드해요 (README·`docs/`·`supabase/`만 바뀌면 빌드 안 함)
 
 내 컴퓨터에서 돌리기:
 
@@ -129,7 +144,7 @@ rm test/widget_test.dart
 flutter run
 ```
 
-위치 권한 문구는 `.github/workflows/build.yml`의 "Generate native" 단계를 참고해 넣는다.
+권한 문구와 로그인 복귀 주소는 [`build.yml`](.github/workflows/build.yml)의 "Generate native" 단계를 참고해 넣어 주세요.
 
 </details>
 
