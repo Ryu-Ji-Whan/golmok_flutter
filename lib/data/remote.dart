@@ -198,6 +198,15 @@ class Remote {
     await _try(() => _c.from('explored').upsert(rows, ignoreDuplicates: true));
   }
 
+  /// 서버의 내 밝힌 칸을 통째로 바꾼다 (칸 크기를 바꿀 때)
+  static Future<void> replaceExplored(Set<String> cells) => _try(() async {
+        await _c.from('explored').delete().eq('user_id', user!.id);
+        final list = cells.toList();
+        for (var i = 0; i < list.length; i += 500) {
+          await _c.from('explored').upsert([for (final c in list.skip(i).take(500)) {'cell': c}], ignoreDuplicates: true);
+        }
+      });
+
   /// 처음 로그인할 때 이 폰에 있던 기록을 한꺼번에 올린다.
   static Future<void> uploadAll({
     required List<Walk> walks,

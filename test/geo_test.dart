@@ -7,10 +7,15 @@ void main() {
     expect(distanceM(defaultCenter, b), closeTo(100, 1));
   });
 
-  test('한 지점 주변 100m 안의 칸을 밝힌다', () {
+  test('걸은 지점 주변 칸을 밝힌다 (40m 반경, 20m 칸)', () {
     final cells = cellsAround(defaultCenter);
-    expect(cells.length, greaterThan(9));
+    expect(cells.length, inInclusiveRange(5, 16));
     expect(cells.toSet().length, cells.length);
+  });
+
+  test('예전 50m 칸 하나는 20m 칸 여러 개로 옮겨진다', () {
+    final moved = migrateCells50to20(['5000:3000']);
+    expect(moved.length, inInclusiveRange(4, 12));
   });
 
   test('거리 표시', () {

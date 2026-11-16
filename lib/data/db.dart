@@ -106,6 +106,16 @@ class AppDb {
     await b.commit(noResult: true);
   }
 
+  /// 밝힌 칸 전체를 바꾼다 (칸 크기를 바꿀 때)
+  Future<void> replaceExplored(Set<String> cells) async {
+    final b = _db.batch();
+    b.delete('explored');
+    for (final c in cells) {
+      b.insert('explored', {'cell': c}, conflictAlgorithm: ConflictAlgorithm.ignore);
+    }
+    await b.commit(noResult: true);
+  }
+
   Future<void> addMarks(String kind, Iterable<String> ids) async {
     final at = DateTime.now().millisecondsSinceEpoch;
     final b = _db.batch();

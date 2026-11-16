@@ -61,6 +61,18 @@ class AppStore extends ChangeNotifier {
     }
     s.spots = await db.spots();
     s.explored = await db.explored();
+    // 안개 칸 크기가 50m → 20m로 바뀌었다. 예전 기록이면 한 번만 옮긴다.
+    if (await db.kv('cell_m') != '20') {
+      if (s.explored.isNotEmpty) {
+        s.explored = migrateCells50to20(s.explored);
+        await db.replaceExplored(s.explored);
+        if (Remote.signedIn) {
+          await Remote.replaceExplored(s.explored);
+          await Remote.addMarks('meta', ['cell20']);
+        }
+      }
+      await db.setKv('cell_m', '20');
+    }
     s.owned = await db.marks('owned');
     if (s.owned.isEmpty) {
       s.owned = starterStickers.toSet();
@@ -103,7 +115,7 @@ class AppStore extends ChangeNotifier {
         walks: walks,
         spots: spots,
         explored: explored,
-        marks: {'owned': owned, 'stamp': stamps, 'reward': rewards, 'store': visitedStores},
+        marks: {'owned': owned, 'stamp': stamps, 'reward': rewards, 'store': visitedStores, 'meta': {'cell20'}},
         coupons: coupons,
       );
     }
@@ -126,7 +138,15 @@ class AppStore extends ChangeNotifier {
     for (final s in d.spots) {
       await _db.saveSpot(s);
     }
-    await _db.addExplored(d.explored);
+    var cells = d.explored;
+    if (cells.isNotEmpty && !(d.marks['meta']?.contains('cell20') ?? false)) {
+      // 서버에 예전(50m 칸) 기록이 있으면 20m 칸으로 옮겨서 다시 올린다
+      cells = migrateCells50to20(cells);
+      await Remote.replaceExplored(cells);
+    }
+    await Remote.addMarks('meta', ['cell20']);
+    await _db.addExplored(cells);
+    await _db.setKv('cell_m', '20');
     owned = {...starterStickers, ...?d.marks['owned']};
     stamps = d.marks['stamp'] ?? {};
     rewards = d.marks['reward'] ?? {};
@@ -141,7 +161,7 @@ class AppStore extends ChangeNotifier {
     walks = d.walks.where((w) => w.endedAt != null).toList();
     activeWalk = null;
     spots = d.spots;
-    explored = d.explored;
+    explored = cells;
     coupons = d.coupons;
     if (home != null) await _db.setKv('home', '${home!.lat},${home!.lng}');
     notifyListeners();
@@ -182,6 +202,7 @@ class AppStore extends ChangeNotifier {
     stopTracking();
     await Remote.signOut();
     await _db.wipe();
+    await _db.setKv('cell_m', '20');
     profile = null;
     walks = [];
     activeWalk = null;

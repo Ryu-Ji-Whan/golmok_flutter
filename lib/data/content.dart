@@ -58,11 +58,11 @@ class Neighbor {
 
 /// 리더보드 예시 이웃 (점수 = 이번 주 밝힌 칸 수)
 const neighbors = [
-  Neighbor('행궁산책러', 'a04', 96),
-  Neighbor('참새방앗간', 'c01', 74),
-  Neighbor('수원천냥', 'a00', 52),
-  Neighbor('깃발참새', 'c13', 31),
-  Neighbor('낮잠고양이', 'a21', 18),
+  Neighbor('행궁산책러', 'a04', 576),
+  Neighbor('참새방앗간', 'c01', 444),
+  Neighbor('수원천냥', 'a00', 312),
+  Neighbor('깃발참새', 'c13', 186),
+  Neighbor('낮잠고양이', 'a21', 108),
 ];
 
 class FeedPost {

@@ -100,8 +100,8 @@ const queue = [];
 // 지도가 준비되기 전에 Flutter가 보낸 명령은 모아 뒀다가 준비되면 실행한다.
 function whenReady(fn) { if (ready) fn(); else queue.push(fn); }
 
-// ── 안개: Flutter의 lib/data/geo.dart 와 같은 격자(50m 칸) ──
-const CELL_M = 50, M_PER_DEG_LAT = 111320;
+// ── 안개: Flutter의 lib/data/geo.dart 와 같은 격자(20m 칸) ──
+const CELL_M = 20, M_PER_DEG_LAT = 111320;
 const D_LAT = CELL_M / M_PER_DEG_LAT;
 const D_LNG = CELL_M / (M_PER_DEG_LAT * Math.cos(37.5 * Math.PI / 180));
 let explored = new Set();
@@ -178,7 +178,7 @@ function drawFog() {
   const cellPx = CELL_M / mPerPx;
   const holes = cells.map(([i, j]) => {
     const p = map.project([(j + 0.5 + (hash01(i, j, 1) - 0.5) * 0.3) * D_LNG, (i + 0.5 + (hash01(i, j, 2) - 0.5) * 0.3) * D_LAT]);
-    return [p.x, p.y, cellPx * (0.95 + hash01(i, j, 3) * 0.3)];
+    return [p.x, p.y, cellPx * (0.75 + hash01(i, j, 3) * 0.25)];
   });
 
   // 동그라미로 안개를 걷어 낸다
@@ -189,10 +189,10 @@ function drawFog() {
   ctx.fill();
 
   // 남은 안개의 가장자리에만 하얀 테두리 (구름 느낌)
-  if (cellPx > 6) {
+  if (cellPx > 4) {
     ctx.globalCompositeOperation = 'source-atop';
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
-    ctx.lineWidth = Math.min(5, Math.max(1.5, cellPx * 0.07));
+    ctx.lineWidth = Math.min(4, Math.max(1.5, cellPx * 0.1));
     ctx.beginPath();
     for (const [x, y, rad] of holes) { const rr = rad + ctx.lineWidth * 0.4; ctx.moveTo(x + rr, y); ctx.arc(x, y, rr, 0, Math.PI * 2); }
     ctx.stroke();
@@ -276,7 +276,7 @@ if (new URLSearchParams(location.search).get('demo') === 'walk') {
     for (let di = -n; di <= n; di++) for (let dj = -n; dj <= n; dj++) {
       const dy = ((ci + di + 0.5) * D_LAT - lat) * M_PER_DEG_LAT;
       const dx = ((cj + dj + 0.5) * D_LNG - lng) * M_PER_DEG_LAT * Math.cos(lat * Math.PI / 180);
-      if (Math.hypot(dx, dy) <= radius + CELL_M / 2) out.push((ci + di) + ':' + (cj + dj));
+      if ((di === 0 && dj === 0) || Math.hypot(dx, dy) <= radius - CELL_M / 2) out.push((ci + di) + ':' + (cj + dj));
     }
     return out;
   };
@@ -288,12 +288,12 @@ if (new URLSearchParams(location.search).get('demo') === 'walk') {
       lat += Math.cos(heading) * 12 / M_PER_DEG_LAT;
       lng += Math.sin(heading) * 12 / (M_PER_DEG_LAT * Math.cos(lat * Math.PI / 180));
       path.push([lng, lat]);
-      window.addExplored(cellsAround(lat, lng, 150));
+      window.addExplored(cellsAround(lat, lng, 40));
       window.setPath(path);
       window.setMe(lng, lat);
       if (path.length % 15 === 0) map.easeTo({ center: [lng, lat], duration: 800 });
     };
-    window.addExplored(cellsAround(lat, lng, 150));
+    window.addExplored(cellsAround(lat, lng, 40));
     window.setMe(lng, lat);
     for (let k = 0; k < 40; k++) step();
     setInterval(step, 400);

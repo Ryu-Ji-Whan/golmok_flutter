@@ -30,7 +30,7 @@
 
 <table>
   <tr>
-    <td align="center" width="25%"><img src="assets/map/stickers/a00.webp" width="88" alt=""><br><b>안개 걷기</b><br><sub>걸은 골목 주변 150m의<br>안개가 걷혀요</sub></td>
+    <td align="center" width="25%"><img src="assets/map/stickers/a00.webp" width="88" alt=""><br><b>안개 걷기</b><br><sub>걸은 골목 주변 40m의<br>안개가 걷혀요</sub></td>
     <td align="center" width="25%"><img src="assets/map/stickers/a18.webp" width="88" alt=""><br><b>스티커 기록</b><br><sub>고양이 벤치, 골목 책방…<br>지금 자리에 붙여요</sub></td>
     <td align="center" width="25%"><img src="assets/map/stickers/c13.webp" width="88" alt=""><br><b>스탬프 투어</b><br><sub>동네 캠페인 스팟을 돌고<br>한정 스티커를 받아요</sub></td>
     <td align="center" width="25%"><img src="assets/map/stickers/a04.webp" width="88" alt=""><br><b>동네 대장</b><br><sub>이번 주 밝힌 칸으로<br>이웃과 순위를 겨뤄요</sub></td>
