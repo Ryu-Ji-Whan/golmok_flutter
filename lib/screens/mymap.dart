@@ -5,6 +5,7 @@ import '../data/models.dart';
 import '../data/store.dart';
 import '../theme.dart';
 import '../widgets/cartoon_map.dart';
+import '../widgets/route_thumb.dart';
 import '../widgets/ui.dart';
 import 'spot_detail.dart';
 import 'walk.dart';
@@ -48,7 +49,7 @@ class _MyMapTabState extends State<MyMapTab> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('내 지도'),
-        actions: [Padding(padding: const EdgeInsets.only(right: 16), child: Pill('밝힌 골목 ${s.explored.length}칸'))],
+        actions: [Padding(padding: const EdgeInsets.only(right: 16), child: Pill('총 ${formatDistance(s.totalDistance)}'))],
       ),
       body: Column(children: [
         Padding(
@@ -139,17 +140,12 @@ class _MyMapTabState extends State<MyMapTab> {
           padding: const EdgeInsets.all(14),
           onTap: w.path.isEmpty ? null : () => _map.goTo(w.path.first, zoom: 16),
           child: Row(children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(color: C.mint, borderRadius: BorderRadius.circular(14)),
-              child: const Icon(Icons.route, color: C.forest),
-            ),
+            RouteThumb(w.path, size: 56),
             const SizedBox(width: 12),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('${formatDate(w.startedAt)} 산책', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
-                Text('${formatDistance(w.distanceM)} · ${formatDuration(w.duration)} · 새 골목 ${w.newCells}칸',
+                Text('${formatDistance(w.distanceM)} · ${formatDuration(w.duration)}',
                     style: const TextStyle(fontSize: 12, color: C.muted)),
               ]),
             ),

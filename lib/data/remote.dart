@@ -31,17 +31,17 @@ class RemoteFeedPost {
 
 /// 서버 리더보드 한 줄
 class RemoteRank {
-  RemoteRank(this.nickname, this.character, this.cells, {this.isMe = false});
+  RemoteRank(this.nickname, this.character, this.meters, {this.isMe = false});
   final String nickname, character;
-  final int cells;
+  final int meters; // 이번 주 그 동네에서 걸은 거리
   final bool isMe;
 }
 
 /// 내가 걸은 동네 하나와 그 동네에서 내 순위
 class MyArea {
-  MyArea(this.area, this.cells, this.rank, this.people);
+  MyArea(this.area, this.meters, this.rank, this.people);
   final String area;
-  final int cells, rank, people;
+  final int meters, rank, people;
 }
 
 String _iso(DateTime t) => t.toUtc().toIso8601String();
@@ -317,9 +317,38 @@ class Remote {
   /// 동네를 모른 채 올린(또는 올릴) 칸에 동네 이름 채우기
   static void tagCells(Iterable<String> cells, String area) => addExplored(cells, area: area);
 
+  // "동네|날짜" → 아직 서버에 안 보낸 걸은 거리(m)
+  static final Map<String, double> _pendingMeters = {};
+
+  /// 산책 중 걸은 거리를 동네·날짜별로 모아 둔다 (20초마다 서버에 더함)
+  static void addAreaMeters(String area, double meters) {
+    if (!signedIn || meters <= 0) return;
+    final d = DateTime.now();
+    final day = '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+    final k = '$area|$day';
+    _pendingMeters[k] = (_pendingMeters[k] ?? 0) + meters;
+    _flushTimer ??= Timer(const Duration(seconds: 20), flushExplored);
+  }
+
+  static Future<void> _flushMeters() async {
+    if (_pendingMeters.isEmpty || !signedIn) return;
+    final items = Map<String, double>.from(_pendingMeters);
+    _pendingMeters.clear();
+    for (final e in items.entries) {
+      final i = e.key.lastIndexOf('|');
+      try {
+        await _c.rpc('add_area_meters', params: {'area_name': e.key.substring(0, i), 'on_day': e.key.substring(i + 1), 'add_m': e.value});
+      } catch (_) {
+        // 실패하면 다음에 다시 보낸다
+        _pendingMeters[e.key] = (_pendingMeters[e.key] ?? 0) + e.value;
+      }
+    }
+  }
+
   static Future<void> flushExplored() async {
     _flushTimer?.cancel();
     _flushTimer = null;
+    await _flushMeters();
     if (_pendingCells.isEmpty) return;
     final tagged = [for (final e in _pendingCells.entries) if (e.value != null) {'cell': e.key, 'area': e.value}];
     final plain = [for (final e in _pendingCells.entries) if (e.value == null) {'cell': e.key}];
@@ -473,14 +502,14 @@ class Remote {
     }
   }
 
-  /// 한 동네의 이번 주 순위 (그 동네에서 실제로 밝힌 칸 수). 실패하면 null
+  /// 한 동네의 이번 주 순위 (그 동네에서 걸은 거리). 실패하면 null
   static Future<List<RemoteRank>?> areaLeaderboard(String area) async {
     if (!signedIn) return null;
     try {
       final rows = await _c.rpc('area_leaderboard', params: {'area_name': area, 'period_days': 7});
       return [
         for (final r in rows as List)
-          RemoteRank(r['nickname'] as String, r['character_id'] as String, (r['cells'] as num).toInt(), isMe: r['is_me'] == true),
+          RemoteRank(r['nickname'] as String, r['character_id'] as String, (r['meters'] as num).toInt(), isMe: r['is_me'] == true),
       ];
     } catch (_) {
       return null;
@@ -494,7 +523,7 @@ class Remote {
       final rows = await _c.rpc('my_areas', params: {'period_days': 7});
       return [
         for (final r in rows as List)
-          MyArea(r['area'] as String, (r['cells'] as num).toInt(), (r['rank'] as num).toInt(), (r['people'] as num).toInt()),
+          MyArea(r['area'] as String, (r['meters'] as num).toInt(), (r['rank'] as num).toInt(), (r['people'] as num).toInt()),
       ];
     } catch (_) {
       return null;

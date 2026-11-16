@@ -104,7 +104,7 @@ class ProfileScreen extends StatelessWidget {
         CardBox(
           child: Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
             Stat(formatDistance(s.totalDistance), '총 걸은 거리'),
-            Stat('${s.explored.length}칸', '밝힌 골목'),
+            Stat('${s.walkDays}일', '산책한 날'),
             Stat('${s.spots.length}곳', '기록'),
           ]),
         ),

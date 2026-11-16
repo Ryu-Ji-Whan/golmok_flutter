@@ -7,6 +7,7 @@ import '../data/models.dart';
 import '../data/store.dart';
 import '../theme.dart';
 import '../widgets/cartoon_map.dart';
+import '../widgets/route_thumb.dart';
 import '../widgets/ui.dart';
 import 'profile.dart';
 import 'record.dart';
@@ -173,11 +174,11 @@ class _WalkTabState extends State<WalkTab> {
                 ? Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
                     Stat(formatDuration(w.duration), '걸은 시간', light: true),
                     Stat(formatDistance(w.distanceM), '거리', light: true),
-                    Stat('${w.newCells}칸', '새로 밝힌 골목', light: true),
+                    Stat('${s.spots.where((x) => x.walkId == w.id).length}곳', '이번 산책 기록', light: true),
                   ])
                 : Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-                    Stat('${s.weeklyCells}칸', '이번 주 밝힌 골목'),
-                    Stat('${s.explored.length}칸', '전체 밝힌 골목'),
+                    Stat(formatDistance(s.weeklyDistance), '이번 주 걸은 거리'),
+                    Stat(formatDistance(s.totalDistance), '총 걸은 거리'),
                     Stat('${s.spots.length}곳', '기록한 장소'),
                   ]),
           ),
@@ -247,10 +248,18 @@ class WalkSummaryScreen extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
           child: Column(children: [
-            const StickerImg('a04', size: 140),
+            // 오늘 걸은 경로 + 응원 고양이
+            SizedBox(
+              width: 220,
+              height: 220,
+              child: Stack(clipBehavior: Clip.none, children: [
+                RouteThumb(walk.path, size: 200, radius: 28),
+                const Positioned(right: -6, bottom: -6, child: StickerImg('a04', size: 84)),
+              ]),
+            ),
             const SizedBox(height: 8),
-            Text(walk.newCells > 0 ? '골목 ${walk.newCells}칸을 새로 밝혔어요!' : '수고했어요! 다음엔 새 골목으로 가 볼까요?',
-                textAlign: TextAlign.center, style: jua(24)),
+            Text(walk.distanceM >= 10 ? '${formatDistance(walk.distanceM)} 걸었어요!' : '수고했어요! 다음엔 조금 더 걸어 볼까요?',
+                textAlign: TextAlign.center, style: jua(26)),
             const SizedBox(height: 20),
             CardBox(
               child: Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [

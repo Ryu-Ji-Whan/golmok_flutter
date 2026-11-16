@@ -46,6 +46,8 @@ class AppStore extends ChangeNotifier {
   DateTime? _areaFailedAt; // 실패하면 30초 쉬었다가 다시 (지도 서버 이용 규칙)
   // 동네를 아직 모를 때 밝힌 칸 (동네를 알게 되면 이름을 채운다)
   final Set<String> _untagged = {};
+  // 동네를 아직 모를 때 걸은 거리 (동네를 알게 되면 그 동네에 더한다)
+  double _untaggedMeters = 0;
 
   /// 리더보드에 내 이름 숨기기
   bool hideRank = false;
@@ -317,7 +319,15 @@ class AppStore extends ChangeNotifier {
     if (w != null) {
       final step = prev == null ? 0.0 : distanceM(prev, p);
       // GPS가 크게 튀는 값(200m 넘게 순간이동)은 거리에 넣지 않는다.
-      if (step < 200) w.distanceM += step;
+      if (step < 200) {
+        w.distanceM += step;
+        // 동네 리더보드: 지금 있는 동네에 걸은 거리를 더한다
+        if (areaHere != null) {
+          Remote.addAreaMeters(areaHere, step);
+        } else {
+          _untaggedMeters += step;
+        }
+      }
       w.newCells += fresh.length;
       w.path.add(p);
       await _db.addPoint(w.id, w.path.length, p);
@@ -344,6 +354,10 @@ class AppStore extends ChangeNotifier {
       _areaFailedAt = null;
       currentArea = place.name;
       _areaAt = p;
+      if (_untaggedMeters > 0) {
+        Remote.addAreaMeters(place.name, _untaggedMeters);
+        _untaggedMeters = 0;
+      }
       if (_untagged.isNotEmpty) {
         final cells = _untagged.toList();
         _untagged.clear();
@@ -404,6 +418,15 @@ class AppStore extends ChangeNotifier {
     final done = walks.where((w) => w.startedAt.isAfter(weekAgo)).fold<int>(0, (n, w) => n + w.newCells);
     return done + (activeWalk?.newCells ?? 0);
   }
+
+  /// 최근 7일 동안 걸은 거리
+  double get weeklyDistance {
+    final weekAgo = DateTime.now().subtract(const Duration(days: 7));
+    return walks.where((w) => w.startedAt.isAfter(weekAgo)).fold<double>(0, (n, w) => n + w.distanceM) + (activeWalk?.distanceM ?? 0);
+  }
+
+  /// 산책한 날 수
+  int get walkDays => {for (final w in walks) '${w.startedAt.year}-${w.startedAt.month}-${w.startedAt.day}'}.length;
 
   double get totalDistance => walks.fold<double>(0, (n, w) => n + w.distanceM) + (activeWalk?.distanceM ?? 0);
 

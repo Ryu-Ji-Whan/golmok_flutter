@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/content.dart';
+import '../data/geo.dart';
 import '../data/remote.dart';
 import '../data/store.dart';
 import '../theme.dart';
@@ -9,7 +10,7 @@ import '../widgets/ui.dart';
 String _short(String area) => area.split(' ').last;
 
 /// ⑤ 동네 리더보드 — 걸은 곳 기준
-/// · 기본은 "지금 있는 동네": 그 동네에서 이번 주 실제로 밝힌 칸 수로 순위
+/// · 기본은 "지금 있는 동네": 그 동네에서 이번 주 실제로 걸은 거리로 순위
 /// · "내 동네"(프로필에서 정한 주 생활 동네)와 "이번 주 내가 걸은 동네"도 골라 볼 수 있다
 /// · 동네 대장 보상은 내 동네에서만
 class TownTab extends StatefulWidget {
@@ -123,7 +124,7 @@ class _TownTabState extends State<TownTab> {
                 ),
                 const SizedBox(height: 10),
                 const Text(
-                  '이번 주에 그 동네에서 새로 밝힌 칸 수로 순위를 매겨요. 정확한 위치나 경로는 다른 사람에게 보이지 않아요. 당겨서 새로고침할 수 있어요.',
+                  '이번 주에 그 동네에서 걸은 거리로 순위를 매겨요. 다른 사람에게는 닉네임과 거리만 보이고, 위치나 경로는 보이지 않아요. 당겨서 새로고침할 수 있어요.',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 12, color: C.muted, height: 1.5),
                 ),
@@ -164,12 +165,12 @@ class _TownTabState extends State<TownTab> {
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(area, style: const TextStyle(fontSize: 12, color: C.mint)),
-            Text(me == null ? '아직 0칸' : '${i + 1}위 · ${me.cells}칸', style: jua(28, color: C.white)),
+            Text(me == null ? '아직 0m' : '${i + 1}위 · ${formatDistance(me.meters.toDouble())}', style: jua(28, color: C.white)),
             Text(
               _rows == null
                   ? '순위를 불러오는 중이에요'
                   : me == null
-                      ? '이번 주 이 동네에서 밝힌 칸이 없어요. 걸어서 순위에 들어가 보세요!'
+                      ? '이번 주 이 동네를 아직 안 걸었어요. 산책하면 순위에 들어가요!'
                       : rows.length == 1
                           ? '이번 주 이 동네를 걸은 사람은 나뿐이에요'
                           : '이번 주 이 동네를 걸은 ${rows.length}명 중',
@@ -197,7 +198,7 @@ class _TownTabState extends State<TownTab> {
         for (final i in [1, 0, 2])
           if (i < rows.length) Expanded(child: _Podium(row: rows[i], place: i + 1)),
       ]),
-      const SectionTitle('전체 순위', trailing: Text('이번 주 밝힌 칸', style: TextStyle(fontSize: 12, color: C.muted))),
+      const SectionTitle('전체 순위', trailing: Text('이번 주 걸은 거리', style: TextStyle(fontSize: 12, color: C.muted))),
       for (var i = 0; i < rows.length; i++)
         Container(
           margin: const EdgeInsets.only(bottom: 6),
@@ -212,7 +213,7 @@ class _TownTabState extends State<TownTab> {
             Avatar(rows[i].character, size: 36),
             const SizedBox(width: 10),
             Expanded(child: Text(rows[i].isMe ? '${rows[i].nickname} (나)' : rows[i].nickname, style: const TextStyle(fontWeight: FontWeight.w700))),
-            Text('${rows[i].cells}칸', style: const TextStyle(fontWeight: FontWeight.w700, color: C.forest)),
+            Text(formatDistance(rows[i].meters.toDouble()), style: const TextStyle(fontWeight: FontWeight.w700, color: C.forest)),
           ]),
         ),
     ];
@@ -242,7 +243,7 @@ class _TownTabState extends State<TownTab> {
               ),
               Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                 Text('${a.rank}위', style: jua(20, color: a.rank <= 3 ? C.orangeText : C.forest)),
-                Text('${a.people}명 중 · ${a.cells}칸', style: const TextStyle(fontSize: 11, color: C.muted)),
+                Text('${a.people}명 중 · ${formatDistance(a.meters.toDouble())}', style: const TextStyle(fontSize: 11, color: C.muted)),
               ]),
             ]),
           ),

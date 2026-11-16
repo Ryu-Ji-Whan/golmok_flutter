@@ -116,3 +116,4 @@ grant select on public_feed, weekly_leaderboard to authenticated;
 -- 이후 수정: supabase/migrations/ 폴더의 파일을 번호 순서대로 SQL Editor에서 실행한다.
 --   002_username_login.sql : 아이디로 로그인 (accounts 표, 아이디 중복 확인)
 --   003_area_leaderboard.sql : 걸은 동네 기준 리더보드 (explored.area, 리더보드 함수, 나 숨기기)
+--   004_area_distance.sql    : 리더보드를 걸은 거리 기준으로 (area_steps, add_area_meters)
