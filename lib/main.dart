@@ -6,9 +6,11 @@ import 'screens/home.dart';
 import 'screens/login.dart';
 import 'screens/onboarding.dart';
 import 'theme.dart';
+import 'widgets/photo.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Photos.init(); // 기록 사진이 들어 있는 앱 폴더 위치
   await Remote.init(); // 서버(Supabase) 연결. 키가 없거나 오프라인이면 폰 DB만 쓴다.
   final store = await AppStore.load(); // 폰 안 데이터베이스에서 기록을 불러온다
   runApp(GolmokApp(store: store));

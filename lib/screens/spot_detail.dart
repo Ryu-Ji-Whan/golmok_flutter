@@ -4,6 +4,7 @@ import '../data/geo.dart';
 import '../data/models.dart';
 import '../data/store.dart';
 import '../theme.dart';
+import '../widgets/photo.dart';
 import '../widgets/ui.dart';
 import 'record.dart';
 
@@ -35,6 +36,7 @@ class SpotDetailScreen extends StatelessWidget {
               final nav = Navigator.of(context);
               if (await confirm(context, '이 기록을 지울까요?', '지운 기록은 되돌릴 수 없어요.', ok: '지우기', danger: true)) {
                 await s.deleteSpot(sp.id);
+                await Photos.delete(sp.photo);
                 nav.pop();
               }
             },
@@ -48,7 +50,7 @@ class SpotDetailScreen extends StatelessWidget {
             height: 240,
             color: C.peach,
             child: Stack(fit: StackFit.expand, children: [
-              if (sp.photo != null) Image.asset(sp.photo!, fit: BoxFit.cover),
+              if (sp.photo != null) SpotPhoto(sp.photo!),
               Align(
                 alignment: sp.photo != null ? Alignment.bottomRight : Alignment.center,
                 child: Padding(padding: const EdgeInsets.all(12), child: StickerImg(sp.stickerId, size: sp.photo != null ? 88 : 150)),

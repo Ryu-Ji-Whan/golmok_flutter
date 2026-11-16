@@ -124,7 +124,8 @@ class Spot {
 
   LatLng get pos => LatLng(lat, lng);
 
-  Spot copyWith({String? stickerId, String? title, String? memo, SpotVisibility? visibility, bool? shared, String? photo}) => Spot(
+  /// [clearPhoto]가 true면 사진을 뺀다 (photo: null 만으로는 "그대로 두기"와 구분이 안 되므로)
+  Spot copyWith({String? stickerId, String? title, String? memo, SpotVisibility? visibility, bool? shared, String? photo, bool clearPhoto = false}) => Spot(
         id: id,
         lat: lat,
         lng: lng,
@@ -133,7 +134,7 @@ class Spot {
         memo: memo ?? this.memo,
         createdAt: createdAt,
         walkId: walkId,
-        photo: photo ?? this.photo,
+        photo: clearPhoto ? null : (photo ?? this.photo),
         visibility: visibility ?? this.visibility,
         shared: shared ?? this.shared,
       );

@@ -93,7 +93,8 @@ class Remote {
   static Future<String?> signInWithProvider(OAuthProvider provider) async {
     if (!_ready) return '서버 연결 설정이 아직 없어요';
     try {
-      final opened = await _c.auth.signInWithOAuth(provider, redirectTo: redirectUrl);
+      // 카카오톡 앱·브라우저에 이미 로그인돼 있으면 바로 넘어가도록 바깥 브라우저로 연다
+      final opened = await _c.auth.signInWithOAuth(provider, redirectTo: redirectUrl, authScreenLaunchMode: LaunchMode.externalApplication);
       return opened ? null : '로그인 화면을 열지 못했어요';
     } on AuthException catch (e) {
       return _authMessage(e.message);

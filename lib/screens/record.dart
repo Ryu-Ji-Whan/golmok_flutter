@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart' show ImageSource;
 
 import '../data/models.dart';
 import '../data/stickers.dart';
 import '../data/store.dart';
 import '../theme.dart';
+import '../widgets/photo.dart';
 import '../widgets/ui.dart';
-
-const benchPhoto = 'assets/images/bench.jpg';
 
 /// ②-2 스티커 붙여 기록 (새 기록 / 고치기)
 class RecordScreen extends StatefulWidget {
@@ -25,11 +25,19 @@ class _RecordScreenState extends State<RecordScreen> {
   late String? _photo = widget.edit?.photo;
   StickerCategory? _cat;
   bool _saving = false;
+  bool _saved = false;
+  // 이 화면에서 새로 찍거나 고른 사진들 (저장하지 않고 나가면 지운다)
+  final List<String> _picked = [];
 
   @override
   void dispose() {
     _title.dispose();
     _memo.dispose();
+    if (!_saved) {
+      for (final f in _picked) {
+        Photos.delete(f);
+      }
+    }
     super.dispose();
   }
 
@@ -42,12 +50,32 @@ class _RecordScreenState extends State<RecordScreen> {
     if (e == null) {
       await s.addSpot(stickerId: _sticker, title: title, memo: _memo.text.trim(), visibility: _vis, photo: _photo);
     } else {
-      await s.updateSpot(e.copyWith(stickerId: _sticker, title: title, memo: _memo.text.trim(), visibility: _vis, photo: _photo));
+      await s.updateSpot(e.copyWith(
+          stickerId: _sticker, title: title, memo: _memo.text.trim(), visibility: _vis, photo: _photo, clearPhoto: _photo == null));
+      if (e.photo != _photo) await Photos.delete(e.photo); // 바뀐 예전 사진 파일 정리
+    }
+    _saved = true;
+    // 쓰지 않게 된 새 사진 정리 (여러 번 바꾼 경우)
+    for (final f in _picked) {
+      if (f != _photo) await Photos.delete(f);
     }
     nav.pop(true);
   }
 
-  // ②-3a 사진 넣기 (데모: 앱에 든 예시 사진)
+  Future<void> _take(ImageSource source) async {
+    try {
+      final path = await Photos.pick(source);
+      if (path == null || !mounted) return;
+      setState(() {
+        _picked.add(path);
+        _photo = path;
+      });
+    } on PhotoError catch (e) {
+      if (mounted) toast(context, e.message);
+    }
+  }
+
+  // ②-3a 사진 넣기: 사진 찍기 / 앨범에서 고르기
   void _pickPhoto() => showModalBottomSheet<void>(
         context: context,
         backgroundColor: C.white,
@@ -61,19 +89,17 @@ class _RecordScreenState extends State<RecordScreen> {
               ListTile(
                 leading: const Icon(Icons.photo_camera_outlined, color: C.forest),
                 title: const Text('사진 찍기'),
-                subtitle: const Text('데모에서는 예시 사진이 들어가요'),
                 onTap: () {
-                  setState(() => _photo = benchPhoto);
                   Navigator.pop(c);
+                  _take(ImageSource.camera);
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library_outlined, color: C.forest),
                 title: const Text('앨범에서 고르기'),
-                subtitle: const Text('데모에서는 예시 사진이 들어가요'),
                 onTap: () {
-                  setState(() => _photo = benchPhoto);
                   Navigator.pop(c);
+                  _take(ImageSource.gallery);
                 },
               ),
               if (_photo != null)
@@ -162,7 +188,7 @@ class _RecordScreenState extends State<RecordScreen> {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(R.card),
               child: Stack(children: [
-                Image.asset(_photo!, height: 200, width: double.infinity, fit: BoxFit.cover),
+                SpotPhoto(_photo!, height: 200, width: double.infinity),
                 Positioned(right: 10, bottom: 10, child: StickerImg(_sticker, size: 64)),
               ]),
             ),

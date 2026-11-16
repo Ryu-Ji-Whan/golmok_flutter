@@ -104,6 +104,8 @@ jobs:
           rm -f test/widget_test.dart
           P=ios/Runner/Info.plist
           /usr/libexec/PlistBuddy -c "Add :NSLocationWhenInUseUsageDescription string $LOCATION_TEXT" $P
+          /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string 마음에 드는 골목을 사진으로 남기려고 카메라를 써요" $P
+          /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryUsageDescription string 앨범의 사진을 골목 기록에 넣으려고 사진에 접근해요" $P
           /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName 골목대장" $P || /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string 골목대장" $P
           # 카카오·구글 로그인 뒤 앱으로 돌아오는 주소 golmok://login-callback
           /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes array" $P
