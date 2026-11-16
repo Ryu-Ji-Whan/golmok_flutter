@@ -48,7 +48,22 @@ jobs:
           # 인터넷(지도 타일)·위치 권한, 앱 이름
           sed -i 's#<application#<uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>\n    <application#' $M
           sed -i 's#android:label="[^"]*"#android:label="골목대장"#' $M
-          grep -n "permission\|android:label" $M
+          # 카카오·구글 로그인 뒤 앱으로 돌아오는 주소 golmok://login-callback
+          sed -i 's#</activity>#    <intent-filter>\n                <action android:name="android.intent.action.VIEW"/>\n                <category android:name="android.intent.category.DEFAULT"/>\n                <category android:name="android.intent.category.BROWSABLE"/>\n                <data android:scheme="golmok" android:host="login-callback"/>\n            </intent-filter>\n        </activity>#' $M
+          grep -n "permission\|android:label\|golmok" $M
+
+      - name: Fixed signing key (앱 업데이트를 덮어 설치할 수 있게)
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_DEBUG_KEYSTORE_B64 }}
+        run: |
+          # Flutter 기본 설정은 release도 debug 키로 서명한다. 매번 새 키가 생기지 않도록 고정 키를 넣는다.
+          if [ -n "$KEYSTORE_B64" ]; then
+            mkdir -p ~/.android
+            echo "$KEYSTORE_B64" | base64 -d > ~/.android/debug.keystore
+            echo "고정 서명 키 사용"
+          else
+            echo "::warning title=Signing::ANDROID_DEBUG_KEYSTORE_B64 비밀값이 없어 이번 빌드는 임시 키로 서명돼요."
+          fi
 
       - name: Install packages & app icon
         run: |
@@ -90,6 +105,12 @@ jobs:
           P=ios/Runner/Info.plist
           /usr/libexec/PlistBuddy -c "Add :NSLocationWhenInUseUsageDescription string $LOCATION_TEXT" $P
           /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName 골목대장" $P || /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string 골목대장" $P
+          # 카카오·구글 로그인 뒤 앱으로 돌아오는 주소 golmok://login-callback
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes array" $P
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0 dict" $P
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLName string kr.golmok.login" $P
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes array" $P
+          /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes:0:CFBundleURLSchemes:0 string golmok" $P
 
       - name: Install packages & app icon
         run: |

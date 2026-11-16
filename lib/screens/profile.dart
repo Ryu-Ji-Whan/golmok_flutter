@@ -78,7 +78,7 @@ class ProfileScreen extends StatelessWidget {
                 Text(p?.nickname ?? '손님', style: jua(24)),
                 Text(p?.areaName ?? '동네 미설정', style: const TextStyle(fontSize: 13, color: C.muted)),
                 Text('가입 ${p == null ? '-' : formatDate(p.joinedAt)}', style: const TextStyle(fontSize: 12, color: C.muted)),
-                Text(Remote.signedIn ? '${Remote.email} · 서버에 저장 중' : '이 폰에만 저장 중',
+                Text(Remote.signedIn ? '${Remote.email ?? ({'kakao': '카카오 계정', 'google': 'Google 계정'}[p?.provider] ?? '내 계정')} · 서버에 저장 중' : '이 폰에만 저장 중',
                     style: TextStyle(fontSize: 12, color: Remote.signedIn ? C.leafText : C.muted)),
               ]),
             ),

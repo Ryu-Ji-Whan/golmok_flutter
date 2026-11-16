@@ -60,7 +60,8 @@ class Remote {
   static Future<String?> signUp(String email, String password) async {
     if (!_ready) return '서버 연결 설정이 아직 없어요';
     try {
-      final r = await _c.auth.signUp(email: email, password: password);
+      // 인증 메일 링크를 누르면 GitHub Pages의 "인증 완료" 화면이 열린다 (docs/auth/index.html)
+      final r = await _c.auth.signUp(email: email, password: password, emailRedirectTo: emailConfirmedUrl);
       if (r.session == null) return '가입 확인 메일을 보냈어요. 메일의 링크를 누른 뒤 로그인해 주세요';
       return null;
     } on AuthException catch (e) {
@@ -80,6 +81,38 @@ class Remote {
     } catch (_) {
       return '인터넷 연결을 확인해 주세요';
     }
+  }
+
+  /// 카카오·구글 로그인 뒤 앱으로 돌아오는 주소. Supabase 대시보드 Redirect URLs에도 같은 값을 등록한다.
+  static const redirectUrl = 'golmok://login-callback';
+
+  /// 이메일 인증 링크를 누르면 열리는 페이지. Supabase Redirect URLs에도 등록한다.
+  static const emailConfirmedUrl = 'https://ryu-ji-whan.github.io/golmok_flutter/auth/';
+
+  /// 카카오·구글 로그인 화면(브라우저)을 연다. 로그인이 끝나면 [authChanges]로 signedIn이 온다.
+  static Future<String?> signInWithProvider(OAuthProvider provider) async {
+    if (!_ready) return '서버 연결 설정이 아직 없어요';
+    try {
+      final opened = await _c.auth.signInWithOAuth(provider, redirectTo: redirectUrl);
+      return opened ? null : '로그인 화면을 열지 못했어요';
+    } on AuthException catch (e) {
+      return _authMessage(e.message);
+    } catch (_) {
+      return '인터넷 연결을 확인해 주세요';
+    }
+  }
+
+  static Stream<AuthState>? get authChanges => _ready ? _c.auth.onAuthStateChange : null;
+
+  /// 소셜 계정에 들어 있는 이름 (닉네임 칸을 미리 채울 때)
+  static String? get displayName {
+    final m = user?.userMetadata;
+    if (m == null) return null;
+    for (final k in ['nickname', 'name', 'full_name', 'preferred_username']) {
+      final v = m[k];
+      if (v is String && v.trim().isNotEmpty) return v.trim();
+    }
+    return null;
   }
 
   static Future<void> signOut() async {
