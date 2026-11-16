@@ -5,6 +5,7 @@ import '../data/models.dart';
 import '../data/remote.dart';
 import '../data/store.dart';
 import '../theme.dart';
+import '../widgets/area_picker.dart';
 import '../widgets/ui.dart';
 
 /// 회원가입 중 입력값 (가입 완료 때 한 번에 저장)
@@ -14,7 +15,7 @@ class SignupDraft {
   bool terms = false, privacy = false, location = false, marketing = false;
   String nickname = '';
   String characterId = 'a02';
-  String areaName = areas.first;
+  String areaName = ''; // 회원가입 ①-G에서 고른다
 
   bool get requiredOk => terms && privacy && location;
 }
@@ -380,40 +381,16 @@ class AreaScreen extends StatefulWidget {
 }
 
 class _AreaScreenState extends State<AreaScreen> {
-  String _q = '';
-
   @override
   Widget build(BuildContext context) {
     final d = widget.draft;
-    final list = areas.where((a) => a.contains(_q.trim())).toList();
     return _StepScaffold(
       step: 4,
       title: '내 동네를 골라 주세요',
-      subtitle: '동네 리더보드와 골목 피드가 이 동네 기준으로 보여요',
-      button: PrimaryButton('다음', onPressed: () => _push(context, DoneScreen(draft: d))),
+      subtitle: '동네 리더보드와 골목 피드가 이 동네 기준으로 보여요. 나중에 프로필에서 바꿀 수 있어요',
+      button: PrimaryButton('다음', onPressed: d.areaName.isEmpty ? null : () => _push(context, DoneScreen(draft: d))),
       children: [
-        TextField(
-          onChanged: (v) => setState(() => _q = v),
-          decoration: const InputDecoration(hintText: '동 이름으로 찾기 (예: 행궁동)', prefixIcon: Icon(Icons.search)),
-        ),
-        const SizedBox(height: 12),
-        for (final a in list)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: CardBox(
-              shadow: false,
-              color: a == d.areaName ? C.mint : C.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              onTap: () => setState(() => d.areaName = a),
-              child: Row(children: [
-                Icon(Icons.place_outlined, color: a == d.areaName ? C.forest : C.muted),
-                const SizedBox(width: 10),
-                Expanded(child: Text(a, style: const TextStyle(fontSize: 14))),
-                if (a == d.areaName) const Icon(Icons.check_circle, color: C.forest),
-              ]),
-            ),
-          ),
-        if (list.isEmpty) const Text('찾는 동네가 없어요. 데모에서는 목록 안에서 골라 주세요.', style: TextStyle(fontSize: 13, color: C.muted)),
+        AreaPicker(selected: d.areaName, onSelected: (v) => setState(() => d.areaName = v)),
       ],
     );
   }

@@ -6,6 +6,7 @@ import '../data/remote.dart';
 import '../data/stickers.dart';
 import '../data/store.dart';
 import '../theme.dart';
+import '../widgets/area_picker.dart';
 import '../widgets/ui.dart';
 
 /// 부록 · 프로필·설정 (로그아웃·초기화)
@@ -75,7 +76,22 @@ class ProfileScreen extends StatelessWidget {
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(p?.nickname ?? '손님', style: jua(24)),
-                Text(p?.areaName ?? '동네 미설정', style: const TextStyle(fontSize: 13, color: C.muted)),
+                InkWell(
+                  onTap: guest || p == null
+                      ? null
+                      : () async {
+                          final area = await Navigator.of(context).push<String>(
+                              MaterialPageRoute(builder: (_) => AreaPickerScreen(current: p.areaName)));
+                          if (area != null) await s.updateProfile(areaName: area);
+                        },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      Flexible(child: Text(p?.areaName ?? '동네 미설정', style: const TextStyle(fontSize: 13, color: C.muted))),
+                      if (!guest) const Text('  바꾸기 ›', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: C.leaf)),
+                    ]),
+                  ),
+                ),
                 Text('가입 ${p == null ? '-' : formatDate(p.joinedAt)}', style: const TextStyle(fontSize: 12, color: C.muted)),
                 Text(Remote.signedIn ? '${Remote.email ?? ({'kakao': '카카오 계정', 'google': 'Google 계정'}[p?.provider] ?? '내 계정')} · 서버에 저장 중' : '이 폰에만 저장 중',
                     style: TextStyle(fontSize: 12, color: Remote.signedIn ? C.leafText : C.muted)),

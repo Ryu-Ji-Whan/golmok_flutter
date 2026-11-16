@@ -112,3 +112,6 @@ create or replace view weekly_leaderboard as
 -- 두 화면은 로그인한 사람만 볼 수 있다.
 revoke all on public_feed, weekly_leaderboard from anon;
 grant select on public_feed, weekly_leaderboard to authenticated;
+
+-- 이후 수정: supabase/migrations/ 폴더의 파일을 번호 순서대로 SQL Editor에서 실행한다.
+--   002_username_login.sql : 아이디로 로그인 (accounts 표, 아이디 중복 확인)

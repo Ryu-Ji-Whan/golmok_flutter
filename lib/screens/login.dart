@@ -8,7 +8,7 @@ import '../data/remote.dart';
 import '../data/store.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
-import 'email_auth.dart';
+import 'account_signup.dart';
 import 'signup.dart';
 
 /// ①-2 로그인
@@ -23,9 +23,13 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
-  String? _loading; // 로그인 중인 방법 (kakao / google)
+  String? _loading; // 로그인 중인 방법 (kakao / google / id)
   StreamSubscription<AuthState>? _auth;
   bool _handling = false;
+  final _id = TextEditingController();
+  final _pw = TextEditingController();
+  bool _hide = true;
+  String? _error;
 
   static const _providers = [
     ('kakao', '카카오로 계속하기', C.kakao, C.kakaoText, false, OAuthProvider.kakao),
@@ -39,7 +43,7 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     // 브라우저에서 로그인하고 앱으로 돌아오면 signedIn이 온다
     _auth = Remote.authChanges?.listen((s) {
-      if (s.event == AuthChangeEvent.signedIn && _loading != null) _afterSocial(_loading!);
+      if (s.event == AuthChangeEvent.signedIn && _loading != null && _loading != 'id') _afterSocial(_loading!);
     });
   }
 
@@ -47,6 +51,8 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _auth?.cancel();
+    _id.dispose();
+    _pw.dispose();
     super.dispose();
   }
 
@@ -116,64 +122,138 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
     if (mounted) Navigator.of(context).popUntil((r) => r.isFirst);
   }
 
+  /// 아이디(또는 이메일) + 비밀번호 로그인
+  Future<void> _idLogin() async {
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _loading = 'id';
+      _error = null;
+    });
+    final err = await Remote.signIn(_id.text, _pw.text);
+    if (!mounted) return;
+    if (err != null) {
+      setState(() {
+        _loading = null;
+        _error = err;
+      });
+      return;
+    }
+    await _afterSocial('email');
+  }
+
+  Future<void> _openSignup() async {
+    final id = await Navigator.of(context).push<String>(MaterialPageRoute(builder: (_) => const AccountSignupScreen()));
+    if (id != null && mounted) {
+      setState(() {
+        _id.text = id;
+        _pw.clear();
+        _error = null;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final busy = _loading != null;
+    final canLogin = Remote.available && _id.text.trim().isNotEmpty && _pw.text.length >= 6 && !busy;
     return Scaffold(
       appBar: AppBar(),
       body: SafeArea(
         top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-          child: Column(children: [
-            const Text('① 로그인', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: C.leafText)),
-            const SizedBox(height: 4),
-            Text('골목대장', style: jua(44)),
-            const SizedBox(height: 8),
-            const Text('내가 걸은 골목이 지도로 남아요\n3초 만에 시작해요',
-                textAlign: TextAlign.center, style: TextStyle(fontSize: 15, color: C.muted, height: 1.5)),
-            const SizedBox(height: 24),
-            const StickerImg('a04', size: 170),
-            const Spacer(),
-            for (final (id, label, bg, fg, border, provider) in _providers) ...[
-              SizedBox(
-                height: 54,
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: busy ? null : () => _go(id, provider),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: bg,
-                    foregroundColor: fg,
-                    disabledBackgroundColor: bg,
-                    disabledForegroundColor: fg,
-                    shape: StadiumBorder(side: border ? const BorderSide(color: C.line) : BorderSide.none),
-                    textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+        child: ListView(padding: const EdgeInsets.fromLTRB(24, 0, 24, 24), children: [
+          Center(child: Text('골목대장', style: jua(44))),
+          const SizedBox(height: 4),
+          const Text('내가 걸은 골목이 지도로 남아요', textAlign: TextAlign.center, style: TextStyle(fontSize: 15, color: C.muted)),
+          const SizedBox(height: 12),
+          const Center(child: StickerImg('a04', size: 120)),
+          const SizedBox(height: 20),
+          AutofillGroup(
+            child: Column(children: [
+              TextField(
+                controller: _id,
+                autocorrect: false,
+                enableSuggestions: false,
+                textInputAction: TextInputAction.next,
+                autofillHints: const [AutofillHints.username],
+                onChanged: (_) => setState(() {}),
+                decoration: const InputDecoration(labelText: '아이디', prefixIcon: Icon(Icons.person_outline)),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _pw,
+                obscureText: _hide,
+                textInputAction: TextInputAction.done,
+                autofillHints: const [AutofillHints.password],
+                onChanged: (_) => setState(() {}),
+                onSubmitted: (_) => canLogin ? _idLogin() : null,
+                decoration: InputDecoration(
+                  labelText: '비밀번호',
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    tooltip: _hide ? '비밀번호 보기' : '비밀번호 숨기기',
+                    icon: Icon(_hide ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+                    onPressed: () => setState(() => _hide = !_hide),
                   ),
-                  child: _loading == id
-                      ? Row(mainAxisSize: MainAxisSize.min, children: [
-                          SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.4, color: fg)),
-                          const SizedBox(width: 10),
-                          const Text('로그인 창에서 계속해 주세요'),
-                        ])
-                      : Text(label),
                 ),
               ),
-              const SizedBox(height: 10),
-            ],
-            OutlineButton('이메일로 계속하기', icon: Icons.mail_outline, height: 54, onPressed: busy
-                ? null
-                : () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const EmailAuthScreen()))),
+            ]),
+          ),
+          if (_error != null) ...[
+            const SizedBox(height: 10),
+            Text(_error!, style: const TextStyle(color: C.danger, fontSize: 13)),
+          ],
+          const SizedBox(height: 16),
+          PrimaryButton(_loading == 'id' ? '로그인 중…' : '로그인', height: 54, onPressed: canLogin ? _idLogin : null),
+          const SizedBox(height: 4),
+          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            const Text('처음이에요?', style: TextStyle(fontSize: 13, color: C.muted)),
             TextButton(
-              onPressed: busy ? null : _browse,
-              child: const Text('로그인 없이 둘러보기', style: TextStyle(fontSize: 13, color: C.muted)),
-            ),
-            Text(
-              Remote.available ? '로그인하면 기록이 내 계정에 저장돼서 폰을 바꿔도 이어져요' : '데모 버전: 이 폰에만 저장돼요',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 11, color: C.muted),
+              onPressed: busy ? null : _openSignup,
+              child: const Text('회원가입', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: C.forest)),
             ),
           ]),
-        ),
+          const SizedBox(height: 8),
+          const Row(children: [
+            Expanded(child: Divider(color: C.line)),
+            Padding(padding: EdgeInsets.symmetric(horizontal: 12), child: Text('또는', style: TextStyle(fontSize: 12, color: C.muted))),
+            Expanded(child: Divider(color: C.line)),
+          ]),
+          const SizedBox(height: 14),
+          for (final (id, label, bg, fg, border, provider) in _providers) ...[
+            SizedBox(
+              height: 54,
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: busy ? null : () => _go(id, provider),
+                style: FilledButton.styleFrom(
+                  backgroundColor: bg,
+                  foregroundColor: fg,
+                  disabledBackgroundColor: bg,
+                  disabledForegroundColor: fg,
+                  shape: StadiumBorder(side: border ? const BorderSide(color: C.line) : BorderSide.none),
+                  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                ),
+                child: _loading == id
+                    ? Row(mainAxisSize: MainAxisSize.min, children: [
+                        SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.4, color: fg)),
+                        const SizedBox(width: 10),
+                        const Text('로그인 창에서 계속해 주세요'),
+                      ])
+                    : Text(label),
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+          TextButton(
+            onPressed: busy ? null : _browse,
+            child: const Text('로그인 없이 둘러보기', style: TextStyle(fontSize: 13, color: C.muted)),
+          ),
+          Text(
+            Remote.available ? '로그인하면 기록이 내 계정에 저장돼서 폰을 바꿔도 이어져요' : '데모 버전: 이 폰에만 저장돼요',
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 11, color: C.muted),
+          ),
+        ]),
       ),
     );
   }

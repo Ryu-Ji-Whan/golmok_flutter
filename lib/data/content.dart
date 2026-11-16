@@ -41,10 +41,5 @@ const packs = [
 final starterStickers = packs[0].stickers;
 final welcomeStickers = packs[1].stickers;
 
-const areas = [
-  '수원시 팔달구 행궁동', '수원시 팔달구 매향동', '수원시 팔달구 신풍동', '수원시 팔달구 남창동', '수원시 장안구 장안동',
-  '서울특별시 종로구 익선동', '서울특별시 종로구 서촌', '서울특별시 마포구 연남동', '서울특별시 성동구 성수동', '서울특별시 용산구 해방촌',
-];
-
 /// 쓸 수 없는 닉네임 (운영용 이름)
 const takenNicknames = ['골목대장', '관리자', '운영자', 'admin'];

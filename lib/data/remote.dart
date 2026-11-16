@@ -17,6 +17,9 @@ class RemoteData {
   final List<Coupon> coupons;
 }
 
+/// 회원가입 결과: 바로 로그인됨 / 인증 메일을 확인해야 함
+enum SignUpResult { signedIn, checkEmail }
+
 /// 서버 피드 글 한 개
 class RemoteFeedPost {
   RemoteFeedPost(this.id, this.nickname, this.character, this.area, this.sticker, this.title, this.memo, this.createdAt);
@@ -55,26 +58,80 @@ class Remote {
   static bool get signedIn => user != null;
   static String? get email => user?.email;
 
-  // ── 로그인 ──
-  /// 성공하면 null, 실패하면 보여 줄 문장
-  static Future<String?> signUp(String email, String password) async {
-    if (!_ready) return '서버 연결 설정이 아직 없어요';
+  // ── 아이디 로그인 · 회원가입 ──
+  /// 아이디 규칙: 영어 소문자·숫자·밑줄 4~20자 (서버 supabase/migrations/002_username_login.sql 과 같음)
+  static final usernamePattern = RegExp(r'^[a-z0-9_]{4,20}$');
+
+  /// 아이디 · 비밀번호 · 이메일로 가입한다. 이메일로 인증 메일이 간다.
+  /// 성공: (signedIn: 바로 로그인됨 / checkEmail: 인증 메일 확인 필요, null), 실패: (null, 보여 줄 문장)
+  static Future<(SignUpResult?, String?)> signUp({required String username, required String email, required String password}) async {
+    if (!_ready) return (null, '서버 연결 설정이 아직 없어요');
     try {
       // 인증 메일 링크를 누르면 GitHub Pages의 "인증 완료" 화면이 열린다 (docs/auth/index.html)
-      final r = await _c.auth.signUp(email: email, password: password, emailRedirectTo: emailConfirmedUrl);
-      if (r.session == null) return '가입 확인 메일을 보냈어요. 메일의 링크를 누른 뒤 로그인해 주세요';
-      return null;
+      final r = await _c.auth.signUp(
+        email: email,
+        password: password,
+        data: {'username': username.toLowerCase()},
+        emailRedirectTo: emailConfirmedUrl,
+      );
+      // 이미 가입한 이메일이면 Supabase는 오류 대신 빈 계정을 돌려준다
+      if (r.user != null && (r.user!.identities?.isEmpty ?? false)) {
+        return (null, '이미 가입한 이메일이에요. 아이디로 로그인해 주세요');
+      }
+      return (r.session == null ? SignUpResult.checkEmail : SignUpResult.signedIn, null);
+    } on AuthException catch (e) {
+      // 아이디가 겹치면 서버 트리거가 막아서 "Database error saving new user"가 온다
+      if (e.message.toLowerCase().contains('database error')) return (null, '이미 쓰고 있는 아이디예요');
+      return (null, _authMessage(e.message));
+    } catch (_) {
+      return (null, '인터넷 연결을 확인해 주세요');
+    }
+  }
+
+  /// 아이디(또는 이메일) + 비밀번호로 로그인. 성공하면 null, 실패하면 보여 줄 문장
+  static Future<String?> signIn(String id, String password) async {
+    if (!_ready) return '서버 연결 설정이 아직 없어요';
+    final login = id.trim();
+    try {
+      if (login.contains('@')) {
+        await _c.auth.signInWithPassword(email: login, password: password);
+        return null;
+      }
+      // 아이디 로그인은 서버 함수가 대신 해 준다 (이메일을 앱에 내보내지 않으려고)
+      final res = await _c.functions.invoke('login-with-username', body: {'username': login.toLowerCase(), 'password': password});
+      final data = res.data;
+      if (data is Map && data['ok'] == true && data['refresh_token'] is String) {
+        await _c.auth.setSession(data['refresh_token'] as String);
+        return null;
+      }
+      final err = data is Map ? data['error'] : null;
+      if (err == 'email_not_confirmed') return '이메일 인증을 먼저 마쳐 주세요. 가입할 때 받은 메일의 링크를 눌러 주세요';
+      if (err == 'too_many') return '로그인 시도가 너무 많아요. 잠시 뒤에 다시 해 주세요';
+      return '아이디나 비밀번호가 맞지 않아요';
     } on AuthException catch (e) {
       return _authMessage(e.message);
+    } on FunctionException {
+      return '아이디 로그인 서버가 아직 준비되지 않았어요';
     } catch (_) {
       return '인터넷 연결을 확인해 주세요';
     }
   }
 
-  static Future<String?> signIn(String email, String password) async {
+  /// 회원가입 화면에서 아이디 중복 확인. 확인할 수 없으면 false.
+  static Future<bool> usernameTaken(String name) async {
+    if (!_ready) return false;
+    try {
+      return await _c.rpc('username_taken', params: {'name': name.toLowerCase()}) == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// 인증 메일 다시 보내기. 성공하면 null
+  static Future<String?> resendConfirmation(String email) async {
     if (!_ready) return '서버 연결 설정이 아직 없어요';
     try {
-      await _c.auth.signInWithPassword(email: email, password: password);
+      await _c.auth.resend(type: OtpType.signup, email: email, emailRedirectTo: emailConfirmedUrl);
       return null;
     } on AuthException catch (e) {
       return _authMessage(e.message);
@@ -126,8 +183,10 @@ class Remote {
 
   static String _authMessage(String m) {
     final s = m.toLowerCase();
-    if (s.contains('invalid login')) return '이메일이나 비밀번호가 맞지 않아요';
-    if (s.contains('already registered') || s.contains('already been registered')) return '이미 가입한 이메일이에요. 로그인해 주세요';
+    if (s.contains('invalid login')) return '아이디나 비밀번호가 맞지 않아요';
+    if (s.contains('not confirmed')) return '이메일 인증을 먼저 마쳐 주세요. 가입할 때 받은 메일의 링크를 눌러 주세요';
+    if (s.contains('rate limit') || s.contains('security purposes')) return '잠시 뒤에 다시 해 주세요 (메일·로그인 횟수 제한)';
+    if (s.contains('already registered') || s.contains('already been registered')) return '이미 가입한 이메일이에요. 아이디로 로그인해 주세요';
     if (s.contains('password')) return '비밀번호는 6자 이상으로 해 주세요';
     if (s.contains('email')) return '이메일 주소를 확인해 주세요';
     return m;
