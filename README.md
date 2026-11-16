@@ -32,7 +32,7 @@
   <tr>
     <td align="center" width="25%"><img src="assets/map/stickers/a00.webp" width="88" alt=""><br><b>안개 걷기</b><br><sub>걸은 골목 주변 40m의<br>안개가 걷혀요</sub></td>
     <td align="center" width="25%"><img src="assets/map/stickers/a18.webp" width="88" alt=""><br><b>스티커 기록</b><br><sub>고양이 벤치, 골목 책방…<br>지금 자리에 붙여요</sub></td>
-    <td align="center" width="25%"><img src="assets/map/stickers/c13.webp" width="88" alt=""><br><b>스탬프 투어</b><br><sub>동네 캠페인 스팟을 돌고<br>한정 스티커를 받아요</sub></td>
+    <td align="center" width="25%"><img src="assets/map/stickers/c13.webp" width="88" alt=""><br><b>골목 피드</b><br><sub>찍은 사진과 스티커 기록을<br>이웃과 나눠요</sub></td>
     <td align="center" width="25%"><img src="assets/map/stickers/a04.webp" width="88" alt=""><br><b>동네 대장</b><br><sub>이번 주 밝힌 칸으로<br>이웃과 순위를 겨뤄요</sub></td>
   </tr>
 </table>
@@ -43,7 +43,7 @@
 
 | 🚶 산책 | 🗺️ 내 지도 | 💬 피드 | 🏆 동네 | 🛍️ 상점 |
 |---|---|---|---|---|
-| 지도 · 산책 시작/끝<br>여기 기록하기<br>산책 요약 | 밝힌 골목 · 지난 경로<br>기록 목록 → 저장된 기록<br>→ 피드에 공유 | 이웃이 공유한 기록<br>좋아요 | 이번 주 리더보드<br>대장 보상 | 스티커 팩<br>스탬프 투어<br>제휴 가게 · 쿠폰 |
+| 지도 · 산책 시작/끝<br>여기 기록하기<br>산책 요약 | 밝힌 골목 · 지난 경로<br>기록 목록 → 저장된 기록<br>→ 피드에 공유 | 이웃이 공유한 기록<br>좋아요 | 이번 주 리더보드<br>대장 보상 | 스티커 팩 |
 
 그 밖에 **프로필** (닉네임·캐릭터 바꾸기, 스티커 보관함, 로그아웃)
 
@@ -55,7 +55,7 @@
 | 스티커 붙여 기록 · 사진 넣기 | [`record.dart`](lib/screens/record.dart) |
 | 내 지도 · 저장된 기록 · 공유 | [`mymap.dart`](lib/screens/mymap.dart) · [`spot_detail.dart`](lib/screens/spot_detail.dart) |
 | 골목 피드 · 동네 리더보드 | [`feed.dart`](lib/screens/feed.dart) · [`town.dart`](lib/screens/town.dart) |
-| 스티커 상점 · 스탬프 투어 · 제휴 가게 | [`shop.dart`](lib/screens/shop.dart) · [`campaign.dart`](lib/screens/campaign.dart) · [`stores.dart`](lib/screens/stores.dart) |
+| 스티커 상점 | [`shop.dart`](lib/screens/shop.dart) |
 | 프로필 · 설정 | [`profile.dart`](lib/screens/profile.dart) |
 
 ## 🎨 디자인 시스템
@@ -69,7 +69,7 @@
 | ![](https://img.shields.io/badge/%20%20%20%20%20-E4F2E8?style=for-the-badge) | 민트 | `#E4F2E8` | 칩, 배지 바탕 |
 | ![](https://img.shields.io/badge/%20%20%20%20%20-FFF9ED?style=for-the-badge) | 크림 | `#FFF9ED` | 화면 바탕 |
 | ![](https://img.shields.io/badge/%20%20%20%20%20-F39A45?style=for-the-badge) | 오렌지 | `#F39A45` | 강조 면, 산책 경로 |
-| ![](https://img.shields.io/badge/%20%20%20%20%20-FDE7D3?style=for-the-badge) | 피치 | `#FDE7D3` | 캐릭터 원, 쿠폰 |
+| ![](https://img.shields.io/badge/%20%20%20%20%20-FDE7D3?style=for-the-badge) | 피치 | `#FDE7D3` | 캐릭터 원 |
 | ![](https://img.shields.io/badge/%20%20%20%20%20-EE7C8B?style=for-the-badge) | 핑크 | `#EE7C8B` | 좋아요 |
 | ![](https://img.shields.io/badge/%20%20%20%20%20-24322C?style=for-the-badge) | 잉크 | `#24322C` | 본문 글자, 지도 외곽선 |
 | ![](https://img.shields.io/badge/%20%20%20%20%20-5E6A63?style=for-the-badge) | 뮤트 | `#5E6A63` | 보조 글자 |

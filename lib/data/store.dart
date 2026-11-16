@@ -387,27 +387,13 @@ class AppStore extends ChangeNotifier {
     return null;
   }
 
-  // ── 스티커·스탬프·쿠폰 ──
+  // ── 스티커·보상 ──
   Future<void> own(Iterable<String> ids) async {
     owned.addAll(ids);
     await _db.addMarks('owned', ids);
     notifyListeners();
     Remote.addMarks('owned', ids);
   }
-
-  LatLng campaignPos(CampaignSpot s) => offset(home ?? defaultCenter, s.north, s.east);
-  LatLng storePos(Store s) => offset(home ?? defaultCenter, s.north, s.east);
-
-  double? distanceTo(LatLng p) => lastPos == null ? null : distanceM(lastPos!, p);
-
-  Future<void> stamp(String spotId) async {
-    stamps.add(spotId);
-    await _db.addMarks('stamp', [spotId]);
-    notifyListeners();
-    Remote.addMarks('stamp', [spotId]);
-  }
-
-  bool get campaignDone => Campaign.spots.every((s) => stamps.contains(s.id));
 
   Future<void> claimReward(String rewardId, List<String> stickerIds, {Coupon? coupon}) async {
     rewards.add(rewardId);
@@ -419,29 +405,6 @@ class AppStore extends ChangeNotifier {
       Remote.saveCoupon(coupon);
     }
     await own(stickerIds);
-  }
-
-  Future<Coupon> visitStore(Store store) async {
-    visitedStores.add(store.id);
-    await _db.addMarks('store', [store.id]);
-    Remote.addMarks('store', [store.id]);
-    final c = Coupon(id: newId('cp'), storeId: store.id, title: store.benefit, issuedAt: DateTime.now());
-    coupons.insert(0, c);
-    await _db.saveCoupon(c);
-    Remote.saveCoupon(c);
-    await own([store.sticker]);
-    return c;
-  }
-
-  Future<void> useCoupon(String id) async {
-    for (final c in coupons) {
-      if (c.id == id) {
-        c.usedAt = DateTime.now();
-        await _db.saveCoupon(c);
-        Remote.saveCoupon(c);
-      }
-    }
-    notifyListeners();
   }
 
   void toggleLike(String postId) {

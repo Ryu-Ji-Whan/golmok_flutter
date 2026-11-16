@@ -5,8 +5,6 @@ import '../data/stickers.dart';
 import '../data/store.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
-import 'campaign.dart';
-import 'stores.dart';
 
 /// ⑥ 스티커 상점
 class ShopTab extends StatelessWidget {
@@ -21,27 +19,6 @@ class ShopTab extends StatelessWidget {
         actions: [Padding(padding: const EdgeInsets.only(right: 16), child: Pill('보관함 ${s.owned.length}/${stickers.length}'))],
       ),
       body: ListView(padding: const EdgeInsets.fromLTRB(16, 4, 16, 24), children: [
-        Row(children: [
-          Expanded(
-            child: _Entry(
-              icon: Icons.flag_outlined,
-              title: '스탬프 투어',
-              sub: '${s.stamps.length}/${Campaign.spots.length} 찍음',
-              color: C.mint,
-              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CampaignScreen())),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: _Entry(
-              icon: Icons.storefront_outlined,
-              title: '제휴 가게',
-              sub: '쿠폰 ${s.coupons.where((c) => c.usedAt == null).length}장',
-              color: C.peach,
-              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const StoresScreen())),
-            ),
-          ),
-        ]),
         const SectionTitle('스티커 팩'),
         for (final p in packs) _PackCard(pack: p),
         const SizedBox(height: 8),
@@ -49,27 +26,6 @@ class ShopTab extends StatelessWidget {
       ]),
     );
   }
-}
-
-class _Entry extends StatelessWidget {
-  const _Entry({required this.icon, required this.title, required this.sub, required this.color, required this.onTap});
-  final IconData icon;
-  final String title, sub;
-  final Color color;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => CardBox(
-        color: color,
-        shadow: false,
-        onTap: onTap,
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Icon(icon, color: C.forest),
-          const SizedBox(height: 8),
-          Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
-          Text(sub, style: const TextStyle(fontSize: 12, color: C.muted)),
-        ]),
-      );
 }
 
 class _PackCard extends StatelessWidget {
@@ -99,10 +55,8 @@ class _PackCard extends StatelessWidget {
               };
       case PackKind.reward:
         // 동네 대장 보상은 실제 이웃 순위를 아는 "동네" 탭에서 받는다
-        final ok = pack.id == 'campaign' && s.campaignDone;
-        final claimed = s.rewards.contains(pack.id);
-        label = claimed ? '받음' : ok ? '보상 받기' : pack.id == 'leader' ? '동네 탭에서 받기' : '조건 미달성';
-        action = ok && !claimed ? () => s.claimReward(pack.id, pack.stickers) : null;
+        label = s.rewards.contains(pack.id) ? '받음' : '동네 탭에서 받기';
+        action = null;
     }
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),

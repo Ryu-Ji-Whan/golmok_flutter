@@ -7,7 +7,6 @@ import '../data/stickers.dart';
 import '../data/store.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
-import 'stores.dart';
 
 /// 부록 · 프로필·설정 (로그아웃·초기화)
 class ProfileScreen extends StatelessWidget {
@@ -102,15 +101,6 @@ class ProfileScreen extends StatelessWidget {
           ]),
         ),
         const SizedBox(height: 12),
-        CardBox(
-          padding: EdgeInsets.zero,
-          child: ListTile(
-            leading: const Icon(Icons.confirmation_number_outlined, color: C.leaf),
-            title: const Text('내 쿠폰'),
-            trailing: Text('${s.coupons.where((c) => c.usedAt == null).length}장  ›', style: const TextStyle(color: C.muted)),
-            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const StoresScreen())),
-          ),
-        ),
         const SizedBox(height: 14),
         Container(
           padding: const EdgeInsets.all(14),

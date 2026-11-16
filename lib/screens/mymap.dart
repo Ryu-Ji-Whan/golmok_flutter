@@ -26,7 +26,7 @@ class _MyMapTabState extends State<MyMapTab> {
     final s = StoreScope.read(context);
     await _map.setExplored(s.explored);
     await _map.setOldPaths([for (final w in s.walks) w.path]);
-    await _map.setMarks(buildMarks(s, extras: false));
+    await _map.setMarks(buildMarks(s));
     await _map.setMe(s.center);
   }
 

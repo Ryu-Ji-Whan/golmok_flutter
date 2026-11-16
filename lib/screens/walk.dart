@@ -2,40 +2,26 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../data/content.dart';
 import '../data/geo.dart';
 import '../data/models.dart';
 import '../data/store.dart';
 import '../theme.dart';
 import '../widgets/cartoon_map.dart';
 import '../widgets/ui.dart';
-import 'campaign.dart';
 import 'profile.dart';
 import 'record.dart';
 import 'spot_detail.dart';
-import 'stores.dart';
 
-/// 지도 위 스티커를 눌렀을 때 공통 동작
+/// 지도 위 스티커(내 기록)를 눌렀을 때
 void openMark(BuildContext context, String kind, String id) {
-  final nav = Navigator.of(context);
   if (kind == 'spot') {
-    nav.push(MaterialPageRoute(builder: (_) => SpotDetailScreen(spotId: id)));
-  } else if (kind == 'store') {
-    nav.push(MaterialPageRoute(builder: (_) => const StoresScreen()));
-  } else {
-    nav.push(MaterialPageRoute(builder: (_) => const CampaignScreen()));
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => SpotDetailScreen(spotId: id)));
   }
 }
 
 /// 지도 표시: 내가 붙인 스티커 기록
-/// (extras: 데모 스탬프 투어·제휴 가게 위치. 실제 장소가 아니라서 지금은 지도에 안 띄운다)
-List<MapMark> buildMarks(AppStore s, {bool extras = false}) => [
+List<MapMark> buildMarks(AppStore s) => [
       for (final sp in s.spots) MapMark(id: sp.id, pos: sp.pos, sticker: sp.stickerId, kind: 'spot', label: sp.title),
-      if (extras) ...[
-        for (final c in Campaign.spots)
-          MapMark(id: c.id, pos: s.campaignPos(c), sticker: 'c04', kind: s.stamps.contains(c.id) ? 'stamped' : 'stamp', label: c.name),
-        for (final st in stores) MapMark(id: st.id, pos: s.storePos(st), sticker: st.sticker, kind: 'store', label: st.name),
-      ],
     ];
 
 /// ①-4 산책 시작 / ②-1 산책 중 지도

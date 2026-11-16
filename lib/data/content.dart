@@ -36,7 +36,6 @@ const packs = [
   Pack('sparrow', '참새 친구 팩', '스티커 6종', PackKind.paid, ['a05', 'a06', 'a07', 'a08', 'a09', 'a10']),
   Pack('cats', '골목 고양이 팩', '스티커 4종', PackKind.paid, ['a03', 'c02', 'c03', 'c05']),
   Pack('leader', '동네 대장 한정', '리더보드 3위 안 보상', PackKind.reward, ['b11', 'b12'], howToGet: '동네 리더보드 3위 안에 들기'),
-  Pack('campaign', '스탬프 투어 한정', '캠페인 완주 보상', PackKind.reward, ['c14', 'c04'], howToGet: '동네 스탬프 투어 5곳 완주'),
 ];
 
 final starterStickers = packs[0].stickers;
@@ -49,38 +48,3 @@ const areas = [
 
 /// 쓸 수 없는 닉네임 (운영용 이름)
 const takenNicknames = ['골목대장', '관리자', '운영자', 'admin'];
-
-class CampaignSpot {
-  const CampaignSpot(this.id, this.name, this.north, this.east);
-  final String id, name;
-  final double north, east; // 집(처음 위치) 기준 북쪽·동쪽 미터
-}
-
-class Campaign {
-  static const id = 'autumn-tour';
-  static const title = '가을 골목 스탬프 투어';
-  static const organizer = 'OO구청 × 골목대장 (데모)';
-  static const radiusM = 40.0;
-  static const reward = '스탬프 투어 한정 스티커 + 동네 가게 쿠폰';
-  static const spots = [
-    CampaignSpot('s1', '느티나무 쉼터', 120, 80),
-    CampaignSpot('s2', '벽화 골목 계단', -150, 200),
-    CampaignSpot('s3', '고양이 벤치', 250, -100),
-    CampaignSpot('s4', '징검다리', -80, -220),
-    CampaignSpot('s5', '노을 언덕', 320, 260),
-  ];
-}
-
-class Store {
-  const Store(this.id, this.name, this.category, this.sticker, this.north, this.east, this.benefit, {this.isNew = false});
-  final String id, name, category, sticker, benefit;
-  final double north, east;
-  final bool isNew;
-}
-
-const stores = [
-  Store('cafe', '골목 끝 카페', '카페', 'b00', 60, 140, '방문 인증 시 음료 할인 쿠폰 (데모)'),
-  Store('books', '작은 골목 책방', '책방', 'b02', -110, 60, '책 구매 시 한정 책갈피 (데모)', isNew: true),
-  Store('flower', '들꽃 한 다발', '꽃집', 'b03', 180, -150, '꽃 한 송이 덤 (데모)'),
-  Store('bakery', '아침 빵집', '빵집', 'b01', -200, -60, '오전 방문 시 빵 1개 덤 (데모)', isNew: true),
-];
