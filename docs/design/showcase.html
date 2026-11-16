@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>골목대장 한눈에</title>
+<!-- 스크린샷용 대표 이미지 (1600×900): README 맨 위 "앱 한눈에 보기" -->
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; }
+  body { width: 1600px; height: 900px; overflow: hidden; background: #FFF9ED; font-family: 'Noto Sans KR', sans-serif; color: #24322C; position: relative; }
+  /* 바탕: 옅은 만화풍 골목 격자 */
+  .grid { position: absolute; inset: 0; background:
+      linear-gradient(#FBF1DC 0 0) 0 0 / 100% 100%;
+    }
+  .grid::before { content: ''; position: absolute; inset: -40px; background:
+      repeating-linear-gradient(0deg, transparent 0 150px, #fff 150px 172px),
+      repeating-linear-gradient(90deg, transparent 0 190px, #fff 190px 212px);
+    opacity: .9; }
+  .head { position: absolute; left: 0; right: 0; top: 46px; text-align: center; z-index: 2; }
+  .eyebrow { margin: 0; font-size: 22px; font-weight: 700; color: #2F7A56; }
+  h1 { margin: 4px 0 6px; font-family: 'Jua', sans-serif; font-weight: 400; font-size: 76px; line-height: 1.05; color: #0E5A3C; }
+  .lead { margin: 0; font-size: 24px; color: #5E6A63; }
+  .row { position: absolute; left: 0; right: 0; top: 262px; display: flex; justify-content: center; gap: 34px; z-index: 2; }
+  .shot { text-align: center; }
+  .phone { width: 312px; height: 675px; border-radius: 38px; overflow: hidden; border: 4px solid #24322C; box-shadow: 8px 8px 0 rgba(36,50,44,.18); background: #fff; }
+  .phone iframe { width: 390px; height: 844px; border: 0; transform: scale(.8); transform-origin: 0 0; display: block; }
+  .shot:nth-child(2), .shot:nth-child(4) { margin-top: 36px; }
+  .tag { display: inline-block; margin-bottom: 12px; padding: 6px 16px; border-radius: 999px; background: #fff; border: 2px solid #24322C; font-weight: 700; font-size: 18px; color: #0E5A3C; }
+</style>
+</head>
+<body>
+<div class="grid"></div>
+<div class="head">
+  <p class="eyebrow">동네 산책 · 골목 기록 앱</p>
+  <h1>골목대장</h1>
+  <p class="lead">걸은 만큼 안개가 걷히고, 마음에 드는 골목엔 스티커를 붙여요</p>
+</div>
+<div class="row">
+  <div class="shot"><span class="tag">① 걷기</span><div class="phone"><iframe src="screens/Explore.dc.html?v=shot" title="산책 중 지도"></iframe></div></div>
+  <div class="shot"><span class="tag">② 기록하기</span><div class="phone"><iframe src="screens/Record.dc.html?v=shot" title="스티커 붙여 기록"></iframe></div></div>
+  <div class="shot"><span class="tag">③ 모아 보기</span><div class="phone"><iframe src="screens/MyMap.dc.html?v=shot" title="내 지도"></iframe></div></div>
+  <div class="shot"><span class="tag">④ 동네 대장</span><div class="phone"><iframe src="screens/Leaderboard.dc.html?v=shot" title="동네 리더보드"></iframe></div></div>
+</div>
+</body>
+</html>

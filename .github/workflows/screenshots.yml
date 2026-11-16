@@ -1,0 +1,64 @@
+# 디자인 시안 화면을 사진(PNG)으로 찍어 docs/screenshots/ 에 저장한다 (README에 쓰는 그림)
+# - docs/design/ 이 바뀌어 main 에 올라오거나, Actions 탭에서 "Run workflow"를 누르면 돈다
+# - 앱 빌드와는 따로 돈다 (build.yml 은 docs/ 변경을 무시함)
+
+name: Design screenshots
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['docs/design/**', '.github/workflows/screenshots.yml']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: screenshots
+  cancel-in-progress: true
+
+jobs:
+  shoot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Korean fonts
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-noto-cjk > /dev/null
+
+      - name: Serve docs
+        run: |
+          cd docs && nohup python3 -m http.server 8000 > /tmp/http.log 2>&1 &
+          sleep 2 && curl -sf -o /dev/null http://localhost:8000/design/frame.html && echo "server ok"
+
+      - name: Take screenshots
+        run: |
+          set -e
+          OUT=docs/screenshots
+          mkdir -p $OUT
+          CHROME=$(command -v google-chrome || command -v chromium || command -v chromium-browser)
+          shot() { # 파일이름 가로 세로 주소
+            "$CHROME" --headless=new --disable-gpu --hide-scrollbars --no-sandbox \
+              --force-device-scale-factor=2 --window-size=$2,$3 \
+              --virtual-time-budget=15000 --run-all-compositor-stages-before-draw \
+              --screenshot="$OUT/$1.png" "$4" 2>/dev/null
+            ls -l "$OUT/$1.png"
+          }
+          # 대표 이미지
+          shot showcase 1600 900 "http://localhost:8000/design/showcase.html"
+          # 화면 한 장씩 (폰 틀 포함)
+          for s in WalkStart Explore Record PhotoEdit Detail MyMap Share Feed Leaderboard StickerShop Main SignupCharacter Profile Decorate; do
+            shot "$s" 446 900 "http://localhost:8000/design/frame.html?s=$s"
+          done
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/screenshots
+          if git diff --cached --quiet; then echo "바뀐 사진 없음"; exit 0; fi
+          git commit -m "디자인 시안 스크린샷 갱신"
+          git push

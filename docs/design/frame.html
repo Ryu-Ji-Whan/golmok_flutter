@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>골목대장 화면</title>
+<!--
+  스크린샷용: frame.html?s=Explore 처럼 화면 이름을 주면 그 시안을 폰 틀에 담아 보여 준다.
+  .github/workflows/screenshots.yml 이 이 페이지를 크롬으로 찍어 docs/screenshots/ 에 PNG로 저장한다.
+-->
+<style>
+  html, body { margin: 0; background: #FFF9ED; }
+  body { width: 446px; height: 900px; display: flex; align-items: center; justify-content: center; }
+  .phone { width: 390px; height: 844px; border-radius: 44px; overflow: hidden; border: 4px solid #24322C; box-shadow: 8px 8px 0 rgba(36,50,44,.18); background: #fff; }
+  iframe { width: 390px; height: 844px; border: 0; display: block; }
+</style>
+</head>
+<body>
+<div class="phone"><iframe id="f" title="골목대장 화면"></iframe></div>
+<script>
+  const s = new URLSearchParams(location.search).get('s') || 'Main';
+  document.getElementById('f').src = 'screens/' + encodeURIComponent(s) + '.dc.html';
+</script>
+</body>
+</html>
