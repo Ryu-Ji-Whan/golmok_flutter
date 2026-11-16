@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io' show ContentType, HttpClient;
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -98,8 +100,10 @@ class Remote {
         return null;
       }
       // 아이디 로그인은 서버 함수가 대신 해 준다 (이메일을 앱에 내보내지 않으려고)
-      final res = await _c.functions.invoke('login-with-username', body: {'username': login.toLowerCase(), 'password': password});
-      final data = res.data;
+      // functions.invoke는 공개 키를 Authorization 헤더에도 넣는데, 새 방식 키(sb_publishable_)는
+      // 그 자리에서 거절된다. 그래서 apikey 헤더만 붙여 직접 부른다.
+      final data = await _callFunction('login-with-username', {'username': login.toLowerCase(), 'password': password});
+      if (data == null) return '아이디 로그인 서버에 연결하지 못했어요. 인터넷을 확인해 주세요';
       if (data is Map && data['ok'] == true && data['refresh_token'] is String) {
         await _c.auth.setSession(data['refresh_token'] as String);
         return null;
@@ -110,10 +114,27 @@ class Remote {
       return '아이디나 비밀번호가 맞지 않아요';
     } on AuthException catch (e) {
       return _authMessage(e.message);
-    } on FunctionException {
-      return '아이디 로그인 서버가 아직 준비되지 않았어요';
     } catch (_) {
       return '인터넷 연결을 확인해 주세요';
+    }
+  }
+
+  /// Edge Function을 apikey 헤더만 붙여 부른다. JSON 답(Map)을 돌려주고, 실패하면 null.
+  static Future<Map<String, dynamic>?> _callFunction(String name, Map<String, Object?> body) async {
+    final client = HttpClient()..connectionTimeout = const Duration(seconds: 10);
+    try {
+      final req = await client.postUrl(Uri.parse('$supabaseUrl/functions/v1/$name'));
+      req.headers.set('apikey', supabaseAnonKey);
+      req.headers.contentType = ContentType.json;
+      req.add(utf8.encode(jsonEncode(body)));
+      final res = await req.close().timeout(const Duration(seconds: 15));
+      final text = await res.transform(utf8.decoder).join();
+      final v = jsonDecode(text);
+      return v is Map<String, dynamic> ? v : null;
+    } catch (_) {
+      return null;
+    } finally {
+      client.close();
     }
   }
 
