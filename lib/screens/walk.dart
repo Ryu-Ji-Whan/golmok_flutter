@@ -27,8 +27,9 @@ void openMark(BuildContext context, String kind, String id) {
   }
 }
 
-/// 내 기록 + 캠페인 스팟 + 제휴 가게를 지도 표시로
-List<MapMark> buildMarks(AppStore s, {bool extras = true}) => [
+/// 지도 표시: 내가 붙인 스티커 기록
+/// (extras: 데모 스탬프 투어·제휴 가게 위치. 실제 장소가 아니라서 지금은 지도에 안 띄운다)
+List<MapMark> buildMarks(AppStore s, {bool extras = false}) => [
       for (final sp in s.spots) MapMark(id: sp.id, pos: sp.pos, sticker: sp.stickerId, kind: 'spot', label: sp.title),
       if (extras) ...[
         for (final c in Campaign.spots)
