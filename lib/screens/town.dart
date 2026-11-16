@@ -14,19 +14,22 @@ class _Row {
   final bool me;
 }
 
-/// 리더보드 순위 (서버의 실제 이웃 + 예시 이웃 + 나)
+/// 리더보드 순위 (서버의 실제 이웃 + 나)
 List<_Row> leaderboard(AppStore s, [List<RemoteRank> remote = const []]) {
   final me = s.profile?.nickname;
   final rows = [
     for (final r in remote)
       if (r.nickname != me) _Row(r.nickname, r.character, r.cells, false),
-    for (final n in neighbors) _Row('${n.name} (예시)', n.character, n.cells, false),
     _Row(s.profile?.nickname ?? '나', s.profile?.characterId ?? 'a00', s.weeklyCells, true),
   ]..sort((a, b) => b.cells.compareTo(a.cells));
   return rows;
 }
 
-int myRank(AppStore s) => leaderboard(s).indexWhere((r) => r.me) + 1;
+/// 동네 대장 보상: 이웃이 3명 이상 있는 동네에서 3위 안에 들어야 받는다 (혼자면 1등이어도 안 됨)
+bool leaderRewardOk(List<_Row> rows) {
+  final rank = rows.indexWhere((r) => r.me) + 1;
+  return rows.length >= 4 && rank > 0 && rank <= 3;
+}
 
 /// ⑤ 동네 리더보드
 class TownTab extends StatefulWidget {
@@ -74,7 +77,12 @@ class _TownTabState extends State<TownTab> {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 const Text('이번 주 내 순위', style: TextStyle(fontSize: 13, color: C.mint)),
                 Text('$rank위 · ${s.weeklyCells}칸', style: jua(28, color: C.white)),
-                Text(rank <= 3 ? '동네 대장 스티커를 받을 수 있어요!' : '${rows[2].cells - s.weeklyCells + 1}칸 더 밝히면 3위예요',
+                Text(
+                    rows.length < 4
+                        ? '이웃이 더 모이면 동네 대장 경쟁이 시작돼요'
+                        : rank <= 3
+                            ? '동네 대장 스티커를 받을 수 있어요!'
+                            : '${rows[2].cells - s.weeklyCells + 1}칸 더 밝히면 3위예요',
                     style: const TextStyle(fontSize: 12, color: C.mint)),
               ]),
             ),
@@ -118,7 +126,7 @@ class _TownTabState extends State<TownTab> {
               ]),
             ),
             FilledButton(
-              onPressed: rank <= 3 && !claimed ? () => s.claimReward('leader', leaderPack.stickers) : null,
+              onPressed: leaderRewardOk(rows) && !claimed ? () => s.claimReward('leader', leaderPack.stickers) : null,
               style: FilledButton.styleFrom(backgroundColor: C.forest),
               child: Text(claimed ? '받음' : '받기'),
             ),
@@ -126,7 +134,7 @@ class _TownTabState extends State<TownTab> {
         ),
         const SizedBox(height: 8),
         Text(
-          Remote.signedIn ? '"(예시)"가 붙은 이웃은 예시예요. 당겨서 새로고침할 수 있어요.' : '이웃 점수는 예시예요. 이메일로 로그인하면 실제 이웃이 보여요.',
+          Remote.signedIn ? '같은 동네 이웃의 이번 주 기록이에요. 당겨서 새로고침할 수 있어요.' : '로그인하면 같은 동네 이웃과 순위를 겨룰 수 있어요.',
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 12, color: C.muted),
         ),

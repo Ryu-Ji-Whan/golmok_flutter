@@ -47,35 +47,8 @@ const areas = [
   '서울특별시 종로구 익선동', '서울특별시 종로구 서촌', '서울특별시 마포구 연남동', '서울특별시 성동구 성수동', '서울특별시 용산구 해방촌',
 ];
 
-const takenNicknames = ['골목대장', '관리자', '운영자', '행궁산책러', 'admin'];
-
-class Neighbor {
-  const Neighbor(this.name, this.character, this.cells);
-  final String name;
-  final String character;
-  final int cells;
-}
-
-/// 리더보드 예시 이웃 (점수 = 이번 주 밝힌 칸 수)
-const neighbors = [
-  Neighbor('행궁산책러', 'a04', 576),
-  Neighbor('참새방앗간', 'c01', 444),
-  Neighbor('수원천냥', 'a00', 312),
-  Neighbor('깃발참새', 'c13', 186),
-  Neighbor('낮잠고양이', 'a21', 108),
-];
-
-class FeedPost {
-  const FeedPost(this.id, this.author, this.character, this.area, this.ago, this.sticker, this.title, this.body, this.likes, this.comments);
-  final String id, author, character, area, ago, sticker, title, body;
-  final int likes, comments;
-}
-
-const feedPosts = [
-  FeedPost('f1', '참새방앗간', 'c01', '행궁동', '1시간 전', 'a18', '해 질 녘 벤치', '여기 앉아 있으면 노란 고양이가 와요.', 128, 12),
-  FeedPost('f2', '책방참새', 'c13', '매향동', '어제', 'b02', '골목 끝 작은 책방', '창가 자리는 고양이 차지.', 64, 5),
-  FeedPost('f3', '수원천냥', 'a00', '행궁동', '2일 전', 'a11', '담장 위 능소화', '이번 주까지가 제일 예뻐요.', 41, 3),
-];
+/// 쓸 수 없는 닉네임 (운영용 이름)
+const takenNicknames = ['골목대장', '관리자', '운영자', 'admin'];
 
 class CampaignSpot {
   const CampaignSpot(this.id, this.name, this.north, this.east);

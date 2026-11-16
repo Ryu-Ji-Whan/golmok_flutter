@@ -118,7 +118,7 @@ class ProfileScreen extends StatelessWidget {
           child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('데모 버전 안내', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
             SizedBox(height: 4),
-            Text('결제와 카카오·Apple·Google 로그인은 예시예요. 산책 경로, 안개 걷기, 스티커 기록은 이 폰의 데이터베이스에 저장되고, 이메일로 로그인하면 서버에도 저장돼요.',
+            Text('산책 경로, 안개 걷기, 스티커 기록은 이 폰에 저장되고, 카카오·이메일로 로그인하면 내 계정(서버)에도 저장돼요. 스티커 팩 결제는 아직 준비 중이에요.',
                 style: TextStyle(fontSize: 12, color: C.muted, height: 1.5)),
           ]),
         ),

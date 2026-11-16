@@ -7,7 +7,6 @@ import '../theme.dart';
 import '../widgets/ui.dart';
 import 'campaign.dart';
 import 'stores.dart';
-import 'town.dart';
 
 /// ⑥ 스티커 상점
 class ShopTab extends StatelessWidget {
@@ -99,9 +98,10 @@ class _PackCard extends StatelessWidget {
                 messenger.showSnackBar(SnackBar(content: Text('${pack.name}을 받았어요')));
               };
       case PackKind.reward:
-        final ok = pack.id == 'campaign' ? s.campaignDone : myRank(s) <= 3;
+        // 동네 대장 보상은 실제 이웃 순위를 아는 "동네" 탭에서 받는다
+        final ok = pack.id == 'campaign' && s.campaignDone;
         final claimed = s.rewards.contains(pack.id);
-        label = claimed ? '받음' : ok ? '보상 받기' : '조건 미달성';
+        label = claimed ? '받음' : ok ? '보상 받기' : pack.id == 'leader' ? '동네 탭에서 받기' : '조건 미달성';
         action = ok && !claimed ? () => s.claimReward(pack.id, pack.stickers) : null;
     }
     return Padding(

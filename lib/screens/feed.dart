@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../data/content.dart';
 import '../data/geo.dart';
 import '../data/models.dart';
 import '../data/remote.dart';
@@ -18,7 +17,7 @@ String _ago(DateTime t) {
   return formatDate(t);
 }
 
-/// ④-2 골목 피드 (서버의 실제 공유 글 또는 내가 공유한 기록 + 예시 이웃 글)
+/// ④-2 골목 피드 (로그인했으면 서버의 공유 글, 아니면 이 폰에서 공유한 기록)
 class FeedTab extends StatefulWidget {
   const FeedTab({super.key});
 
@@ -84,24 +83,21 @@ class _FeedTabState extends State<FeedTab> {
             onLike: () => s.toggleLike(sp.id),
             onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => SpotDetailScreen(spotId: sp.id))),
           ),
-        for (final f in feedPosts)
-          _Post(
-            author: f.author,
-            character: f.character,
-            meta: '${f.area} · ${f.ago}',
-            sticker: f.sticker,
-            title: f.title,
-            body: f.body,
-            likes: f.likes + (s.likedPosts.contains(f.id) ? 1 : 0),
-            liked: s.likedPosts.contains(f.id),
-            comments: f.comments,
-            onLike: () => s.toggleLike(f.id),
+        if (_remote.isEmpty && mine.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 60),
+            child: Column(children: [
+              const StickerImg('a02', size: 110),
+              const SizedBox(height: 12),
+              Text('아직 올라온 골목 이야기가 없어요', style: jua(20)),
+              const SizedBox(height: 6),
+              const Text('산책하다 붙인 스티커 기록을\n"골목 피드에 공유하기"로 첫 글을 올려 보세요',
+                  textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: C.muted, height: 1.5)),
+            ]),
           ),
         const SizedBox(height: 8),
         Text(
-          online
-              ? '위는 실제 이웃 글, 아래 3개는 예시 글이에요. 당겨서 새로고침할 수 있어요.'
-              : '예시 이웃 글이에요. 이메일로 로그인하면 실제 이웃 글이 보여요.',
+          online ? '당겨서 새로고침할 수 있어요' : '로그인하면 이웃이 공유한 글도 보여요',
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 12, color: C.muted),
         ),

@@ -12,8 +12,8 @@ import 'email_auth.dart';
 import 'signup.dart';
 
 /// ①-2 로그인
-/// - 이메일·카카오·구글: Supabase 계정 (서버에 저장, 어느 폰에서든 이어짐)
-/// - Apple: Apple 개발자 프로그램(유료)에 가입하면 붙인다. 그 전까지는 버튼을 숨긴다.
+/// - 카카오·이메일: Supabase 계정 (서버에 저장, 어느 폰에서든 이어짐)
+/// - 구글·Apple: 아직 붙이지 않았다 (Apple은 유료 개발자 프로그램 필요)
 /// - 서버 연결 키가 없는 빌드에서는 예전처럼 이 폰에만 저장하는 데모로 동작한다.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -29,7 +29,8 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
 
   static const _providers = [
     ('kakao', '카카오로 계속하기', C.kakao, C.kakaoText, false, OAuthProvider.kakao),
-    ('google', 'Google로 계속하기', C.white, C.ink, true, OAuthProvider.google),
+    // 구글은 나중에 붙일 때 여기에 한 줄 추가:
+    // ('google', 'Google로 계속하기', C.white, C.ink, true, OAuthProvider.google),
   ];
 
   @override
