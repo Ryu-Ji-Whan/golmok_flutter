@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/banner.svg" alt="골목대장 - 걸은 골목이 지도로 남는 동네 산책 앱" width="100%">
+  <img src="docs/screenshots/showcase.png" alt="골목대장 - 걷기, 기록하기, 모아 보기, 동네 대장 화면" width="100%">
 </p>
 
 <p align="center">
@@ -22,6 +22,31 @@
 </p>
 
 ---
+
+## 📱 화면 미리보기
+
+<table>
+  <tr>
+    <td align="center" width="25%"><img src="docs/screenshots/WalkStart.png" width="200" alt="산책 시작"><br><b>산책 시작</b><br><sub>오늘의 미션과 동네 채움률</sub></td>
+    <td align="center" width="25%"><img src="docs/screenshots/Explore.png" width="200" alt="산책 중 지도"><br><b>산책 중 지도</b><br><sub>걸은 길과 걷힌 안개</sub></td>
+    <td align="center" width="25%"><img src="docs/screenshots/Record.png" width="200" alt="장소 기록"><br><b>장소 기록</b><br><sub>사진·메모·스티커</sub></td>
+    <td align="center" width="25%"><img src="docs/screenshots/PhotoEdit.png" width="200" alt="사진 꾸미기"><br><b>사진 꾸미기</b><br><sub>사진 위에 스티커</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="25%"><img src="docs/screenshots/Detail.png" width="200" alt="저장된 기록"><br><b>저장된 기록</b><br><sub>남긴 장소 다시 보기</sub></td>
+    <td align="center" width="25%"><img src="docs/screenshots/MyMap.png" width="200" alt="내 지도"><br><b>내 지도</b><br><sub>동네별로 모아 보기</sub></td>
+    <td align="center" width="25%"><img src="docs/screenshots/Decorate.png" width="200" alt="지도 꾸미기"><br><b>지도 꾸미기</b><br><sub>내 지도에 스티커</sub></td>
+    <td align="center" width="25%"><img src="docs/screenshots/Share.png" width="200" alt="기록 공유하기"><br><b>기록 공유하기</b><br><sub>피드와 SNS로</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="25%"><img src="docs/screenshots/Feed.png" width="200" alt="골목 피드"><br><b>골목 피드</b><br><sub>이웃이 나눈 골목</sub></td>
+    <td align="center" width="25%"><img src="docs/screenshots/Leaderboard.png" width="200" alt="동네 리더보드"><br><b>동네 리더보드</b><br><sub>이번 주 동네 대장</sub></td>
+    <td align="center" width="25%"><img src="docs/screenshots/StickerShop.png" width="200" alt="스티커 상점"><br><b>스티커 상점</b><br><sub>팩 모으기</sub></td>
+    <td align="center" width="25%"><img src="docs/screenshots/Profile.png" width="200" alt="프로필"><br><b>프로필</b><br><sub>스티커 보관함·설정</sub></td>
+  </tr>
+</table>
+
+<sub>디자인 시안 화면이에요. 실제 앱은 조금씩 다를 수 있어요 · <a href="https://ryu-ji-whan.github.io/golmok_flutter/design/">화면 33개 직접 눌러 보기</a></sub>
 
 ## ✨ 이런 걸 할 수 있어요
 
