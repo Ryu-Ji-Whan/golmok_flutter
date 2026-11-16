@@ -16,6 +16,20 @@ const cors = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// 키 묶음 환경 변수에서 첫 번째 키를 꺼낸다 ({"default":"sb_..."} 모양이거나 그냥 문자열)
+function firstKey(raw: string | undefined): string {
+  if (!raw) return "";
+  try {
+    const v = JSON.parse(raw);
+    if (typeof v === "string") return v;
+    if (Array.isArray(v)) return String(v[0] ?? "");
+    if (v && typeof v === "object") return String(v.default ?? Object.values(v)[0] ?? "");
+  } catch {
+    return raw;
+  }
+  return "";
+}
+
 const reply = (body: Record<string, unknown>) =>
   new Response(JSON.stringify(body), { headers: { ...cors, "Content-Type": "application/json" } });
 
@@ -34,10 +48,14 @@ Deno.serve(async (req) => {
     return reply({ ok: false, error: "invalid_login" });
   }
 
-  const url = Deno.env.get("SUPABASE_URL")!;
-  const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
-    auth: { persistSession: false },
-  });
+  // 프로젝트마다 예전 키(SUPABASE_SERVICE_ROLE_KEY / SUPABASE_ANON_KEY) 또는
+  // 새 키(SUPABASE_SECRET_KEYS / SUPABASE_PUBLISHABLE_KEYS, JSON 묶음)가 들어 있다. 있는 것을 쓴다.
+  const url = Deno.env.get("SUPABASE_URL") ?? "";
+  const secretKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || firstKey(Deno.env.get("SUPABASE_SECRET_KEYS"));
+  const publicKey = Deno.env.get("SUPABASE_ANON_KEY") || firstKey(Deno.env.get("SUPABASE_PUBLISHABLE_KEYS"));
+  if (!url || !secretKey || !publicKey) return reply({ ok: false, error: "server_config" });
+
+  const admin = createClient(url, secretKey, { auth: { persistSession: false } });
 
   // 아이디 → 계정
   const { data: row } = await admin.from("accounts").select("user_id").eq("username", username).maybeSingle();
@@ -48,7 +66,7 @@ Deno.serve(async (req) => {
   if (!email) return reply({ ok: false, error: "invalid_login" });
 
   // 그 이메일로 로그인
-  const anon = createClient(url, Deno.env.get("SUPABASE_ANON_KEY")!, { auth: { persistSession: false } });
+  const anon = createClient(url, publicKey, { auth: { persistSession: false } });
   const { data, error } = await anon.auth.signInWithPassword({ email, password });
   if (error || !data.session) {
     const m = (error?.message ?? "").toLowerCase();
