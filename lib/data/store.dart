@@ -8,6 +8,7 @@ import 'content.dart';
 import 'db.dart';
 import 'geo.dart';
 import 'models.dart';
+import 'places.dart';
 import 'remote.dart';
 
 final _rand = math.Random();
@@ -37,6 +38,17 @@ class AppStore extends ChangeNotifier {
   /// 처음 위치를 잡은 곳. 캠페인 스팟·제휴 가게를 이 주변에 놓는다(데모).
   LatLng? home;
   LatLng? lastPos;
+
+  /// 지금 있는 동네 (예: "수원시 팔달구 행궁동"). 300m 넘게 움직이면 다시 확인한다.
+  String? currentArea;
+  LatLng? _areaAt;
+  bool _areaBusy = false;
+  DateTime? _areaFailedAt; // 실패하면 30초 쉬었다가 다시 (지도 서버 이용 규칙)
+  // 동네를 아직 모를 때 밝힌 칸 (동네를 알게 되면 이름을 채운다)
+  final Set<String> _untagged = {};
+
+  /// 리더보드에 내 이름 숨기기
+  bool hideRank = false;
 
   /// 새로 밝힌 칸 (지도에 바로 보내기 위해)
   final List<String> _freshCells = [];
@@ -88,6 +100,7 @@ class AppStore extends ChangeNotifier {
       s.home = LatLng(double.parse(parts[0]), double.parse(parts[1]));
     }
     s.lastPos = s.home;
+    s.hideRank = await db.kv('hide_rank') == '1';
     return s;
   }
 
@@ -164,6 +177,8 @@ class AppStore extends ChangeNotifier {
     explored = cells;
     coupons = d.coupons;
     if (home != null) await _db.setKv('home', '${home!.lat},${home!.lng}');
+    hideRank = await Remote.hideRank() ?? hideRank;
+    await _db.setKv('hide_rank', hideRank ? '1' : '0');
     notifyListeners();
     return true;
   }
@@ -289,12 +304,15 @@ class AppStore extends ChangeNotifier {
       await _db.setKv('home', '${p.lat},${p.lng}');
     }
     final fresh = cellsAround(p).where((c) => !explored.contains(c)).toList();
+    final areaHere = _areaFresh(p) ? currentArea : null;
     if (fresh.isNotEmpty) {
       explored.addAll(fresh);
       _freshCells.addAll(fresh);
-      await _db.addExplored(fresh);
-      Remote.addExplored(fresh);
+      if (areaHere == null) _untagged.addAll(fresh);
+      await _db.addExplored(fresh, area: areaHere);
+      Remote.addExplored(fresh, area: areaHere);
     }
+    _lookupArea(p);
     final w = activeWalk;
     if (w != null) {
       final step = prev == null ? 0.0 : distanceM(prev, p);
@@ -306,6 +324,51 @@ class AppStore extends ChangeNotifier {
       await _db.saveWalk(w);
     }
     notifyListeners();
+  }
+
+  // ── 지금 있는 동네 ──
+  bool _areaFresh(LatLng p) => currentArea != null && _areaAt != null && distanceM(_areaAt!, p) < 300;
+
+  /// 지금 위치의 동네 이름을 (필요할 때만) 지도 서버에 물어본다
+  Future<void> _lookupArea(LatLng p, {bool force = false}) async {
+    if (_areaBusy || (!force && _areaFresh(p))) return;
+    final failed = _areaFailedAt;
+    if (!force && failed != null && DateTime.now().difference(failed) < const Duration(seconds: 30)) return;
+    _areaBusy = true;
+    try {
+      final place = await Places.reverse(p.lat, p.lng);
+      if (place == null) {
+        _areaFailedAt = DateTime.now();
+        return;
+      }
+      _areaFailedAt = null;
+      currentArea = place.name;
+      _areaAt = p;
+      if (_untagged.isNotEmpty) {
+        final cells = _untagged.toList();
+        _untagged.clear();
+        await _db.tagCells(cells, place.name);
+        Remote.tagCells(cells, place.name);
+      }
+      notifyListeners();
+    } finally {
+      _areaBusy = false;
+    }
+  }
+
+  /// 리더보드를 열 때: 위치를 새로 잡고 지금 동네를 확인한다. 모르면 null
+  Future<String?> refreshCurrentArea() async {
+    await locate();
+    final p = lastPos;
+    if (p != null) await _lookupArea(p, force: currentArea == null);
+    return currentArea;
+  }
+
+  Future<void> setHideRank(bool hide) async {
+    hideRank = hide;
+    await _db.setKv('hide_rank', hide ? '1' : '0');
+    notifyListeners();
+    await Remote.setHideRank(hide);
   }
 
   // ── 산책 ──

@@ -143,7 +143,7 @@ class _AreaPickerState extends State<AreaPicker> {
         ),
       // 검색이 안 되거나 인터넷이 없을 때: 입력한 이름 그대로 쓰기
       if (typed.length >= 2 && !_results.any((p) => p.name == typed))
-        _tile(typed, icon: Icons.edit_location_alt_outlined, sub: '입력한 이름 그대로 쓰기'),
+        _tile(typed, icon: Icons.edit_location_alt_outlined, sub: '입력한 이름 그대로 쓰기 (검색 결과로 고르는 게 리더보드에 더 정확해요)'),
       if (widget.selected.isNotEmpty && widget.selected != _here?.name && !_results.any((p) => p.name == widget.selected) && widget.selected != typed)
         _tile(widget.selected, sub: '지금 고른 동네'),
       const SizedBox(height: 4),

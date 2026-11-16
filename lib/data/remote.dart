@@ -31,9 +31,17 @@ class RemoteFeedPost {
 
 /// 서버 리더보드 한 줄
 class RemoteRank {
-  RemoteRank(this.nickname, this.character, this.cells);
+  RemoteRank(this.nickname, this.character, this.cells, {this.isMe = false});
   final String nickname, character;
   final int cells;
+  final bool isMe;
+}
+
+/// 내가 걸은 동네 하나와 그 동네에서 내 순위
+class MyArea {
+  MyArea(this.area, this.cells, this.rank, this.people);
+  final String area;
+  final int cells, rank, people;
 }
 
 String _iso(DateTime t) => t.toUtc().toIso8601String();
@@ -104,11 +112,11 @@ class Remote {
       // 그 자리에서 거절된다. 그래서 apikey 헤더만 붙여 직접 부른다.
       final data = await _callFunction('login-with-username', {'username': login.toLowerCase(), 'password': password});
       if (data == null) return '아이디 로그인 서버에 연결하지 못했어요. 인터넷을 확인해 주세요';
-      if (data is Map && data['ok'] == true && data['refresh_token'] is String) {
+      if (data['ok'] == true && data['refresh_token'] is String) {
         await _c.auth.setSession(data['refresh_token'] as String);
         return null;
       }
-      final err = data is Map ? data['error'] : null;
+      final err = data['error'];
       if (err == 'email_not_confirmed') return '이메일 인증을 먼저 마쳐 주세요. 가입할 때 받은 메일의 링크를 눌러 주세요';
       if (err == 'too_many') return '로그인 시도가 너무 많아요. 잠시 뒤에 다시 해 주세요';
       return '아이디나 비밀번호가 맞지 않아요';
@@ -294,22 +302,31 @@ class Remote {
       }));
 
   // 밝힌 칸은 걸을 때마다 생기므로 모아 뒀다가 20초마다 한 번에 올린다.
-  static final Set<String> _pendingCells = {};
+  // 칸 → 그 칸을 밝힐 때 있던 동네 (모르면 null)
+  static final Map<String, String?> _pendingCells = {};
   static Timer? _flushTimer;
 
-  static void addExplored(Iterable<String> cells) {
+  static void addExplored(Iterable<String> cells, {String? area}) {
     if (!signedIn) return;
-    _pendingCells.addAll(cells);
+    for (final c in cells) {
+      _pendingCells[c] = area ?? _pendingCells[c];
+    }
     _flushTimer ??= Timer(const Duration(seconds: 20), flushExplored);
   }
+
+  /// 동네를 모른 채 올린(또는 올릴) 칸에 동네 이름 채우기
+  static void tagCells(Iterable<String> cells, String area) => addExplored(cells, area: area);
 
   static Future<void> flushExplored() async {
     _flushTimer?.cancel();
     _flushTimer = null;
     if (_pendingCells.isEmpty) return;
-    final rows = [for (final c in _pendingCells) {'cell': c}];
+    final tagged = [for (final e in _pendingCells.entries) if (e.value != null) {'cell': e.key, 'area': e.value}];
+    final plain = [for (final e in _pendingCells.entries) if (e.value == null) {'cell': e.key}];
     _pendingCells.clear();
-    await _try(() => _c.from('explored').upsert(rows, ignoreDuplicates: true));
+    // 동네를 아는 칸은 동네 이름까지 덮어쓰고, 모르는 칸은 새로 생길 때만 넣는다 (있던 동네 이름을 지우지 않게)
+    if (tagged.isNotEmpty) await _try(() => _c.from('explored').upsert(tagged, onConflict: 'user_id,cell'));
+    if (plain.isNotEmpty) await _try(() => _c.from('explored').upsert(plain, onConflict: 'user_id,cell', ignoreDuplicates: true));
   }
 
   /// 서버의 내 밝힌 칸을 통째로 바꾼다 (칸 크기를 바꿀 때)
@@ -456,13 +473,52 @@ class Remote {
     }
   }
 
-  static Future<List<RemoteRank>> leaderboard(String area) async {
-    if (!signedIn) return [];
+  /// 한 동네의 이번 주 순위 (그 동네에서 실제로 밝힌 칸 수). 실패하면 null
+  static Future<List<RemoteRank>?> areaLeaderboard(String area) async {
+    if (!signedIn) return null;
     try {
-      final rows = await _c.from('weekly_leaderboard').select().eq('area_name', area).order('cells', ascending: false).limit(50);
-      return [for (final r in rows) RemoteRank(r['nickname'] as String, r['character_id'] as String, (r['cells'] as num).toInt())];
+      final rows = await _c.rpc('area_leaderboard', params: {'area_name': area, 'period_days': 7});
+      return [
+        for (final r in rows as List)
+          RemoteRank(r['nickname'] as String, r['character_id'] as String, (r['cells'] as num).toInt(), isMe: r['is_me'] == true),
+      ];
     } catch (_) {
-      return [];
+      return null;
+    }
+  }
+
+  /// 내가 이번 주 걸은 동네들과 동네마다 내 순위. 실패하면 null
+  static Future<List<MyArea>?> myAreas() async {
+    if (!signedIn) return null;
+    try {
+      final rows = await _c.rpc('my_areas', params: {'period_days': 7});
+      return [
+        for (final r in rows as List)
+          MyArea(r['area'] as String, (r['cells'] as num).toInt(), (r['rank'] as num).toInt(), (r['people'] as num).toInt()),
+      ];
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// 리더보드에 내 이름 숨기기
+  static Future<bool> setHideRank(bool hide) async {
+    if (!signedIn) return false;
+    try {
+      await _c.from('profiles').update({'hide_rank': hide}).eq('user_id', user!.id);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<bool?> hideRank() async {
+    if (!signedIn) return null;
+    try {
+      final r = await _c.from('profiles').select('hide_rank').eq('user_id', user!.id).maybeSingle();
+      return r?['hide_rank'] == true;
+    } catch (_) {
+      return null;
     }
   }
 }

@@ -12,7 +12,13 @@ class AppDb {
 
   static Future<AppDb> open() async {
     final path = p.join(await getDatabasesPath(), 'golmok.db');
-    final db = await openDatabase(path, version: 1, onCreate: (db, _) async {
+    final db = await openDatabase(path, version: 2, onUpgrade: (db, from, to) async {
+      // 2: 밝힌 칸에 '그때 있던 동네'(area)와 밝힌 시각(at)을 같이 저장
+      if (from < 2) {
+        await db.execute('ALTER TABLE explored ADD COLUMN area TEXT');
+        await db.execute('ALTER TABLE explored ADD COLUMN at INTEGER');
+      }
+    }, onCreate: (db, _) async {
       final b = db.batch();
       b.execute('''CREATE TABLE profile (
         id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -30,7 +36,7 @@ class AppDb {
         id TEXT PRIMARY KEY, walk_id TEXT, lat REAL NOT NULL, lng REAL NOT NULL,
         sticker_id TEXT NOT NULL, title TEXT NOT NULL, memo TEXT NOT NULL, photo TEXT,
         visibility TEXT NOT NULL, shared INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL)''');
-      b.execute('CREATE TABLE explored (cell TEXT PRIMARY KEY)');
+      b.execute('CREATE TABLE explored (cell TEXT PRIMARY KEY, area TEXT, at INTEGER)');
       // kind: owned(가진 스티커) / stamp(스탬프) / reward(받은 보상) / store(방문한 가게)
       b.execute('CREATE TABLE marks (kind TEXT NOT NULL, id TEXT NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (kind, id))');
       b.execute('''CREATE TABLE coupons (
@@ -98,10 +104,21 @@ class AppDb {
 
   Future<void> deleteSpot(String id) => _db.delete('spots', where: 'id = ?', whereArgs: [id]);
 
-  Future<void> addExplored(Iterable<String> cells) async {
+  /// 새로 밝힌 칸 저장. [area]는 그 칸을 밝힐 때 있던 동네 (모르면 null, 나중에 [tagCells]로 채움)
+  Future<void> addExplored(Iterable<String> cells, {String? area}) async {
+    final at = DateTime.now().millisecondsSinceEpoch;
     final b = _db.batch();
     for (final c in cells) {
-      b.insert('explored', {'cell': c}, conflictAlgorithm: ConflictAlgorithm.ignore);
+      b.insert('explored', {'cell': c, 'area': area, 'at': at}, conflictAlgorithm: ConflictAlgorithm.ignore);
+    }
+    await b.commit(noResult: true);
+  }
+
+  /// 동네를 모른 채 저장한 칸에 동네 이름 채우기
+  Future<void> tagCells(Iterable<String> cells, String area) async {
+    final b = _db.batch();
+    for (final c in cells) {
+      b.update('explored', {'area': area}, where: 'cell = ? AND area IS NULL', whereArgs: [c]);
     }
     await b.commit(noResult: true);
   }
