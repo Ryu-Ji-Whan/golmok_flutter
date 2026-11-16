@@ -109,7 +109,7 @@ let fogOn = true;
 
 // 안개는 지도 위에 얹은 투명한 캔버스에 그린다.
 // 밝힌 칸마다 크기가 조금씩 다른 동그라미로 구멍을 뚫어서, 안개 가장자리가 구름처럼 몽글몽글해진다.
-const FOG_COLOR = 'rgba(112, 120, 114, 0.58)';
+const FOG_COLOR = 'rgba(112, 120, 114, 0.5)';
 let fogCanvas = null, fogCtx = null, fogQueued = false;
 
 // 칸마다 늘 같은 값이 나오는 0~1 난수 (그릴 때마다 모양이 바뀌지 않게)
@@ -178,7 +178,7 @@ function drawFog() {
   const cellPx = CELL_M / mPerPx;
   const holes = cells.map(([i, j]) => {
     const p = map.project([(j + 0.5 + (hash01(i, j, 1) - 0.5) * 0.3) * D_LNG, (i + 0.5 + (hash01(i, j, 2) - 0.5) * 0.3) * D_LAT]);
-    return [p.x, p.y, cellPx * (0.78 + hash01(i, j, 3) * 0.3)];
+    return [p.x, p.y, cellPx * (0.95 + hash01(i, j, 3) * 0.3)];
   });
 
   // 동그라미로 안개를 걷어 낸다
@@ -288,12 +288,12 @@ if (new URLSearchParams(location.search).get('demo') === 'walk') {
       lat += Math.cos(heading) * 12 / M_PER_DEG_LAT;
       lng += Math.sin(heading) * 12 / (M_PER_DEG_LAT * Math.cos(lat * Math.PI / 180));
       path.push([lng, lat]);
-      window.addExplored(cellsAround(lat, lng, 100));
+      window.addExplored(cellsAround(lat, lng, 150));
       window.setPath(path);
       window.setMe(lng, lat);
       if (path.length % 15 === 0) map.easeTo({ center: [lng, lat], duration: 800 });
     };
-    window.addExplored(cellsAround(lat, lng, 100));
+    window.addExplored(cellsAround(lat, lng, 150));
     window.setMe(lng, lat);
     for (let k = 0; k < 40; k++) step();
     setInterval(step, 400);

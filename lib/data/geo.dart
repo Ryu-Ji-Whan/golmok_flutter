@@ -14,7 +14,7 @@ class LatLng {
 const cellM = 50.0;
 
 /// 걸은 지점에서 이 반경 안의 칸을 밝힌다(미터).
-const revealM = 100.0;
+const revealM = 150.0;
 
 const _mPerDegLat = 111320.0;
 // 한국 중부 위도(37.5도) 기준으로 경도 간격을 고정해 어디서나 같은 칸 번호를 갖게 한다.

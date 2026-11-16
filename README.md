@@ -30,7 +30,7 @@
 
 <table>
   <tr>
-    <td align="center" width="25%"><img src="assets/map/stickers/a00.webp" width="88" alt=""><br><b>안개 걷기</b><br><sub>걸은 골목 주변 100m의<br>안개가 걷혀요</sub></td>
+    <td align="center" width="25%"><img src="assets/map/stickers/a00.webp" width="88" alt=""><br><b>안개 걷기</b><br><sub>걸은 골목 주변 150m의<br>안개가 걷혀요</sub></td>
     <td align="center" width="25%"><img src="assets/map/stickers/a18.webp" width="88" alt=""><br><b>스티커 기록</b><br><sub>고양이 벤치, 골목 책방…<br>지금 자리에 붙여요</sub></td>
     <td align="center" width="25%"><img src="assets/map/stickers/c13.webp" width="88" alt=""><br><b>스탬프 투어</b><br><sub>동네 캠페인 스팟을 돌고<br>한정 스티커를 받아요</sub></td>
     <td align="center" width="25%"><img src="assets/map/stickers/a04.webp" width="88" alt=""><br><b>동네 대장</b><br><sub>이번 주 밝힌 칸으로<br>이웃과 순위를 겨뤄요</sub></td>
@@ -93,7 +93,7 @@
 
 ## 🙌 디자인 도움이 필요한 곳
 
-- [ ] **앱 아이콘 · 시작 화면** — 지금은 Flutter 기본 아이콘이에요
+- [ ] **앱 아이콘 다듬기 · 시작 화면** — 임시 아이콘(<img src="assets/icon/icon.png" width="20" alt="">, 원본 `assets/icon/icon.svg`)이 들어가 있어요
 - [ ] **사진 꾸미기** — 사진 위에 스티커 여러 개 붙이기, 갤러리 저장, SNS 공유
 - [ ] **지도 꾸미기** — 내 지도를 꾸며서 한 장으로 남기기
 - [ ] **빈 화면 · 오류 화면** — 기록이 없을 때, 위치 권한이 없을 때, 인터넷이 끊겼을 때

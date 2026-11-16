@@ -42,7 +42,7 @@ jobs:
 
       - name: Generate native Android project
         run: |
-          flutter create --platforms=android --org kr.golmok --project-name golmok_flutter .
+          flutter create --platforms=android,ios --org kr.golmok --project-name golmok_flutter .
           rm -f test/widget_test.dart
           M=android/app/src/main/AndroidManifest.xml
           # 인터넷(지도 타일)·위치 권한, 앱 이름
@@ -50,8 +50,10 @@ jobs:
           sed -i 's#android:label="[^"]*"#android:label="골목대장"#' $M
           grep -n "permission\|android:label" $M
 
-      - name: Install packages
-        run: flutter pub get
+      - name: Install packages & app icon
+        run: |
+          flutter pub get
+          dart run flutter_launcher_icons
 
       - name: Analyze & test (경고만, 빌드는 계속)
         run: |
@@ -83,14 +85,16 @@ jobs:
 
       - name: Generate native iOS project
         run: |
-          flutter create --platforms=ios --org kr.golmok --project-name golmok_flutter .
+          flutter create --platforms=android,ios --org kr.golmok --project-name golmok_flutter .
           rm -f test/widget_test.dart
           P=ios/Runner/Info.plist
           /usr/libexec/PlistBuddy -c "Add :NSLocationWhenInUseUsageDescription string $LOCATION_TEXT" $P
           /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName 골목대장" $P || /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string 골목대장" $P
 
-      - name: Install packages
-        run: flutter pub get
+      - name: Install packages & app icon
+        run: |
+          flutter pub get
+          dart run flutter_launcher_icons
 
       - name: Build app (no signing)
         run: flutter build ios --release --no-codesign
