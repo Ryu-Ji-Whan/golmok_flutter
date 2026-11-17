@@ -27,7 +27,8 @@
     <feDisplacementMap in="SourceGraphic" in2="n" scale="4" xChannelSelector="R" yChannelSelector="G"></feDisplacementMap>
   </filter>
 </svg>
-<div id="map" class="wobble"></div>
+<!-- 손그림 흔들림(wobble)은 기본 꺼짐: 안드로이드만 적용되고 iOS(WebKit)는 무시해서 두 폰 모양이 달랐음 -->
+<div id="map"></div>
 <script>
 function post(o) { if (window.Golmok) Golmok.postMessage(JSON.stringify(o)); }
 
