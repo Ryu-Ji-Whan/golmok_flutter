@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
@@ -33,6 +34,9 @@ class AppStore extends ChangeNotifier {
   Set<String> rewards = {};
   Set<String> visitedStores = {};
   List<Coupon> coupons = [];
+
+  /// 내 지도에 붙인 꾸미기 (폰에만 저장)
+  List<MapDeco> decos = [];
   final Set<String> likedPosts = {};
 
   /// 처음 위치를 잡은 곳. 캠페인 스팟·제휴 가게를 이 주변에 놓는다(데모).
@@ -103,6 +107,10 @@ class AppStore extends ChangeNotifier {
     }
     s.lastPos = s.home;
     s.hideRank = await db.kv('hide_rank') == '1';
+    try {
+      final raw = await db.kv('map_deco');
+      if (raw != null) s.decos = [for (final j in jsonDecode(raw) as List) MapDeco.fromJson(j as Map<String, dynamic>)];
+    } catch (_) {}
     return s;
   }
 
@@ -143,7 +151,14 @@ class AppStore extends ChangeNotifier {
     final d = await Remote.fetchAll();
     if (d == null || d.profile == null) return false;
     stopTracking();
+    // 지도 꾸미기는 아직 서버에 없다. 같은 계정으로 다시 로그인한 거면 이 폰의 꾸미기를 남긴다.
+    final keepDecos = profile?.nickname == d.profile!.nickname;
     await _db.wipe();
+    if (keepDecos && decos.isNotEmpty) {
+      await _db.setKv('map_deco', jsonEncode([for (final x in decos) x.toJson()]));
+    } else {
+      decos = [];
+    }
     profile = d.profile;
     await _db.saveProfile(d.profile!);
     for (final w in d.walks) {
@@ -231,6 +246,7 @@ class AppStore extends ChangeNotifier {
     rewards = {};
     visitedStores = {};
     coupons = [];
+    decos = [];
     likedPosts.clear();
     home = null;
     lastPos = null;
@@ -464,6 +480,13 @@ class AppStore extends ChangeNotifier {
     await _db.deleteSpot(id);
     notifyListeners();
     Remote.deleteSpot(id);
+  }
+
+  /// 지도 꾸미기 저장
+  Future<void> saveDecos(List<MapDeco> list) async {
+    decos = list;
+    await _db.setKv('map_deco', jsonEncode([for (final d in list) d.toJson()]));
+    notifyListeners();
   }
 
   Spot? spotById(String id) {

@@ -9,6 +9,7 @@ import '../data/store.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
 import 'account_signup.dart';
+import 'forgot_password.dart';
 import 'signup.dart';
 
 /// ①-2 로그인
@@ -210,6 +211,13 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
             TextButton(
               onPressed: busy ? null : _openSignup,
               child: const Text('회원가입', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: C.forest)),
+            ),
+            const Text('·', style: TextStyle(color: C.muted)),
+            TextButton(
+              onPressed: busy || !Remote.available
+                  ? null
+                  : () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ForgotPasswordScreen())),
+              child: const Text('아이디·비밀번호 찾기', style: TextStyle(fontSize: 13, color: C.muted)),
             ),
           ]),
           const SizedBox(height: 8),

@@ -9,8 +9,8 @@
   - 지도 데이터: OpenStreetMap / 타일: OpenFreeMap (무료, 키 없음)
   - 그리는 엔진: MapLibre GL JS
   Flutter와 주고받는 방법
-  - Flutter → 지도: window.goTo(경도, 위도, 확대), window.setWobble(true/false)
-  - 지도 → Flutter: Golmok 채널로 {"type":"ready"} / {"type":"move", lat, lng, zoom}
+  - Flutter → 지도: window.goTo(경도, 위도, 확대), window.setWobble(true/false), window.setDecos(꾸미기, 고치는 중?, 고른 id)
+  - 지도 → Flutter: Golmok 채널로 {"type":"ready"} / {"type":"move", lat, lng, zoom} / {"type":"decoTap", id} / {"type":"decoMove", id, lat, lng}
 -->
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
@@ -18,6 +18,13 @@
 <style>
   html, body, #map { margin: 0; width: 100%; height: 100%; background: #FFF9ED; }
   .wobble .maplibregl-canvas, .wobble .fog-canvas { filter: url(#wobble); }
+  /* 지도 꾸미기 */
+  .deco { display: flex; align-items: center; justify-content: center; border-radius: 12px; touch-action: none; }
+  .deco img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(2px 2px 0 #24322C); pointer-events: none; }
+  .deco-text { font-family: 'Jua', sans-serif; color: #0E5A3C; white-space: nowrap; line-height: 1; padding: 2px 6px;
+    text-shadow: -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff, 0 3px 0 #fff, 0 -3px 0 #fff, 3px 0 0 #fff, -3px 0 0 #fff; }
+  .deco.view { pointer-events: none; }
+  .deco.sel { outline: 3px dashed #F39A45; outline-offset: 3px; }
 </style>
 </head>
 <body>
@@ -203,6 +210,8 @@ function drawFog() {
 
 const line = (coords) => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: coords } });
 let spotMarkers = [];
+let decoMarkers = [];
+let decoTouchedAt = 0; // 꾸미기를 누른 시각 (같은 누름이 지도 빈 곳 누름으로도 잡히지 않게)
 
 window.goTo = (lng, lat, zoom) => whenReady(() => map.flyTo({ center: [lng, lat], zoom: zoom || map.getZoom(), speed: 1.6 }));
 window.setWobble = (on) => document.getElementById('map').classList.toggle('wobble', !!on);
@@ -230,6 +239,37 @@ window.setSpots = (items) => whenReady(() => {
     el.appendChild(img);
     el.addEventListener('click', (e) => { e.stopPropagation(); post({ type: 'tap', kind: it.kind, id: it.id }); });
     return new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat([it.lng, it.lat]).addTo(map);
+  });
+});
+
+/**
+ * 지도 꾸미기. items = [{id, lng, lat, sticker?, text?, size}]
+ * editing = true면 눌러서 고르고 끌어서 옮길 수 있다. selected = 고른 것의 id
+ */
+window.setDecos = (items, editing, selected) => whenReady(() => {
+  decoMarkers.forEach((m) => m.remove());
+  decoMarkers = items.map((it) => {
+    const el = document.createElement('div');
+    el.className = 'deco' + (editing ? '' : ' view') + (it.id === selected ? ' sel' : '');
+    if (it.sticker) {
+      el.style.width = el.style.height = it.size + 'px';
+      const img = document.createElement('img');
+      img.src = 'stickers/' + it.sticker + '.webp';
+      img.alt = '';
+      el.appendChild(img);
+    } else {
+      el.classList.add('deco-text');
+      el.style.fontSize = Math.round(it.size / 3) + 'px';
+      el.textContent = it.text || '';
+    }
+    const m = new maplibregl.Marker({ element: el, anchor: 'center', draggable: !!editing }).setLngLat([it.lng, it.lat]).addTo(map);
+    if (editing) {
+      el.addEventListener('pointerdown', () => { decoTouchedAt = Date.now(); });
+      el.addEventListener('click', (e) => { e.stopPropagation(); decoTouchedAt = Date.now(); post({ type: 'decoTap', id: it.id }); });
+      m.on('dragstart', () => { decoTouchedAt = Date.now(); post({ type: 'decoTap', id: it.id }); });
+      m.on('dragend', () => { const p = m.getLngLat(); post({ type: 'decoMove', id: it.id, lat: p.lat, lng: p.lng }); });
+    }
+    return m;
   });
 });
 
@@ -263,6 +303,7 @@ document.fonts.load('20px Jua').finally(() => {
     post({ type: 'ready' });
   });
   map.on('move', renderFog);
+  map.on('click', () => setTimeout(() => { if (Date.now() - decoTouchedAt > 400) post({ type: 'mapTap' }); }, 60));
   map.on('resize', resizeFog);
   map.on('moveend', () => {
     const c = map.getCenter();

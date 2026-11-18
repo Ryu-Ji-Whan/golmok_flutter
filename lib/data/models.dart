@@ -193,3 +193,28 @@ class Coupon {
         usedAt: r['used_at'] == null ? null : DateTime.fromMillisecondsSinceEpoch(r['used_at'] as int),
       );
 }
+
+/// ②-4 지도 꾸미기: 내 지도에 붙인 스티커나 글씨 하나 (나만 보임, 다른 사람에게 보내지 않음)
+class MapDeco {
+  MapDeco({required this.id, required this.lat, required this.lng, this.sticker, this.text, this.size = 64});
+
+  final String id;
+  double lat;
+  double lng;
+  final String? sticker;
+  final String? text;
+
+  /// 스티커는 너비(px), 글씨는 글자 크기의 3배 (px) — 지도 확대와 상관없이 같은 크기
+  double size;
+
+  Map<String, Object?> toJson() => {'id': id, 'lat': lat, 'lng': lng, 'sticker': sticker, 'text': text, 'size': size};
+
+  static MapDeco fromJson(Map<String, dynamic> j) => MapDeco(
+        id: j['id'] as String,
+        lat: (j['lat'] as num).toDouble(),
+        lng: (j['lng'] as num).toDouble(),
+        sticker: j['sticker'] as String?,
+        text: j['text'] as String?,
+        size: (j['size'] as num?)?.toDouble() ?? 64,
+      );
+}

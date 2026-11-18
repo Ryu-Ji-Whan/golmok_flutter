@@ -6,6 +6,7 @@ import '../data/store.dart';
 import '../theme.dart';
 import '../widgets/photo.dart';
 import '../widgets/ui.dart';
+import 'photo_edit.dart';
 import 'record.dart';
 
 /// ③-1 저장된 기록
@@ -58,6 +59,18 @@ class SpotDetailScreen extends StatelessWidget {
             ]),
           ),
         ),
+        if (sp.photo != null) ...[
+          const SizedBox(height: 10),
+          OutlineButton('사진 꾸미기', icon: Icons.auto_awesome_outlined, height: 48, onPressed: () async {
+            final old = sp.photo;
+            final out = await Navigator.of(context).push<String>(
+              MaterialPageRoute(builder: (_) => PhotoEditScreen(photo: old!, date: sp.createdAt)),
+            );
+            if (out == null) return;
+            await s.updateSpot(sp.copyWith(photo: out));
+            await Photos.delete(old);
+          }),
+        ],
         const SizedBox(height: 16),
         Text(sp.title, style: jua(26)),
         const SizedBox(height: 6),

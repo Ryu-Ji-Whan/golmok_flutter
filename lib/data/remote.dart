@@ -169,6 +169,34 @@ class Remote {
     }
   }
 
+  /// 비밀번호 찾기 메일 보내기. 성공하면 null, 실패하면 보여 줄 문장.
+  /// 메일 링크를 누르면 웹페이지(docs/auth/index.html)가 열려서 새 비밀번호를 정하고 아이디도 알려 준다.
+  /// 앱의 기본 방식(PKCE)으로 보내면 메일을 연 그 폰의 앱에서만 링크가 통하므로,
+  /// 인증 서버에 직접 요청해서 어느 기기·브라우저에서 열어도 되는 링크로 받는다.
+  /// 가입하지 않은 이메일이어도 서버는 똑같이 성공으로 답한다 (가입 여부를 숨김).
+  static Future<String?> sendPasswordReset(String email) async {
+    if (!_ready) return '서버 연결 설정이 아직 없어요';
+    final client = HttpClient()..connectionTimeout = const Duration(seconds: 10);
+    try {
+      final uri = Uri.parse('$supabaseUrl/auth/v1/recover').replace(queryParameters: {'redirect_to': emailConfirmedUrl});
+      final req = await client.postUrl(uri);
+      req.headers.set('apikey', supabaseAnonKey);
+      req.headers.contentType = ContentType.json;
+      req.add(utf8.encode(jsonEncode({'email': email.trim()})));
+      final res = await req.close().timeout(const Duration(seconds: 15));
+      final text = await res.transform(utf8.decoder).join();
+      if (res.statusCode == 200) return null;
+      if (res.statusCode == 429 || text.toLowerCase().contains('rate limit')) {
+        return '메일을 너무 자주 보냈어요. 1시간쯤 뒤에 다시 해 주세요';
+      }
+      return '메일을 보내지 못했어요. 이메일 주소를 확인해 주세요';
+    } catch (_) {
+      return '인터넷 연결을 확인해 주세요';
+    } finally {
+      client.close();
+    }
+  }
+
   /// 카카오·구글 로그인 뒤 앱으로 돌아오는 주소. Supabase 대시보드 Redirect URLs에도 같은 값을 등록한다.
   static const redirectUrl = 'golmok://login-callback';
 

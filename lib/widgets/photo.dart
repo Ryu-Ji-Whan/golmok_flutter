@@ -45,6 +45,15 @@ class Photos {
     return 'file:photos/$name';
   }
 
+  /// 앱에서 만든 그림(꾸민 사진 등)을 앱 폴더에 저장하고 'file:photos/…' 경로를 돌려준다.
+  static Future<String> saveBytes(List<int> bytes, {String ext = '.png'}) async {
+    final dir = Directory(p.join(_docs, 'photos'));
+    await dir.create(recursive: true);
+    final name = 'photo_${DateTime.now().millisecondsSinceEpoch}$ext';
+    await File(p.join(dir.path, name)).writeAsBytes(bytes);
+    return 'file:photos/$name';
+  }
+
   /// 기록을 지우거나 사진을 바꿀 때 예전 파일 정리
   static Future<void> delete(String? stored) async {
     if (stored == null || !stored.startsWith('file:')) return;

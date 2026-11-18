@@ -46,7 +46,9 @@ jobs:
           rm -f test/widget_test.dart
           M=android/app/src/main/AndroidManifest.xml
           # 인터넷(지도 타일)·위치 권한, 앱 이름
-          sed -i 's#<application#<uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>\n    <application#' $M
+          sed -i 's#<application#<uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>\n    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>\n    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29"/>\n    <application#' $M
+          # 꾸민 사진을 갤러리에 저장 (안드로이드 10 이하에서 필요)
+          sed -i 's#<application#<application android:requestLegacyExternalStorage="true"#' $M
           sed -i 's#android:label="[^"]*"#android:label="골목대장"#' $M
           # 카카오·구글 로그인 뒤 앱으로 돌아오는 주소 golmok://login-callback
           sed -i 's#</activity>#    <intent-filter>\n                <action android:name="android.intent.action.VIEW"/>\n                <category android:name="android.intent.category.DEFAULT"/>\n                <category android:name="android.intent.category.BROWSABLE"/>\n                <data android:scheme="golmok" android:host="login-callback"/>\n            </intent-filter>\n        </activity>#' $M
@@ -106,6 +108,7 @@ jobs:
           /usr/libexec/PlistBuddy -c "Add :NSLocationWhenInUseUsageDescription string $LOCATION_TEXT" $P
           /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string 마음에 드는 골목을 사진으로 남기려고 카메라를 써요" $P
           /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryUsageDescription string 앨범의 사진을 골목 기록에 넣으려고 사진에 접근해요" $P
+          /usr/libexec/PlistBuddy -c "Add :NSPhotoLibraryAddUsageDescription string 꾸민 사진을 앨범에 저장하려고 사진에 접근해요" $P
           /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName 골목대장" $P || /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string 골목대장" $P
           # 카카오·구글 로그인 뒤 앱으로 돌아오는 주소 golmok://login-callback
           /usr/libexec/PlistBuddy -c "Add :CFBundleURLTypes array" $P

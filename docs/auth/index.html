@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>골목대장 이메일 인증</title>
+<title>골목대장 계정</title>
 <link rel="icon" href="../design/img/a00.webp">
 <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -17,6 +17,15 @@
   .card { margin-top: 20px; padding: 16px; border-radius: 18px; background: #fff; box-shadow: 0 4px 12px rgba(36,50,44,.08); font-size: 14px; line-height: 1.7; text-align: left; }
   .card b { color: #0E5A3C; }
   .error h1 { color: #B3263A; }
+  form { margin-top: 20px; text-align: left; }
+  label { display: block; margin: 14px 0 6px; font-size: 14px; font-weight: 700; }
+  input { width: 100%; padding: 14px 16px; border: 1px solid #E3DCCB; border-radius: 14px; font-size: 16px; background: #fff; color: #24322C; font-family: inherit; }
+  input:focus { outline: 2px solid #2F8A61; border-color: transparent; }
+  button { width: 100%; margin-top: 20px; padding: 16px; border: 0; border-radius: 999px; background: #0E5A3C; color: #fff; font-size: 17px; font-weight: 700; font-family: inherit; cursor: pointer; }
+  button:disabled { background: #E3DCCB; color: #5E6A63; cursor: default; }
+  .msg { min-height: 20px; margin-top: 10px; font-size: 13px; color: #B3263A; }
+  .idbox { margin-top: 16px; padding: 14px 16px; border-radius: 18px; background: #E4F2E8; font-size: 15px; }
+  .idbox b { font-size: 20px; color: #0E5A3C; word-break: break-all; }
 </style>
 </head>
 <body>
@@ -26,16 +35,105 @@
   <p>골목대장 계정이 준비됐어요.</p>
   <div class="card">
     1. 이 창을 닫고 <b>골목대장 앱</b>으로 돌아가요<br>
-    2. <b>이메일로 계속하기 → 로그인</b>을 눌러요<br>
-    3. 가입할 때 쓴 이메일과 비밀번호를 넣으면 시작!
+    2. 로그인 화면에서 <b>아이디와 비밀번호</b>를 넣어요<br>
+    3. <b>로그인</b>을 누르면 시작!
   </div>
 </main>
 <main id="err" class="error" hidden>
   <div class="badge"><img src="../design/img/a21.webp" alt="낮잠 자는 고양이"></div>
   <h1>링크가 만료됐어요</h1>
-  <p>인증 링크는 한 번만, 정해진 시간 안에만 쓸 수 있어요.</p>
-  <div class="card">앱에서 <b>이메일로 계속하기 → 가입하기</b>를 다시 눌러 새 인증 메일을 받아 주세요.</div>
+  <p>메일 링크는 한 번만, 정해진 시간 안에만 쓸 수 있어요.</p>
+  <div class="card">
+    <b>가입 인증 메일이었다면</b> 앱에서 회원가입을 다시 해 새 인증 메일을 받아 주세요.<br>
+    <b>비밀번호 찾기 메일이었다면</b> 앱 로그인 화면의 <b>아이디·비밀번호 찾기</b>에서 메일을 다시 받아 주세요.
+  </div>
 </main>
+<main id="reset" hidden>
+  <div class="badge"><img src="../design/img/a03.webp" alt="지도 보는 고양이"></div>
+  <h1>새 비밀번호 정하기</h1>
+  <div class="idbox" id="idbox">계정을 확인하는 중이에요…</div>
+  <form id="form">
+    <label for="pw">새 비밀번호 (6자 이상)</label>
+    <input id="pw" type="password" autocomplete="new-password" minlength="6" required>
+    <label for="pw2">새 비밀번호 확인</label>
+    <input id="pw2" type="password" autocomplete="new-password" minlength="6" required>
+    <div class="msg" id="msg" role="alert"></div>
+    <button id="save" type="submit" disabled>비밀번호 바꾸기</button>
+  </form>
+</main>
+<main id="done" hidden>
+  <div class="badge"><img src="../design/img/a04.webp" alt="응원하는 고양이"></div>
+  <h1>비밀번호를 바꿨어요!</h1>
+  <p id="doneId"></p>
+  <div class="card">
+    1. 이 창을 닫고 <b>골목대장 앱</b>으로 돌아가요<br>
+    2. <b>아이디와 새 비밀번호</b>로 로그인하면 끝!
+  </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+  // 비밀번호 찾기 메일의 링크로 들어오면 주소 뒤에 #access_token=…&type=recovery 가 붙어 온다.
+  // 공개 키(sb_publishable_)만 쓴다. 비밀 키는 절대 여기에 넣지 않는다.
+  const SUPABASE_URL = 'https://iozoocgrtqzscexbxtox.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_nh8TxxJMXTDhp2HWD4JG2g_-W8KW8au';
+  const show = (id) => ['ok', 'err', 'reset', 'done'].forEach((x) => { document.getElementById(x).hidden = x !== id; });
+
+  (async () => {
+    const h = new URLSearchParams(location.hash.slice(1));
+    if (h.get('type') !== 'recovery' || !h.get('access_token')) return;
+    show('reset');
+    // 토큰이 주소창·방문 기록에 남지 않게 지운다
+    history.replaceState(null, '', location.pathname);
+    const $ = (id) => document.getElementById(id);
+    let sb;
+    try {
+      sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
+      const { error } = await sb.auth.setSession({ access_token: h.get('access_token'), refresh_token: h.get('refresh_token') || '' });
+      if (error) throw error;
+    } catch (e) {
+      show('err');
+      return;
+    }
+    let username = '';
+    try {
+      const { data } = await sb.from('accounts').select('username').maybeSingle();
+      username = data?.username || '';
+    } catch (e) {}
+    $('idbox').innerHTML = username
+      ? '내 아이디<br><b></b>'
+      : '아이디가 없는 계정이에요. 로그인 화면에서 <b>이메일 주소</b>를 아이디 칸에 넣으면 돼요.';
+    if (username) $('idbox').querySelector('b').textContent = username;
+
+    const check = () => {
+      const a = $('pw').value, b = $('pw2').value;
+      let m = '';
+      if (a && a.length < 6) m = '6자 이상으로 해 주세요';
+      else if (b && a !== b) m = '비밀번호가 서로 달라요';
+      $('msg').textContent = m;
+      $('save').disabled = !(a.length >= 6 && a === b);
+    };
+    $('pw').addEventListener('input', check);
+    $('pw2').addEventListener('input', check);
+    $('form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      $('save').disabled = true;
+      $('save').textContent = '바꾸는 중…';
+      const { error } = await sb.auth.updateUser({ password: $('pw').value });
+      if (error) {
+        const t = (error.message || '').toLowerCase();
+        $('msg').textContent = t.includes('different') ? '예전과 다른 비밀번호로 정해 주세요'
+          : t.includes('expired') || t.includes('jwt') ? '링크 시간이 지났어요. 앱에서 메일을 다시 받아 주세요'
+          : '바꾸지 못했어요. 잠시 뒤 다시 해 주세요';
+        $('save').textContent = '비밀번호 바꾸기';
+        check();
+        return;
+      }
+      $('doneId').textContent = username ? '아이디 ' + username + ' 의 비밀번호가 바뀌었어요.' : '';
+      show('done');
+      sb.auth.signOut({ scope: 'local' }).catch(() => {});
+    });
+  })();
+</script>
 <script>
   // Supabase가 오류를 주소 뒤(#error=...)에 붙여 보낸다
   const h = new URLSearchParams(location.hash.slice(1) + '&' + location.search.slice(1));

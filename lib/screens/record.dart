@@ -7,6 +7,7 @@ import '../data/store.dart';
 import '../theme.dart';
 import '../widgets/photo.dart';
 import '../widgets/ui.dart';
+import 'photo_edit.dart';
 
 /// ②-2 스티커 붙여 기록 (새 기록 / 고치기)
 class RecordScreen extends StatefulWidget {
@@ -73,6 +74,20 @@ class _RecordScreenState extends State<RecordScreen> {
     } on PhotoError catch (e) {
       if (mounted) toast(context, e.message);
     }
+  }
+
+  // ②-3 사진 꾸미기: 꾸민 사진은 새 파일로 저장되고, 저장하지 않고 나가면 지운다
+  Future<void> _decorate() async {
+    final photo = _photo;
+    if (photo == null) return;
+    final out = await Navigator.of(context).push<String>(
+      MaterialPageRoute(builder: (_) => PhotoEditScreen(photo: photo, date: widget.edit?.createdAt)),
+    );
+    if (out == null || !mounted) return;
+    setState(() {
+      _picked.add(out);
+      _photo = out;
+    });
   }
 
   // ②-3a 사진 넣기: 사진 찍기 / 앨범에서 고르기
@@ -182,7 +197,7 @@ class _RecordScreenState extends State<RecordScreen> {
         const SectionTitle('사진'),
         if (_photo == null)
           OutlineButton('사진 넣기', icon: Icons.add_a_photo_outlined, onPressed: _pickPhoto)
-        else
+        else ...[
           GestureDetector(
             onTap: _pickPhoto,
             child: ClipRRect(
@@ -193,6 +208,13 @@ class _RecordScreenState extends State<RecordScreen> {
               ]),
             ),
           ),
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(child: OutlineButton('사진 바꾸기', icon: Icons.photo_library_outlined, height: 48, onPressed: _pickPhoto)),
+            const SizedBox(width: 10),
+            Expanded(child: PrimaryButton('스티커로 꾸미기', icon: Icons.auto_awesome_outlined, height: 48, onPressed: _decorate)),
+          ]),
+        ],
         const SectionTitle('누구에게 보일까요?'),
         SegmentedButton<SpotVisibility>(
           segments: [for (final v in SpotVisibility.values) ButtonSegment(value: v, label: Text(visibilityLabel[v]!))],

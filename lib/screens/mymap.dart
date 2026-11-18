@@ -7,6 +7,7 @@ import '../theme.dart';
 import '../widgets/cartoon_map.dart';
 import '../widgets/route_thumb.dart';
 import '../widgets/ui.dart';
+import 'map_decorate.dart';
 import 'spot_detail.dart';
 import 'walk.dart';
 
@@ -29,6 +30,7 @@ class _MyMapTabState extends State<MyMapTab> {
     await _map.setOldPaths([for (final w in s.walks) w.path]);
     await _map.setMarks(buildMarks(s));
     await _map.setMe(s.center);
+    await _map.setDecos(s.decos);
   }
 
   Future<void> _ready() async {
@@ -49,7 +51,19 @@ class _MyMapTabState extends State<MyMapTab> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('내 지도'),
-        actions: [Padding(padding: const EdgeInsets.only(right: 16), child: Pill('총 ${formatDistance(s.totalDistance)}'))],
+        actions: [
+          Pill('총 ${formatDistance(s.totalDistance)}'),
+          TextButton.icon(
+            onPressed: () async {
+              final saved = await Navigator.of(context).push<bool>(MaterialPageRoute(builder: (_) => const MapDecorateScreen()));
+              if (saved == true) _sync();
+            },
+            icon: const Icon(Icons.brush_outlined, size: 18),
+            label: const Text('꾸미기', style: TextStyle(fontWeight: FontWeight.w700)),
+            style: TextButton.styleFrom(foregroundColor: C.forest),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: Column(children: [
         Padding(

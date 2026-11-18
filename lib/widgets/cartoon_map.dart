@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../data/geo.dart';
+import '../data/models.dart' show MapDeco;
 import '../theme.dart';
 
 /// 지도에 올릴 스티커 하나
@@ -46,16 +47,23 @@ class MapHandle {
   Future<void> setMe(LatLng p) => _js('setMe', [p.lng, p.lat]);
   Future<void> setMarks(List<MapMark> marks) => _js('setSpots', [marks.map((m) => m.toJson()).toList()]);
   Future<void> setWobble(bool on) => _js('setWobble', [on]);
+
+  /// 지도 꾸미기 표시. [editing]이면 눌러서 고르고 끌어서 옮길 수 있다.
+  Future<void> setDecos(List<MapDeco> decos, {bool editing = false, String? selected}) =>
+      _js('setDecos', [decos.map((d) => d.toJson()).toList(), editing, selected]);
 }
 
 /// 만화풍 지도 (assets/map/cartoon_map.html 을 WebView로 띄운다)
 class CartoonMap extends StatefulWidget {
-  const CartoonMap({super.key, required this.handle, this.onReady, this.onTap});
+  const CartoonMap({super.key, required this.handle, this.onReady, this.onTap, this.onEvent});
   final MapHandle handle;
   final VoidCallback? onReady;
 
   /// 지도 위 스티커를 눌렀을 때 (kind, id)
   final void Function(String kind, String id)? onTap;
+
+  /// 그 밖의 지도 소식 (move, mapTap, decoTap, decoMove …) 전체
+  final void Function(Map<String, dynamic> msg)? onEvent;
 
   @override
   State<CartoonMap> createState() => _CartoonMapState();
@@ -90,6 +98,8 @@ class _CartoonMapState extends State<CartoonMap> {
         widget.onReady?.call();
       case 'tap':
         widget.onTap?.call(msg['kind'] as String, msg['id'] as String);
+      default:
+        widget.onEvent?.call(msg);
     }
   }
 
