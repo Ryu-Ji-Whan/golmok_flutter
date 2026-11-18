@@ -61,11 +61,16 @@
     <td align="center"><img src="assets/map/stickers/a11.webp" width="96" alt=""><br><b>스티커 모으기</b><br><sub>고양이·참새·골목 풍경 스티커 55종.<br>가입 선물과 동네 대장 한정 스티커도 있어요.</sub></td>
     <td align="center"><img src="assets/map/stickers/c04.webp" width="96" alt=""><br><b>내 산책 기록</b><br><sub>산책마다 걸은 경로 그림과 거리·시간이 남아<br>내 지도로 한눈에 모아 봐요.</sub></td>
   </tr>
+  <tr>
+    <td align="center"><img src="assets/map/stickers/a17.webp" width="96" alt=""><br><b>사진 꾸미기</b><br><sub>사진 위에 스티커와 날짜 도장을 붙이고<br>앨범에 저장하거나 SNS에 공유해요.</sub></td>
+    <td align="center"><img src="assets/map/stickers/a19.webp" width="96" alt=""><br><b>내 지도 꾸미기</b><br><sub>내 지도 위에 스티커와 글씨를 붙여<br>나만의 동네 지도를 만들어요.</sub></td>
+    <td align="center"><img src="assets/map/stickers/a03.webp" width="96" alt=""><br><b>아이디·비밀번호 찾기</b><br><sub>가입한 이메일로 링크를 받아<br>아이디 확인과 새 비밀번호 설정.</sub></td>
+  </tr>
 </table>
 
 ### 🗺️ 만화풍 지도
 
-전국 어디서나 동화책 같은 지도로 그려져요. 파스텔 색에 굵은 외곽선, 건물 그림자, 물결과 풀 무늬, 손으로 그린 듯 살짝 흔들리는 선.
+전국 어디서나 동화책 같은 지도로 그려져요. 파스텔 색에 굵은 외곽선, 건물 그림자, 물결과 풀 무늬.
 → [지도 직접 움직여 보기](https://ryu-ji-whan.github.io/golmok_flutter/design/#map)
 
 ## 👟 이렇게 써요
@@ -73,9 +78,10 @@
 1. **가입하기** — 아이디·비밀번호·이메일로 가입하거나 카카오로 시작해요. 로그인 없이 둘러볼 수도 있어요.
 2. **내 동네 정하기** — 주로 생활하는 동네를 검색하거나, 현재 위치로 찾아요. (전국 어느 동이든)
 3. **산책 시작** — 지도에서 **산책 시작**을 누르고 걸어요. 걸은 길이 주황 선으로 그려지고 안개가 걷혀요.
-4. **여기 기록하기** — 마음에 드는 곳에서 스티커를 고르고 사진·메모를 남겨요.
+4. **여기 기록하기** — 마음에 드는 곳에서 스티커를 고르고 사진·메모를 남겨요. **스티커로 꾸미기**로 사진 위에 스티커와 날짜 도장도 붙여요.
 5. **산책 끝내기** — 오늘 걸은 경로 그림과 거리가 나와요. 기록은 내 지도에 쌓여요.
-6. **동네 탭** — 지금 있는 동네, 내 동네, 이번 주 걸은 동네마다 내 순위를 확인해요.
+6. **내 지도 꾸미기** — 내 지도 탭의 **꾸미기**에서 스티커·글씨를 붙여 나만의 지도를 만들어요.
+7. **동네 탭** — 지금 있는 동네, 내 동네, 이번 주 걸은 동네마다 내 순위를 확인해요.
 
 ## 🏆 동네 리더보드는 이렇게 정해져요
 
@@ -91,7 +97,8 @@
 | 걸은 경로, 정확한 위치 | **나만** (내 폰과 내 계정) |
 | 피드에 공유한 기록 | 이웃 — 스티커·제목·메모·동네 이름만, **좌표는 안 보여요** |
 | 리더보드 | 이웃 — 닉네임과 걸은 거리만 (숨기기 가능) |
-| 사진 | 지금은 **내 폰에만** 저장돼요 |
+| 사진 | 지금은 **내 폰에만** 저장돼요 (직접 앨범 저장·SNS 공유한 것만 밖으로 나가요) |
+| 지도 꾸미기 | **나만** — 지금은 내 폰에만 저장돼요 |
 
 로그인하면 기록이 내 계정에 저장돼서 폰을 바꿔도 이어져요. 로그인 없이 쓰면 이 폰에만 남아요.
 
@@ -106,10 +113,11 @@
 
 ## 🛣️ 앞으로
 
-- [ ] 사진 꾸미기 — 사진 위에 스티커 여러 개 붙이고 저장·공유
-- [ ] 지도 꾸미기 — 내 지도를 꾸며 한 장으로 남기기
-- [ ] 사진을 내 계정에 저장 (폰을 바꿔도 사진 유지)
-- [ ] 비밀번호 찾기, Google · Apple 로그인
+- [x] 사진 꾸미기 — 사진 위에 스티커 여러 개 붙이고 저장·공유
+- [x] 지도 꾸미기 — 내 지도에 스티커·글씨 붙이기
+- [x] 아이디·비밀번호 찾기
+- [ ] 사진·지도 꾸미기를 내 계정에 저장 (폰을 바꿔도 유지)
+- [ ] Google · Apple 로그인
 - [ ] 앱스토어 · 플레이스토어 출시
 
 ---
@@ -157,7 +165,7 @@
 | 동네 이름 | OpenStreetMap Nominatim | [`lib/data/places.dart`](lib/data/places.dart) |
 | 빌드 | GitHub Actions → Releases에 APK · IPA | [`.github/workflows/build.yml`](.github/workflows/build.yml) |
 
-- **화면:** 온보딩 · 로그인 · 회원가입([`login.dart`](lib/screens/login.dart), [`account_signup.dart`](lib/screens/account_signup.dart), [`signup.dart`](lib/screens/signup.dart)), 산책([`walk.dart`](lib/screens/walk.dart)), 기록([`record.dart`](lib/screens/record.dart), [`spot_detail.dart`](lib/screens/spot_detail.dart)), 내 지도([`mymap.dart`](lib/screens/mymap.dart)), 피드([`feed.dart`](lib/screens/feed.dart)), 동네([`town.dart`](lib/screens/town.dart)), 상점([`shop.dart`](lib/screens/shop.dart)), 프로필([`profile.dart`](lib/screens/profile.dart))
+- **화면:** 온보딩 · 로그인 · 회원가입([`login.dart`](lib/screens/login.dart), [`account_signup.dart`](lib/screens/account_signup.dart), [`signup.dart`](lib/screens/signup.dart)), 산책([`walk.dart`](lib/screens/walk.dart)), 비밀번호 찾기([`forgot_password.dart`](lib/screens/forgot_password.dart)), 기록([`record.dart`](lib/screens/record.dart), [`spot_detail.dart`](lib/screens/spot_detail.dart)), 사진 꾸미기([`photo_edit.dart`](lib/screens/photo_edit.dart)), 내 지도([`mymap.dart`](lib/screens/mymap.dart)), 지도 꾸미기([`map_decorate.dart`](lib/screens/map_decorate.dart)), 피드([`feed.dart`](lib/screens/feed.dart)), 동네([`town.dart`](lib/screens/town.dart)), 상점([`shop.dart`](lib/screens/shop.dart)), 프로필([`profile.dart`](lib/screens/profile.dart))
 - **서버 DB:** [`supabase/schema.sql`](supabase/schema.sql) 다음 [`supabase/migrations/`](supabase/migrations)를 번호 순서대로 실행. 아이디 로그인은 Edge Function [`login-with-username`](supabase/functions/login-with-username/index.ts)
 - **빌드:** `main`에 push하면 `android/`·`ios/`를 새로 만들어 빌드해요 (README·`docs/`·`supabase/`만 바뀌면 빌드 안 함)
 
