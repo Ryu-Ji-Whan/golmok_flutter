@@ -46,6 +46,7 @@
 - 사진: 찍기·앨범, 폰 앱 폴더에 `file:photos/…`로 저장 (서버 업로드는 아직)
 - 사진 꾸미기 `lib/screens/photo_edit.dart`: 스티커 20개까지 + 날짜 도장 1개, 완료하면 꾸민 PNG가 원본을 대신함. 갤러리 저장 `gal`(앨범 "골목대장"), 공유 `share_plus`
 - 지도 꾸미기 `lib/screens/map_decorate.dart`: 스티커·글씨(12자) 50개까지, 폰 kv `map_deco`에만 저장(서버 동기화 아직, 나만 보임)
+- 친구에게 보내기 `lib/screens/share_card.dart`: 기록을 스티커 카드(4:5, 1080×1350 PNG) 한 장으로 공유·앨범 저장. 좌표 없음, 동네 이름·메모는 켜고 끔. 저장·공유 공통 `lib/widgets/image_out.dart`
 - 비밀번호 찾기 `lib/screens/forgot_password.dart`: 이메일 입력 → `/auth/v1/recover`를 직접 불러 implicit 링크로 받음 → `docs/auth/index.html`이 `#type=recovery`를 보고 아이디 표시 + 새 비밀번호 설정. redirect는 `emailConfirmedUrl`과 같은 주소(Supabase Redirect URLs에 있어야 함)
 - 앱 아이콘: 초록 지도 핀 속 참새 (`assets/icon/`)
 
@@ -55,4 +56,5 @@
 - [ ] 아이디 회원가입 → 인증 → 로그인 실기기 확인, accounts 표에 아이디 들어가는지
 - [ ] 사진 꾸미기·지도 꾸미기·비밀번호 찾기 실기기 확인 (2026-11-18 만듦)
 - [ ] 사진 서버 저장, 지도 꾸미기 서버 동기화
+- [ ] 링크로 공유 (사용자가 원함: 카드 먼저, 사진 서버 저장 뒤 링크 → 웹/앱에서 기록 보기)
 - [ ] 실제 앱 스크린샷으로 README 갤러리 교체

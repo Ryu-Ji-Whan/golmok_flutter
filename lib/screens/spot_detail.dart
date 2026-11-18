@@ -8,6 +8,7 @@ import '../widgets/photo.dart';
 import '../widgets/ui.dart';
 import 'photo_edit.dart';
 import 'record.dart';
+import 'share_card.dart';
 
 /// ③-1 저장된 기록
 class SpotDetailScreen extends StatelessWidget {
@@ -86,6 +87,9 @@ class SpotDetailScreen extends StatelessWidget {
         const SizedBox(height: 14),
         Text('위치 ${sp.lat.toStringAsFixed(5)}, ${sp.lng.toStringAsFixed(5)}', style: const TextStyle(fontSize: 12, color: C.muted)),
         const SizedBox(height: 24),
+        PrimaryButton('친구에게 보내기', icon: Icons.send_outlined, color: C.orange,
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ShareCardScreen(spot: sp)))),
+        const SizedBox(height: 10),
         if (!sp.shared)
           PrimaryButton('골목 피드에 공유하기', icon: Icons.ios_share,
               onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ShareScreen(spot: sp))))

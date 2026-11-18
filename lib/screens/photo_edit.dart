@@ -3,17 +3,13 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:gal/gal.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../data/geo.dart';
 import '../data/stickers.dart';
 import '../data/store.dart';
 import '../theme.dart';
+import '../widgets/image_out.dart';
 import '../widgets/photo.dart';
 import '../widgets/ui.dart';
 
@@ -155,26 +151,17 @@ class _PhotoEditScreenState extends State<PhotoEditScreen> {
   }
 
   // ── 저장·공유 ──
-  /// 꾸민 사진을 PNG로 그린다 (원본 사진 크기에 가깝게)
+  /// 꾸민 사진을 PNG로 그린다 (원본 사진 크기에 가깝게, 선택 테두리는 빼고)
   Future<Uint8List?> _render() async {
-    setState(() => _sel = null); // 선택 테두리는 빼고
-    await WidgetsBinding.instance.endOfFrame;
-    final box = _canvasKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-    if (box == null) return null;
-    final ratio = ((_imgSize?.width ?? box.size.width) / box.size.width).clamp(1.0, 4.0);
-    final img = await box.toImage(pixelRatio: ratio);
-    final data = await img.toByteData(format: ui.ImageByteFormat.png);
-    img.dispose();
-    return data?.buffer.asUint8List();
+    setState(() => _sel = null);
+    final shown = _canvasKey.currentContext?.size?.width ?? 1;
+    final ratio = ((_imgSize?.width ?? shown) / shown).clamp(1.0, 4.0);
+    return ImageOut.capture(_canvasKey, pixelRatio: ratio);
   }
 
   Future<String?> _renderToTemp() async {
     final bytes = await _render();
-    if (bytes == null) return null;
-    final dir = await getTemporaryDirectory();
-    final f = File(p.join(dir.path, 'golmok_${DateTime.now().millisecondsSinceEpoch}.png'));
-    await f.writeAsBytes(bytes);
-    return f.path;
+    return bytes == null ? null : ImageOut.toTemp(bytes);
   }
 
   Future<void> _run(Future<void> Function() job) async {
@@ -188,36 +175,15 @@ class _PhotoEditScreenState extends State<PhotoEditScreen> {
   }
 
   Future<void> _saveToGallery() => _run(() async {
-        try {
-          final path = await _renderToTemp();
-          if (path == null) throw Exception('render');
-          if (!await Gal.hasPermission(toAlbum: true) && !await Gal.requestPermission(toAlbum: true)) {
-            if (mounted) toast(context, '사진 권한이 꺼져 있어요. 설정에서 골목대장의 사진 접근을 켜 주세요');
-            return;
-          }
-          await Gal.putImage(path, album: '골목대장');
-          if (mounted) toast(context, '갤러리의 "골목대장" 앨범에 저장했어요');
-        } on GalException catch (e) {
-          if (mounted) {
-            toast(context, e.type == GalExceptionType.permissionDenied
-                ? '사진 권한이 꺼져 있어요. 설정에서 골목대장의 사진 접근을 켜 주세요'
-                : e.type == GalExceptionType.notEnoughSpace
-                    ? '폰 저장 공간이 모자라요'
-                    : '저장하지 못했어요. 다시 해 주세요');
-          }
-        } catch (_) {
-          if (mounted) toast(context, '저장하지 못했어요. 다시 해 주세요');
-        }
+        final path = await _renderToTemp();
+        final err = path == null ? '저장하지 못했어요. 다시 해 주세요' : await ImageOut.saveToGallery(path);
+        if (mounted) toast(context, err ?? '갤러리의 "골목대장" 앨범에 저장했어요');
       });
 
   Future<void> _share() => _run(() async {
-        try {
-          final path = await _renderToTemp();
-          if (path == null) throw Exception('render');
-          await SharePlus.instance.share(ShareParams(files: [XFile(path, mimeType: 'image/png')], text: '#골목대장 #골목산책'));
-        } catch (_) {
-          if (mounted) toast(context, '공유하지 못했어요. 다시 해 주세요');
-        }
+        final path = await _renderToTemp();
+        final err = path == null ? '공유하지 못했어요. 다시 해 주세요' : await ImageOut.share(path, text: '#골목대장 #골목산책');
+        if (err != null && mounted) toast(context, err);
       });
 
   Future<void> _done() => _run(() async {
