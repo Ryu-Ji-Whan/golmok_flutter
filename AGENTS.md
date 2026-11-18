@@ -11,7 +11,9 @@
 - 서버: Supabase `lib/data/remote.dart`, URL·공개 키 `lib/config.dart`
 - 동네 이름: OpenStreetMap Nominatim `lib/data/places.dart` (1초 1회 규칙, 실패 시 30초 쉼)
 
-## 빌드·배포 (이 맥에는 Flutter·Xcode 없음 → 로컬 빌드 불가)
+## 빌드·배포 (이 맥에는 Xcode 없음 → 앱 빌드는 GitHub Actions)
+
+- 맥에 Flutter 3.50.0 stable 설치됨 (`~/development/flutter`, PATH는 `~/.zshrc`). push 전에 `flutter analyze`로 오류 검사 (info는 무시 가능, error 0이어야 함)
 
 - `main`에 push → `.github/workflows/build.yml`이 `flutter create`로 android/ios 생성 → APK·IPA를 Releases에
   - 권한 문구, 로그인 복귀 주소 `golmok://login-callback`, 앱 아이콘(flutter_launcher_icons), 고정 서명 키는 이 워크플로에서 넣는다
