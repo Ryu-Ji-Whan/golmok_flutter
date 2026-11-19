@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+<title>친구 추가</title>
+<style>
+  .dim { position: absolute; inset: 0; background: rgba(36,50,44,.45); }
+  .sheet { position: absolute; left: 0; right: 0; bottom: 0; background: #fff; border-radius: 28px 28px 0 0; padding: 22px 20px 34px; }
+  .input { height: 52px; border: 1.5px solid var(--forest); border-radius: 14px; padding: 0 16px; display: flex; align-items: center; font-size: 15px; flex: 1; }
+</style>
+</head>
+<body>
+<div class="status"><span>9:41</span><i></i></div>
+<div class="appbar"><button class="back">‹</button><h1>친구</h1><span class="act">＋ 친구 추가</span></div>
+<div class="pad"><div class="sec">친구 3</div><div class="card" style="height:64px"></div></div>
+<div class="dim"></div>
+<div class="sheet">
+  <div class="jua" style="font-size:26px;color:var(--forest)">친구 추가</div>
+  <p class="sub" style="font-size:13px;line-height:1.5;margin:4px 0 14px">친구의 아이디나 닉네임을 정확히 입력해 주세요.<br>카카오로 가입한 친구는 닉네임으로 찾을 수 있어요.</p>
+  <div class="row"><div class="input">골목참새</div><button class="chip" style="height:52px;border-radius:26px;padding:0 20px">찾기</button></div>
+  <div class="card row" style="margin-top:14px;background:var(--cream);box-shadow:none">
+    <div class="av" style="width:52px;height:52px"><img src="../img/c01.webp" alt=""></div>
+    <div class="jua" style="font-size:24px;color:var(--forest)">골목참새</div>
+  </div>
+  <button class="btn" style="margin-top:12px">＋ 친구 요청 보내기</button>
+</div>
+</body>
+</html>

@@ -1,0 +1,51 @@
+/* 2026-11-19에 추가한 화면들(친구·스티커 보내기·받기·지도 테마·밝힌 곳에 붙이기)이 함께 쓰는 모양.
+   색·모서리는 앱 lib/theme.dart 와 같다. 화면 크기 390×844 */
+:root {
+  --forest:#0E5A3C; --leaf:#2F8A61; --leafText:#2F7A56; --cream:#FFF9ED; --orange:#F39A45; --orangeText:#A4500B;
+  --ink:#24322C; --muted:#5E6A63; --line:#E3DCCB; --lineSoft:#EDE6D6; --mint:#E4F2E8; --peach:#FDE7D3; --sand:#F2EEE4;
+  --danger:#B3263A; --white:#fff; --shadow: 0 4px 12px rgba(36,50,44,.12);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 390px; height: 844px; overflow: hidden; }
+body { background: var(--cream); color: var(--ink); font-family: 'Noto Sans KR', -apple-system, sans-serif; word-break: keep-all; position: relative; }
+button { font-family: inherit; cursor: pointer; }
+.jua { font-family: 'Jua', sans-serif; font-weight: 400; }
+.status { height: 47px; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; font-size: 15px; font-weight: 700; }
+.status i { width: 26px; height: 12px; border: 1.5px solid var(--ink); border-radius: 4px; display: inline-block; position: relative; }
+.status i::after { content: ''; position: absolute; inset: 1.5px; right: 6px; background: var(--ink); border-radius: 1.5px; }
+.appbar { height: 56px; display: flex; align-items: center; gap: 4px; padding: 0 8px 0 4px; }
+.appbar .back { width: 44px; height: 44px; border: 0; background: none; font-size: 26px; color: var(--ink); }
+.appbar h1 { flex: 1; font-size: 20px; font-weight: 700; }
+.appbar .act { border: 0; background: none; color: var(--forest); font-weight: 700; font-size: 14px; padding: 8px 10px; display: flex; gap: 4px; align-items: center; }
+.pad { padding: 4px 16px 24px; }
+.sec { margin: 20px 0 10px; font-size: 17px; font-weight: 700; }
+.card { background: var(--white); border-radius: 18px; box-shadow: var(--shadow); padding: 16px; }
+.row { display: flex; align-items: center; gap: 12px; }
+.av { width: 44px; height: 44px; border-radius: 50%; background: var(--peach); border: 2px solid #fff; display: flex; align-items: center; justify-content: center; flex: none; }
+.av img { width: 82%; height: 82%; object-fit: contain; }
+.name { font-size: 15px; font-weight: 700; }
+.sub { font-size: 12px; color: var(--muted); }
+.grow { flex: 1; min-width: 0; }
+.btn { height: 56px; width: 100%; border-radius: 28px; border: 0; background: var(--forest); color: #fff; font-size: 17px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 6px 14px rgba(14,90,60,.25); }
+.btn.orange { background: var(--orange); box-shadow: 0 6px 14px rgba(243,154,69,.35); }
+.btn.outline { background: #fff; color: var(--forest); border: 1px solid var(--line); box-shadow: none; font-size: 15px; }
+.btn.off { background: var(--line); color: var(--muted); box-shadow: none; }
+.btn.sm { height: 50px; font-size: 15px; }
+.chip { height: 36px; padding: 0 16px; border-radius: 18px; border: 0; background: var(--forest); color: #fff; font-size: 14px; font-weight: 700; }
+.chip.ghost { background: none; color: var(--muted); }
+.pill { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; background: var(--mint); color: var(--forest); }
+.pick-row { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 18px; background: #fff; border: 1px solid var(--line); margin-bottom: 8px; }
+.pick-row.on { background: var(--mint); border: 2px solid var(--forest); }
+.radio { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); flex: none; }
+.on .radio { border: 6px solid var(--forest); }
+.bottom { position: absolute; left: 16px; right: 16px; bottom: 28px; }
+.map { position: absolute; inset: 0; background: center / cover no-repeat; }
+.note { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font-size: 11px; color: var(--muted); }
+/* 스티커 콩 */
+.kong { position: absolute; pointer-events: none; }
+.kong-ring { width: 16px; height: 16px; margin: -8px 0 0 -8px; border: 3px solid var(--orange); border-radius: 50%; animation: ring .5s ease-out forwards; }
+.kong-text { font-family: 'Jua'; font-size: 22px; color: var(--orangeText); transform: translateX(-50%); white-space: nowrap; animation: kongText .9s ease-out forwards;
+  text-shadow: -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff; }
+@keyframes ring { to { transform: scale(6); opacity: 0; } }
+@keyframes kongText { 0% { opacity: 0; transform: translate(-50%, 6px) scale(.6); } 30% { opacity: 1; transform: translate(-50%, -14px) scale(1.15); } 100% { opacity: 0; transform: translate(-50%, -30px); } }

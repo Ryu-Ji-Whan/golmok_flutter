@@ -19,6 +19,8 @@
   - 권한 문구, 로그인 복귀 주소 `golmok://login-callback`, 앱 아이콘(flutter_launcher_icons), 고정 서명 키는 이 워크플로에서 넣는다
 - `README.md`·`docs/`·`supabase/`만 바뀌면 앱 빌드 안 함
 - `docs/` = GitHub Pages: 디자인 시안 `docs/design/`, 이메일 인증 완료 페이지 `docs/auth/`
+  - 시안 화면 `docs/design/screens/*.dc.html`: 예전 것은 디자인 도구가 묶은 큰 파일, 2026-11-19에 더한 6개(Friends·FriendAdd·SendSticker·GiftReceive·MapTheme·PickPlace)는 손으로 쓴 HTML + `screens/app.css`
+  - `docs/design/map/index.html`은 앱 지도(`assets/map/cartoon_map.html`)를 그대로 복사한 것 → 지도를 고치면 같이 복사. 테마 미리보기 그림 `docs/design/img/theme-*.jpg`
 - `docs/design/` 바뀌면 `screenshots.yml`이 README용 PNG(`docs/screenshots/`)를 다시 찍는다
 - 끝나면 `gh release download`로 IPA를 `~/Downloads/golmok-flutter-unsigned.ipa`에 받아 둔다 (사용자는 Sideloadly로 설치)
 - 커밋 메시지는 한국어, 끝에 `Co-Authored-By` 줄
