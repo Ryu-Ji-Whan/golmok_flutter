@@ -22,7 +22,6 @@
   /* 테마 장식(종이 질감·테두리·꽃잎 등)은 지도와 안개 위, 스티커 아래 */
   .theme-ov { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
   .maplibregl-marker { z-index: 2; }
-  .retro .maplibregl-canvas { image-rendering: pixelated; }
   /* 지도 꾸미기 */
   .deco { display: flex; align-items: center; justify-content: center; border-radius: 12px; touch-action: none; }
   .deco img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(2px 2px 0 #24322C); pointer-events: none; }
@@ -61,6 +60,7 @@ const isRoad = ['any', isMinor, isMajor];
 const isPath = ['==', ['get', 'class'], 'path'];
 const isRes = ['==', ['get', 'class'], 'residential'];
 const round = { 'line-cap': 'round', 'line-join': 'round' };
+const SQUARE = { 'line-cap': 'square', 'line-join': 'miter' }; // 각진 길 (레트로)
 const road = (id, f, paint, layout) => ({ id, type: 'line', source: 'omt', 'source-layer': 'transportation', filter: f, paint, ...(layout ? { layout } : {}) });
 const fill = (id, layer, paint, extra) => ({ id, type: 'fill', source: 'omt', 'source-layer': layer, paint, ...(extra || {}) });
 const line = (id, layer, paint, extra) => ({ id, type: 'line', source: 'omt', 'source-layer': layer, paint, ...(extra || {}) });
@@ -407,7 +407,9 @@ const THEMES = {
   },
 
   retro: {
-    name: '레트로 게임', font: 'Do Hyeon', bg: '#B9D77A', pixelRatio: 0.5, cls: 'retro', fog: 'rgba(22, 33, 15, 0.45)',
+    // 예전에는 지도를 낮은 해상도(pixelRatio 0.5)로 그렸더니 글씨까지 깨졌다.
+    // 이제 지도는 선명하게 그리고, 각진 길·도트 무늬·화면 격자·주사선으로 게임 화면 느낌을 낸다.
+    name: '레트로 게임', font: 'Do Hyeon', bg: '#B9D77A', fog: 'rgba(22, 33, 15, 0.45)',
     route: { old: '#3D6B22', casing: '#16210F', line: '#F08A4B', me: '#16210F' },
     images: () => ({ grass: P.checker('#7DB650', '#6FA845'), waves: P.checker('#4FA8D8', '#62B6E2') }),
     layers: () => {
@@ -419,15 +421,17 @@ const THEMES = {
         fill('building-shadow', 'building', { 'fill-color': INK, 'fill-translate': [4, 4] }, { minzoom: 14 }),
         fill('building', 'building', { 'fill-color': ['match', ['%', ['to-number', ['id'], 0], 3], 0, '#F4D35E', 1, '#EE964B', '#F7EFC6'] }, { minzoom: 13 }),
         line('building-line', 'building', { 'line-color': INK, 'line-width': 2.5 }, { minzoom: 14 }),
-        road('road-casing', isRoad, { 'line-color': INK, 'line-width': z(0.5 + CAS * 0.6, 16 + CAS) }),
-        road('minor', isMinor, { 'line-color': '#E8D7A3', 'line-width': z(0.5, 12) }),
-        road('major', isMajor, { 'line-color': '#C9C9C9', 'line-width': z(1.5, 16) }),
-        road('major-mid', isMajor, { 'line-color': '#FFFFFF', 'line-width': z(0.4, 2), 'line-dasharray': [3, 3] }),
-        ...labels({ halo: '#16210F', road: '#FFFFFF', place: '#FFE45E', size: 18 }),
+        road('road-casing', isRoad, { 'line-color': INK, 'line-width': z(0.5 + CAS * 0.6, 16 + CAS) }, SQUARE),
+        road('minor', isMinor, { 'line-color': '#E8D7A3', 'line-width': z(0.5, 12) }, SQUARE),
+        road('major', isMajor, { 'line-color': '#C9C9C9', 'line-width': z(1.5, 16) }, SQUARE),
+        road('major-mid', isMajor, { 'line-color': '#FFFFFF', 'line-width': z(0.4, 2), 'line-dasharray': [3, 3] }, { 'line-cap': 'butt' }),
+        ...labels({ halo: '#16210F', road: '#FFFFFF', place: '#FFE45E', size: 16 }),
       ];
     },
     decorate(kit) {
-      kit.div('background: repeating-linear-gradient(0deg, rgba(0,0,0,.12) 0 1px, transparent 1px 3px)');
+      // 화면 격자(옛날 액정의 네모 점) + 주사선 + 게임 화면 테두리
+      kit.div('background-image: linear-gradient(rgba(22,33,15,.10) 1px, transparent 1px), linear-gradient(90deg, rgba(22,33,15,.10) 1px, transparent 1px); background-size: 4px 4px');
+      kit.div('background: repeating-linear-gradient(0deg, rgba(0,0,0,.08) 0 1px, transparent 1px 3px)');
       kit.div('box-shadow: inset 0 0 0 5px #16210F, inset 0 0 0 9px #F7EFC6, inset 0 0 0 13px #16210F');
     },
   },
@@ -715,8 +719,7 @@ async function makeMap(id) {
   theme = t;
   FOG_COLOR = t.fog || FOG_DEFAULT;
   const box = document.getElementById('map');
-  box.classList.toggle('retro', t.cls === 'retro');
-  document.body.style.background = box.style.background = t.bg || '#FFF9ED';
+    document.body.style.background = box.style.background = t.bg || '#FFF9ED';
   const images = t.images();
   const R = Object.assign({}, ROUTE, t.route || {});
   const opts = {

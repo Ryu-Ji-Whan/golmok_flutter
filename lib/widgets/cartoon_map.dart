@@ -27,7 +27,7 @@ const mapThemes = [
   MapTheme('sketch', '연필 스케치', '모눈 공책에 연필로 그린 흑백 지도', [Color(0xFFFCFCFA), Color(0xFFE6E8E0), Color(0xFF3B3B3B), Color(0xFF5B7FB0)]),
   MapTheme('watercolor', '수채화', '외곽선 없이 물감이 번진 지도', [Color(0xFFFBF6EC), Color(0xFFF2B48C), Color(0xFF8EC3E6), Color(0xFFA9D49A)]),
   MapTheme('sakura', '벚꽃 골목', '꽃 무늬 공원과 살랑살랑 떨어지는 꽃잎', [Color(0xFFFFF5F7), Color(0xFFF9D9E4), Color(0xFFFFC6D8), Color(0xFFC0386E)]),
-  MapTheme('retro', '레트로 게임', '도트 그림처럼 네모난 점이 보이는 게임 화면', [Color(0xFFB9D77A), Color(0xFFF4D35E), Color(0xFFEE964B), Color(0xFF16210F)]),
+  MapTheme('retro', '레트로 게임', '각진 길, 화면 격자와 주사선, 게임기 테두리', [Color(0xFFB9D77A), Color(0xFFF4D35E), Color(0xFFEE964B), Color(0xFF16210F)]),
 ];
 
 /// 지도에 올릴 스티커 하나
