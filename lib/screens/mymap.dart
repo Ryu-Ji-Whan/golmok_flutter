@@ -24,6 +24,20 @@ class MyMapTab extends StatefulWidget {
 class _MyMapTabState extends State<MyMapTab> {
   final _map = MapHandle();
   int _view = 0; // 0 = 장소, 1 = 산책
+  LatLng? _pick; // 지도에서 고른, 스티커 붙일 자리
+
+  void _onMapEvent(Map<String, dynamic> msg) {
+    if (msg['type'] != 'mapTap') return;
+    final p = explorePick(context, msg);
+    setState(() => _pick = p);
+    _map.setPick(p);
+  }
+
+  Future<void> _recordAt(LatLng at) async {
+    setState(() => _pick = null);
+    await _map.setPick(null);
+    if (mounted) await recordAt(context, _map, at: at);
+  }
 
   Future<void> _sync() async {
     final s = StoreScope.read(context);
@@ -79,7 +93,22 @@ class _MyMapTabState extends State<MyMapTab> {
             child: Container(
               height: 300,
               decoration: BoxDecoration(border: Border.all(color: C.ink, width: 2), borderRadius: BorderRadius.circular(R.big)),
-              child: CartoonMap(handle: _map, onReady: _ready, onTap: (k, id) => openMark(context, k, id)),
+              child: Stack(children: [
+                Positioned.fill(child: CartoonMap(handle: _map, onReady: _ready, onTap: (k, id) => openMark(context, k, id), onEvent: _onMapEvent)),
+                if (_pick != null)
+                  Positioned(
+                    left: 8,
+                    right: 8,
+                    bottom: 8,
+                    child: PickCard(
+                      onCancel: () {
+                        setState(() => _pick = null);
+                        _map.setPick(null);
+                      },
+                      onOk: () => _recordAt(_pick!),
+                    ),
+                  ),
+              ]),
             ),
           ),
         ),

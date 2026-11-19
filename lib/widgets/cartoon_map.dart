@@ -69,6 +69,9 @@ class MapHandle {
   Future<void> setMarks(List<MapMark> marks) => _js('setSpots', [marks.map((m) => m.toJson()).toList()]);
   Future<void> setWobble(bool on) => _js('setWobble', [on]);
 
+  /// 스티커 붙일 자리 표시 (null이면 지움)
+  Future<void> setPick(LatLng? p) => _js('setPick', [p?.lng, p?.lat]);
+
   /// 지도 테마 바꾸기 (지도를 새로 그림, 표시하던 것은 그대로)
   Future<void> setTheme(String id) => _js('setTheme', [id]);
 

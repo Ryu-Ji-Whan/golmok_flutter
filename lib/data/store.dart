@@ -461,8 +461,9 @@ class AppStore extends ChangeNotifier {
   double get totalDistance => walks.fold<double>(0, (n, w) => n + w.distanceM) + (activeWalk?.distanceM ?? 0);
 
   // ── 기록 (스티커 붙인 장소) ──
-  Future<Spot> addSpot({required String stickerId, required String title, required String memo, required SpotVisibility visibility, String? photo}) async {
-    final p = center;
+  /// [at]이 있으면 그 자리(내가 밝힌 곳)에, 없으면 지금 있는 자리에 붙인다
+  Future<Spot> addSpot({required String stickerId, required String title, required String memo, required SpotVisibility visibility, String? photo, LatLng? at}) async {
+    final p = at ?? center;
     final s = Spot(
       id: newId('spot'),
       lat: p.lat,
@@ -472,7 +473,7 @@ class AppStore extends ChangeNotifier {
       memo: memo,
       visibility: visibility,
       photo: photo,
-      walkId: activeWalk?.id,
+      walkId: at == null ? activeWalk?.id : null,
       createdAt: DateTime.now(),
     );
     spots.insert(0, s);

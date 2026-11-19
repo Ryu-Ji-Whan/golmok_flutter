@@ -26,6 +26,56 @@ List<MapMark> buildMarks(AppStore s) => [
       for (final sp in s.spots) MapMark(id: sp.id, pos: sp.pos, sticker: sp.stickerId, kind: 'spot', label: sp.title),
     ];
 
+/// 지도 빈 곳을 눌렀을 때 스티커 붙일 자리. 내가 걸어서 밝힌 곳만 되고, 안개 낀 곳이면 알려 주고 null
+LatLng? explorePick(BuildContext context, Map<String, dynamic> msg) {
+  if (msg['type'] != 'mapTap' || msg['lat'] == null) return null;
+  final p = LatLng((msg['lat'] as num).toDouble(), (msg['lng'] as num).toDouble());
+  if (StoreScope.read(context).explored.contains(cellOf(p))) return p;
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(const SnackBar(content: Text('아직 안개 낀 곳이에요. 걸어서 밝힌 곳에만 스티커를 붙일 수 있어요'), duration: Duration(seconds: 2)));
+  return null;
+}
+
+/// 기록 화면을 열고, 저장하고 돌아오면 지도에 스티커를 콩 찍는다. [at]이 없으면 지금 있는 자리. 저장했으면 true
+Future<bool> recordAt(BuildContext context, MapHandle map, {LatLng? at}) async {
+  final saved = await Navigator.of(context).push<bool>(MaterialPageRoute(builder: (_) => RecordScreen(at: at)));
+  if (saved != true || !context.mounted) return false;
+  final s = StoreScope.read(context);
+  if (s.spots.isEmpty) return true;
+  await map.setMarks(buildMarks(s));
+  await Future<void>.delayed(const Duration(milliseconds: 250));
+  await map.stamp(s.spots.first.id);
+  return true;
+}
+
+/// 고른 자리에 붙일지 묻는 카드
+class PickCard extends StatelessWidget {
+  const PickCard({super.key, required this.onCancel, required this.onOk});
+  final VoidCallback onCancel, onOk;
+
+  @override
+  Widget build(BuildContext context) => CardBox(
+        padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+        child: Row(children: [
+          const Icon(Icons.add_location_alt, color: C.orange),
+          const SizedBox(width: 10),
+          const Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+              Text('이 자리에 스티커를 붙일까요?', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+              Text('내가 걸어서 밝힌 골목이에요', style: TextStyle(fontSize: 12, color: C.muted)),
+            ]),
+          ),
+          TextButton(onPressed: onCancel, child: const Text('취소', style: TextStyle(color: C.muted))),
+          FilledButton(
+            onPressed: onOk,
+            style: FilledButton.styleFrom(backgroundColor: C.orange, shape: const StadiumBorder()),
+            child: const Text('붙이기'),
+          ),
+        ]),
+      );
+}
+
 /// ①-4 산책 시작 / ②-1 산책 중 지도
 class WalkTab extends StatefulWidget {
   const WalkTab({super.key});
@@ -40,6 +90,7 @@ class _WalkTabState extends State<WalkTab> {
   Timer? _tick;
   int _spotCount = -1;
   bool _wasWalking = false;
+  LatLng? _pick; // 지도에서 고른, 스티커 붙일 자리
 
   @override
   void didChangeDependencies() {
@@ -120,16 +171,22 @@ class _WalkTabState extends State<WalkTab> {
     if (w != null) nav.push(MaterialPageRoute(builder: (_) => WalkSummaryScreen(walk: w)));
   }
 
-  /// 기록하고 돌아오면 방금 붙인 스티커를 도장처럼 콩 찍는다
-  Future<void> _record() async {
-    final saved = await Navigator.of(context).push<bool>(MaterialPageRoute(builder: (_) => const RecordScreen()));
-    if (saved != true || !mounted) return;
-    final s = StoreScope.read(context);
-    if (s.spots.isEmpty) return;
-    _spotCount = s.spots.length;
-    await _map.setMarks(buildMarks(s));
-    await Future<void>.delayed(const Duration(milliseconds: 250));
-    await _map.stamp(s.spots.first.id);
+  /// 기록하고 돌아오면 방금 붙인 스티커를 도장처럼 콩 찍는다. [at]이 있으면 지도에서 고른 자리
+  Future<void> _record({LatLng? at}) async {
+    setState(() => _pick = null);
+    await _map.setPick(null);
+    if (!mounted) return;
+    _spotCount = -1; // 돌아오면 스티커 표시를 다시 그리게
+    await recordAt(context, _map, at: at);
+    _spotCount = StoreScope.read(context).spots.length;
+  }
+
+  /// 지도 빈 곳을 누르면: 밝힌 곳이면 그 자리에 붙일지 묻는다
+  void _onMapEvent(Map<String, dynamic> msg) {
+    if (msg['type'] != 'mapTap') return;
+    final p = explorePick(context, msg);
+    setState(() => _pick = p);
+    _map.setPick(p);
   }
 
   Future<void> _locate() async {
@@ -147,7 +204,7 @@ class _WalkTabState extends State<WalkTab> {
     final p = s.profile;
     return Stack(children: [
       Positioned.fill(
-        child: CartoonMap(handle: _map, onReady: _fullSync, onTap: (k, id) => openMark(context, k, id)),
+        child: CartoonMap(handle: _map, onReady: _fullSync, onTap: (k, id) => openMark(context, k, id), onEvent: _onMapEvent),
       ),
       // 위: 프로필 + 통계
       Positioned(
@@ -229,12 +286,20 @@ class _WalkTabState extends State<WalkTab> {
           child: const Icon(Icons.my_location),
         ),
       ),
-      // 아래: 버튼
+      // 아래: 버튼 (지도에서 자리를 골랐으면 붙일지 묻는 카드)
       Positioned(
         left: 16,
         right: 16,
         bottom: 16,
-        child: w == null
+        child: _pick != null
+            ? PickCard(
+                onCancel: () {
+                  setState(() => _pick = null);
+                  _map.setPick(null);
+                },
+                onOk: () => _record(at: _pick),
+              )
+            : w == null
             ? PrimaryButton('산책 시작', icon: Icons.directions_walk, onPressed: _start)
             : Column(mainAxisSize: MainAxisSize.min, children: [
                 Align(
@@ -251,7 +316,7 @@ class _WalkTabState extends State<WalkTab> {
                 const SizedBox(height: 8),
                 Row(children: [
                   Expanded(
-                    child: OutlineButton('여기 기록하기', icon: Icons.add_location_alt_outlined, onPressed: _record),
+                    child: OutlineButton('여기 기록하기', icon: Icons.add_location_alt_outlined, onPressed: () => _record()),
                   ),
                   const SizedBox(width: 10),
                   Expanded(child: PrimaryButton('산책 끝내기', onPressed: _end, color: C.orangeText)),

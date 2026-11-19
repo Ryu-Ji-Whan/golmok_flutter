@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart' show ImageSource;
 
+import '../data/geo.dart';
 import '../data/models.dart';
 import '../data/stickers.dart';
 import '../data/store.dart';
@@ -11,8 +12,11 @@ import 'photo_edit.dart';
 
 /// ②-2 스티커 붙여 기록 (새 기록 / 고치기)
 class RecordScreen extends StatefulWidget {
-  const RecordScreen({super.key, this.edit});
+  const RecordScreen({super.key, this.edit, this.at});
   final Spot? edit;
+
+  /// 지도에서 고른 자리 (내가 밝힌 곳). 없으면 지금 있는 자리
+  final LatLng? at;
 
   @override
   State<RecordScreen> createState() => _RecordScreenState();
@@ -49,7 +53,7 @@ class _RecordScreenState extends State<RecordScreen> {
     final title = _title.text.trim().isEmpty ? stickerOf(_sticker).name : _title.text.trim();
     final e = widget.edit;
     if (e == null) {
-      await s.addSpot(stickerId: _sticker, title: title, memo: _memo.text.trim(), visibility: _vis, photo: _photo);
+      await s.addSpot(stickerId: _sticker, title: title, memo: _memo.text.trim(), visibility: _vis, photo: _photo, at: widget.at);
     } else {
       await s.updateSpot(e.copyWith(
           stickerId: _sticker, title: title, memo: _memo.text.trim(), visibility: _vis, photo: _photo, clearPhoto: _photo == null));

@@ -27,6 +27,9 @@ const defaultCenter = LatLng(37.2836, 127.0152); // 수원 행궁동
 
 String cellKey(int i, int j) => '$i:$j';
 
+/// p가 들어 있는 칸 (cellsAround와 같은 격자)
+String cellOf(LatLng p) => cellKey((p.lat / dLat).floor(), (p.lng / dLng).floor());
+
 double distanceM(LatLng a, LatLng b) {
   const r = 6371000.0;
   double rad(double d) => d * math.pi / 180;

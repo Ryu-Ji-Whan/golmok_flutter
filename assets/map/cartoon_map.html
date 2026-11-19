@@ -12,7 +12,7 @@
   - Flutter → 지도: window.boot(테마) (페이지가 열리면 한 번), window.setTheme(테마), window.goTo(경도, 위도, 확대),
     window.setDecos(꾸미기, 고치는 중?, 고른 id), window.stamp(기록 id, 날아오기?) …
   - 지도 → Flutter: Golmok 채널로 {"type":"ready"} / {"type":"move", lat, lng, zoom} / {"type":"tap", kind, id}
-    / {"type":"decoTap", id} / {"type":"decoMove", id, lat, lng} / {"type":"mapTap"} / {"type":"stamped", id}
+    / {"type":"decoTap", id} / {"type":"decoMove", id, lat, lng} / {"type":"mapTap", lat, lng} / {"type":"stamped", id}
 -->
 <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
@@ -29,6 +29,12 @@
     text-shadow: -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff, 0 3px 0 #fff, 0 -3px 0 #fff, 3px 0 0 #fff, -3px 0 0 #fff; }
   .deco.view { pointer-events: none; }
   .deco.sel { outline: 3px dashed #F39A45; outline-offset: 3px; }
+  /* 스티커 붙일 자리 고르기 */
+  /* 바깥 .pick은 지도가 자리를 옮기는 데 쓰므로(transform) 움직임은 안쪽 div에만 준다 */
+  .pick { width: 46px; height: 46px; pointer-events: none; }
+  .pick > div { width: 100%; height: 100%; box-sizing: border-box; border-radius: 50%; border: 3px dashed #F39A45; background: rgba(255,255,255,.55);
+    display: flex; align-items: center; justify-content: center; font: 700 26px sans-serif; color: #A4500B; animation: pick 1.1s ease-in-out infinite; }
+  @keyframes pick { 50% { transform: scale(1.15); } }
   /* 스티커 콩 찍기 */
   .kong { position: absolute; left: 50%; bottom: -2px; pointer-events: none; }
   .kong-ring { width: 14px; height: 14px; margin: -7px 0 0 -7px; border: 3px solid #F39A45; border-radius: 50%; }
@@ -649,6 +655,19 @@ window.setSpots = (items) => { last.spots = items; whenReady(drawSpots); };
  * 지도 꾸미기. items = [{id, lng, lat, sticker?, text?, size}]
  * editing = true면 눌러서 고르고 끌어서 옮길 수 있다. selected = 고른 것의 id
  */
+/** 스티커 붙일 자리 표시 (lng가 null이면 지움) */
+let pickMarker = null;
+window.setPick = (lng, lat) => whenReady(() => {
+  if (pickMarker) pickMarker.remove();
+  pickMarker = null;
+  if (lng == null) return;
+  const el = document.createElement('div');
+  el.className = 'pick';
+  const ring = document.createElement('div');
+  ring.textContent = '+';
+  el.appendChild(ring);
+  pickMarker = new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([lng, lat]).addTo(map);
+});
 window.setDecos = (items, editing, selected) => { last.decos = [items, editing, selected]; whenReady(drawDecos); };
 
 /**
@@ -713,7 +732,7 @@ async function makeMap(id) {
   if (map) {
     const c = map.getCenter(); center = [c.lng, c.lat]; zoom = map.getZoom();
     if (kit) kit.dispose();
-    kit = null; spotMarkers = []; decoMarkers = [];
+    kit = null; spotMarkers = []; decoMarkers = []; pickMarker = null;
     map.remove(); map = null; fogCanvas = null; fogCtx = null;
   }
   theme = t;
@@ -752,7 +771,7 @@ async function makeMap(id) {
     if (!booted) { booted = true; post({ type: 'ready' }); }
   });
   m.on('move', renderFog);
-  m.on('click', () => setTimeout(() => { if (Date.now() - decoTouchedAt > 400) post({ type: 'mapTap' }); }, 60));
+  m.on('click', (e) => setTimeout(() => { if (Date.now() - decoTouchedAt > 400) post({ type: 'mapTap', lat: e.lngLat.lat, lng: e.lngLat.lng }); }, 60));
   m.on('resize', resizeFog);
   m.on('moveend', () => {
     const c = m.getCenter();
