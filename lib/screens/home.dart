@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+
+import '../data/store.dart';
 
 import 'feed.dart';
 import 'mymap.dart';
@@ -14,8 +18,36 @@ class HomeShell extends StatefulWidget {
   State<HomeShell> createState() => _HomeShellState();
 }
 
-class _HomeShellState extends State<HomeShell> {
+class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   int _tab = 0;
+  Timer? _inbox;
+
+  // 친구가 보낸 스티커·친구 요청 확인: 앱을 켤 때, 다시 열 때, 켜 둔 동안 1분마다
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _check(force: true));
+    _inbox = Timer.periodic(const Duration(minutes: 1), (_) => _check());
+  }
+
+  @override
+  void dispose() {
+    _inbox?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _check(force: true);
+  }
+
+  void _check({bool force = false}) {
+    if (!mounted) return;
+    StoreScope.read(context).refreshInbox(force: force);
+  }
+
   // 지도가 있는 탭은 처음 열 때 만들고 그 뒤로는 유지한다.
   final _visited = <int>{0};
 

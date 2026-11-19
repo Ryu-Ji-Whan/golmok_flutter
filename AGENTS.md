@@ -7,7 +7,7 @@
 
 - Flutter 앱 `lib/` — 화면 `lib/screens/`, 데이터 `lib/data/`(db·store·remote·places·geo), 공통 부품 `lib/widgets/`, 색 `lib/theme.dart`
 - 지도: `assets/map/cartoon_map.html`(MapLibre + OpenFreeMap 만화풍, WebView) ↔ `lib/widgets/cartoon_map.dart`
-- 폰 DB: SQLite `lib/data/db.dart` (지금 2판: explored에 area·at 칸). 상태·동기화 `lib/data/store.dart`
+- 폰 DB: SQLite `lib/data/db.dart` (지금 3판: 2판 explored에 area·at 칸, 3판 spots.from_name). 상태·동기화 `lib/data/store.dart`
 - 서버: Supabase `lib/data/remote.dart`, URL·공개 키 `lib/config.dart`
 - 동네 이름: OpenStreetMap Nominatim `lib/data/places.dart` (1초 1회 규칙, 실패 시 30초 쉼)
 
@@ -27,6 +27,7 @@
 
 - 처음 `supabase/schema.sql`, 이후 `supabase/migrations/00N_*.sql`을 번호 순서로 SQL Editor에서 실행 (사용자가 직접)
   - 002 아이디 로그인(accounts·username_taken·가입 트리거), 003 걸은 동네 리더보드, 004 거리 기준(area_steps·add_area_meters) — **2026-11-16에 모두 실행 확인됨**
+  - 005 친구·스티커 보내기(friend_links·gifts·my_friends·my_gifts·저장소 버킷 gifts·spots.from_name) — 2026-11-19 만듦, **사용자 실행 확인 전**
 - Edge Function `login-with-username`(아이디→이메일을 서버에서만 찾아 로그인, JWT 확인 끔) — 배포 확인됨
   - 앱은 `functions.invoke` 대신 apikey 헤더만 붙여 직접 호출 (새 키 `sb_publishable_`가 Authorization에서 거절됨)
 - 공개 키(`sb_publishable_`)만 앱에. secret·service_role 키, DB 비밀번호는 절대 코드·대화에 넣지 않음
@@ -41,13 +42,22 @@
 - 사람에게 보이는 숫자는 **칸 수가 아니라 걸은 거리**
 - 리더보드: **실제로 걸은 동(시·구·동 전체 이름) 기준, 최근 7일 걸은 거리**. 기본은 지금 있는 동네, 내 동네(주 생활 동네)·이번 주 걸은 동네별 순위, 리더보드에 나 숨기기. 동네 대장 보상은 내 동네·4명 이상·3위 안
 - 내 동네: 전국 검색 + 현재 위치로 찾기 (고정 목록 없음)
-- 다른 사람에게는 경로·좌표를 절대 보여 주지 않는다 (피드는 좌표 빼고, 리더보드는 닉네임·거리만)
+- 다른 사람에게는 경로·좌표를 절대 보여 주지 않는다 (피드는 좌표 빼고, 리더보드는 닉네임·거리만). 예외: 내가 친구에게 직접 보낸 기록 한 곳의 위치
 - 예시·데모 데이터는 넣지 않는다 (가짜 이웃·글·스탬프 투어·제휴 가게·쿠폰 모두 삭제함)
 - 사진: 찍기·앨범, 폰 앱 폴더에 `file:photos/…`로 저장 (서버 업로드는 아직)
 - 사진 꾸미기 `lib/screens/photo_edit.dart`: 스티커 20개까지 + 날짜 도장 1개, 완료하면 꾸민 PNG가 원본을 대신함. 갤러리 저장 `gal`(앨범 "골목대장"), 공유 `share_plus`
 - 지도 꾸미기 `lib/screens/map_decorate.dart`: 스티커·글씨(12자) 50개까지, 폰 kv `map_deco`에만 저장(서버 동기화 아직, 나만 보임)
 - 친구에게 보내기 `lib/screens/share_card.dart`: 기록을 스티커 카드(4:5, 1080×1350 PNG) 한 장으로 공유·앨범 저장. 좌표 없음, 동네 이름·메모는 켜고 끔. 저장·공유 공통 `lib/widgets/image_out.dart`
 - 비밀번호 찾기 `lib/screens/forgot_password.dart`: 이메일 입력 → `/auth/v1/recover`를 직접 불러 implicit 링크로 받음 → `docs/auth/index.html`이 `#type=recovery`를 보고 아이디 표시 + 새 비밀번호 설정. redirect는 `emailConfirmedUrl`과 같은 주소(Supabase Redirect URLs에 있어야 함)
+- 친구·스티커 보내기 (2026-11-19 사용자 결정): `friends.dart`, `send_sticker.dart`, `gift_receive.dart`, 서버 005
+  - 친구 추가는 아이디 또는 닉네임 **정확히** 입력(카카오 가입자는 아이디가 없어서 닉네임) → 요청 → 수락
+  - 보내기: 기록 한 곳의 정확한 위치·스티커·제목·메모·사진 (경로는 절대 안 감). 보낼 때 스티커가 슝 날아가는 효과
+  - 받기: 받은 사람 지도에서 스티커가 날아와 콩 붙음(`window.stamp(id, true)`), 받은 순간부터 받은 사람 기록(`spots.from_name`, 나만 보기). 보낸 사람이 원래 기록을 지워도 남고, 받은 사람이 마음대로 지울 수 있음
+  - 받기·거절하면 서버 gifts 줄과 사진을 지운다. 받은 스티커·친구 요청은 앱 켤 때·다시 열 때·1분마다 확인(`refreshInbox`)
+- 내 기록 저장하면 지도에서 스티커가 도장처럼 콩 찍힘 (`window.stamp`, 폰 진동)
+- 지도 테마 7가지 (기본 pastel): `cartoon_map.html`의 `THEMES` + `lib/widgets/cartoon_map.dart`의 `mapThemes` (이름 맞출 것). 폰 kv `map_theme`
+  - 테마마다 색·선·무늬·글씨체(구글 글꼴, 한글 조각 미리 받음)·종이 질감·테두리·움직임이 다름. 테마를 바꾸면 지도를 새로 만들고 안개·경로·스티커·꾸미기를 다시 올림
+  - 지도 스타일의 오솔길 층 이름이 'path'라서 내 산책 경로 층은 'route'(같은 이름이면 경로가 안 그려지던 버그 고침)
 - 앱 아이콘: 초록 지도 핀 속 참새 (`assets/icon/`)
 
 ## 남은 일
@@ -56,5 +66,7 @@
 - [ ] 아이디 회원가입 → 인증 → 로그인 실기기 확인, accounts 표에 아이디 들어가는지
 - [ ] 사진 꾸미기·지도 꾸미기·비밀번호 찾기 실기기 확인 (2026-11-18 만듦)
 - [ ] 사진 서버 저장, 지도 꾸미기 서버 동기화
-- [ ] 링크로 공유 (사용자가 원함: 카드 먼저, 사진 서버 저장 뒤 링크 → 웹/앱에서 기록 보기)
+- [ ] 005 SQL 실행 확인 → 친구 추가·스티커 보내기·받기 실기기 확인 (2026-11-19 만듦)
+- [ ] 지도 테마 7가지·콩 찍기 효과 실기기 확인 (특히 iOS 글씨체 로딩, 레트로 도트, 꽃잎 움직임 배터리)
+- [ ] 링크로 공유 (카드 먼저 했음, 사진 서버 저장 뒤 링크 → 웹/앱에서 기록 보기)
 - [ ] 실제 앱 스크린샷으로 README 갤러리 교체

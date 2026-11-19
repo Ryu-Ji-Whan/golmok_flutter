@@ -66,6 +66,11 @@
     <td align="center"><img src="assets/map/stickers/a19.webp" width="96" alt=""><br><b>내 지도 꾸미기</b><br><sub>내 지도 위에 스티커와 글씨를 붙여<br>나만의 동네 지도를 만들어요.</sub></td>
     <td align="center"><img src="assets/map/stickers/a03.webp" width="96" alt=""><br><b>아이디·비밀번호 찾기</b><br><sub>가입한 이메일로 링크를 받아<br>아이디 확인과 새 비밀번호 설정.</sub></td>
   </tr>
+  <tr>
+    <td align="center"><img src="assets/map/stickers/a04.webp" width="96" alt=""><br><b>친구</b><br><sub>아이디·닉네임으로 친구를 추가하고<br>요청을 수락해 친구가 돼요.</sub></td>
+    <td align="center"><img src="assets/map/stickers/c13.webp" width="96" alt=""><br><b>스티커 보내기</b><br><sub>기록을 친구에게 보내면 슝 날아가고,<br>친구가 받으면 그 자리에 콩 붙어요.</sub></td>
+    <td align="center"><img src="assets/map/stickers/a02.webp" width="96" alt=""><br><b>지도 테마 7가지</b><br><sub>파스텔·밤 산책·보물 지도·연필 스케치·<br>수채화·벚꽃·레트로 게임.</sub></td>
+  </tr>
 </table>
 
 ### 🗺️ 만화풍 지도
@@ -80,8 +85,8 @@
 3. **산책 시작** — 지도에서 **산책 시작**을 누르고 걸어요. 걸은 길이 주황 선으로 그려지고 안개가 걷혀요.
 4. **여기 기록하기** — 마음에 드는 곳에서 스티커를 고르고 사진·메모를 남겨요. **스티커로 꾸미기**로 사진 위에 스티커와 날짜 도장도 붙여요.
 5. **산책 끝내기** — 오늘 걸은 경로 그림과 거리가 나와요. 기록은 내 지도에 쌓여요.
-6. **친구에게 보내기** — 저장된 기록을 스티커 카드 한 장으로 만들어 카톡·인스타로 보내요.
-7. **내 지도 꾸미기** — 내 지도 탭의 **꾸미기**에서 스티커·글씨를 붙여 나만의 지도를 만들어요.
+6. **친구에게 스티커 보내기** — 프로필의 **친구**에서 아이디·닉네임으로 친구를 추가하고, 저장된 기록에서 친구를 골라 보내요. 친구가 **받기**를 누르면 스티커가 날아와 친구 지도의 그 자리에 콩 붙어요. 카톡·인스타로는 **카드 사진으로 공유하기**를 써요.
+7. **내 지도 꾸미기** — 내 지도 탭의 **꾸미기**에서 스티커·글씨를 붙여 나만의 지도를 만들어요. 🎨 버튼(또는 프로필 → 지도 테마)으로 지도 테마도 바꿔요.
 8. **동네 탭** — 지금 있는 동네, 내 동네, 이번 주 걸은 동네마다 내 순위를 확인해요.
 
 ## 🏆 동네 리더보드는 이렇게 정해져요
@@ -98,8 +103,10 @@
 | 걸은 경로, 정확한 위치 | **나만** (내 폰과 내 계정) |
 | 피드에 공유한 기록 | 이웃 — 스티커·제목·메모·동네 이름만, **좌표는 안 보여요** |
 | 리더보드 | 이웃 — 닉네임과 걸은 거리만 (숨기기 가능) |
-| 사진 | 지금은 **내 폰에만** 저장돼요 (직접 앨범 저장·공유한 것만 밖으로 나가요) |
-| 친구에게 보낸 스티커 카드 | 받은 친구 — 사진·스티커·제목·메모(끌 수 있음)·동 이름(끌 수 있음)·날짜, **좌표는 없어요** |
+| 사진 | 내 폰에 저장돼요. 친구에게 스티커를 보낼 때만 그 사진이 서버를 거쳐 그 친구에게 가요 (받거나 거절하면 서버에서 지워요) |
+| 친구에게 보낸 스티커 | **그 친구만** — 그 기록 한 곳의 정확한 위치·스티커·제목·메모·사진. **걸은 경로는 안 가요.** 받은 순간부터 친구의 기록이에요 |
+| 카드 사진으로 공유 | 받은 사람 — 사진·스티커·제목·메모(끌 수 있음)·동 이름(끌 수 있음)·날짜, **좌표는 없어요** |
+| 친구 찾기 | 아이디나 닉네임을 **정확히** 입력해야만 찾을 수 있어요 (목록으로 훑어볼 수 없어요) |
 | 지도 꾸미기 | **나만** — 지금은 내 폰에만 저장돼요 |
 
 로그인하면 기록이 내 계정에 저장돼서 폰을 바꿔도 이어져요. 로그인 없이 쓰면 이 폰에만 남아요.
@@ -119,6 +126,8 @@
 - [x] 지도 꾸미기 — 내 지도에 스티커·글씨 붙이기
 - [x] 아이디·비밀번호 찾기
 - [x] 기록을 스티커 카드 한 장으로 친구에게 보내기
+- [x] 친구 추가, 친구에게 스티커 보내기 (날아가서 콩 붙기)
+- [x] 지도 테마 7가지
 - [ ] 링크로 기록 공유 (친구가 웹·앱에서 바로 열어 보기)
 - [ ] 사진·지도 꾸미기를 내 계정에 저장 (폰을 바꿔도 유지)
 - [ ] Google · Apple 로그인
@@ -149,7 +158,7 @@
 |---|---|
 | 앱 색 · 모서리 · 그림자 | [`lib/theme.dart`](lib/theme.dart) |
 | 버튼 · 카드 같은 공통 부품 | [`lib/widgets/ui.dart`](lib/widgets/ui.dart) |
-| 지도 색 · 선 · 무늬 | [`assets/map/cartoon_map.html`](assets/map/cartoon_map.html) 안의 `C = { … }` |
+| 지도 테마 (색 · 선 · 무늬 · 글씨체 · 장식) | [`assets/map/cartoon_map.html`](assets/map/cartoon_map.html) 안의 `THEMES = { … }`, 고르는 목록은 [`lib/widgets/cartoon_map.dart`](lib/widgets/cartoon_map.dart)의 `mapThemes` |
 | 스티커 그림 · 이름 | [`assets/map/stickers/`](assets/map/stickers) · [`lib/data/stickers.dart`](lib/data/stickers.dart) |
 | 앱 아이콘 | [`assets/icon/`](assets/icon) |
 
@@ -165,11 +174,11 @@
 | 앱 | Flutter | [`lib/`](lib) |
 | 지도 | MapLibre GL JS + OpenFreeMap (WebView) | [`assets/map/cartoon_map.html`](assets/map/cartoon_map.html), [`lib/widgets/cartoon_map.dart`](lib/widgets/cartoon_map.dart) |
 | 폰 안 저장 | SQLite (오프라인에서도 기록) | [`lib/data/db.dart`](lib/data/db.dart) |
-| 서버 | Supabase — 아이디·이메일·카카오 로그인, 기록 동기화, 피드, 리더보드 | [`lib/data/remote.dart`](lib/data/remote.dart), [`supabase/`](supabase) |
+| 서버 | Supabase — 아이디·이메일·카카오 로그인, 기록 동기화, 피드, 리더보드, 친구·스티커 보내기(사진 저장소) | [`lib/data/remote.dart`](lib/data/remote.dart), [`supabase/`](supabase) |
 | 동네 이름 | OpenStreetMap Nominatim | [`lib/data/places.dart`](lib/data/places.dart) |
 | 빌드 | GitHub Actions → Releases에 APK · IPA | [`.github/workflows/build.yml`](.github/workflows/build.yml) |
 
-- **화면:** 온보딩 · 로그인 · 회원가입([`login.dart`](lib/screens/login.dart), [`account_signup.dart`](lib/screens/account_signup.dart), [`signup.dart`](lib/screens/signup.dart)), 산책([`walk.dart`](lib/screens/walk.dart)), 비밀번호 찾기([`forgot_password.dart`](lib/screens/forgot_password.dart)), 기록([`record.dart`](lib/screens/record.dart), [`spot_detail.dart`](lib/screens/spot_detail.dart)), 사진 꾸미기([`photo_edit.dart`](lib/screens/photo_edit.dart)), 내 지도([`mymap.dart`](lib/screens/mymap.dart)), 지도 꾸미기([`map_decorate.dart`](lib/screens/map_decorate.dart)), 피드([`feed.dart`](lib/screens/feed.dart)), 동네([`town.dart`](lib/screens/town.dart)), 상점([`shop.dart`](lib/screens/shop.dart)), 프로필([`profile.dart`](lib/screens/profile.dart))
+- **화면:** 온보딩 · 로그인 · 회원가입([`login.dart`](lib/screens/login.dart), [`account_signup.dart`](lib/screens/account_signup.dart), [`signup.dart`](lib/screens/signup.dart)), 산책([`walk.dart`](lib/screens/walk.dart)), 비밀번호 찾기([`forgot_password.dart`](lib/screens/forgot_password.dart)), 기록([`record.dart`](lib/screens/record.dart), [`spot_detail.dart`](lib/screens/spot_detail.dart)), 사진 꾸미기([`photo_edit.dart`](lib/screens/photo_edit.dart)), 내 지도([`mymap.dart`](lib/screens/mymap.dart)), 지도 꾸미기([`map_decorate.dart`](lib/screens/map_decorate.dart)), 지도 테마([`map_theme.dart`](lib/screens/map_theme.dart)), 친구([`friends.dart`](lib/screens/friends.dart)), 스티커 보내기·받기([`send_sticker.dart`](lib/screens/send_sticker.dart), [`gift_receive.dart`](lib/screens/gift_receive.dart)), 피드([`feed.dart`](lib/screens/feed.dart)), 동네([`town.dart`](lib/screens/town.dart)), 상점([`shop.dart`](lib/screens/shop.dart)), 프로필([`profile.dart`](lib/screens/profile.dart))
 - **서버 DB:** [`supabase/schema.sql`](supabase/schema.sql) 다음 [`supabase/migrations/`](supabase/migrations)를 번호 순서대로 실행. 아이디 로그인은 Edge Function [`login-with-username`](supabase/functions/login-with-username/index.ts)
 - **빌드:** `main`에 push하면 `android/`·`ios/`를 새로 만들어 빌드해요 (README·`docs/`·`supabase/`만 바뀌면 빌드 안 함)
 

@@ -5,19 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>골목대장 지도</title>
 <!--
-  만화풍 지도 (C안: 파스텔 + 굵은 외곽선 + 건물 그림자 + 무늬 + 손그림 흔들림)
-  - 지도 데이터: OpenStreetMap / 타일: OpenFreeMap (무료, 키 없음)
-  - 그리는 엔진: MapLibre GL JS
+  만화풍 지도 + 지도 테마 7가지 (THEMES: pastel 기본 / night / treasure / sketch / watercolor / sakura / retro)
+  - 지도 데이터: OpenStreetMap / 타일: OpenFreeMap (무료, 키 없음) / 그리는 엔진: MapLibre GL JS
+  - 테마마다 색뿐 아니라 선 모양·무늬·글씨체·종이 질감·테두리·움직임이 다르다. 시안은 Flutter 쪽 설정 > 지도 테마에서 고른다.
   Flutter와 주고받는 방법
-  - Flutter → 지도: window.goTo(경도, 위도, 확대), window.setWobble(true/false), window.setDecos(꾸미기, 고치는 중?, 고른 id)
-  - 지도 → Flutter: Golmok 채널로 {"type":"ready"} / {"type":"move", lat, lng, zoom} / {"type":"decoTap", id} / {"type":"decoMove", id, lat, lng}
+  - Flutter → 지도: window.boot(테마) (페이지가 열리면 한 번), window.setTheme(테마), window.goTo(경도, 위도, 확대),
+    window.setDecos(꾸미기, 고치는 중?, 고른 id), window.stamp(기록 id, 날아오기?) …
+  - 지도 → Flutter: Golmok 채널로 {"type":"ready"} / {"type":"move", lat, lng, zoom} / {"type":"tap", kind, id}
+    / {"type":"decoTap", id} / {"type":"decoMove", id, lat, lng} / {"type":"mapTap"} / {"type":"stamped", id}
 -->
-<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <style>
-  html, body, #map { margin: 0; width: 100%; height: 100%; background: #FFF9ED; }
+  html, body, #map { margin: 0; width: 100%; height: 100%; background: #FFF9ED; overflow: hidden; }
   .wobble .maplibregl-canvas, .wobble .fog-canvas { filter: url(#wobble); }
+  /* 테마 장식(종이 질감·테두리·꽃잎 등)은 지도와 안개 위, 스티커 아래 */
+  .theme-ov { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+  .maplibregl-marker { z-index: 2; }
+  .retro .maplibregl-canvas { image-rendering: pixelated; }
   /* 지도 꾸미기 */
   .deco { display: flex; align-items: center; justify-content: center; border-radius: 12px; touch-action: none; }
   .deco img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(2px 2px 0 #24322C); pointer-events: none; }
@@ -25,6 +30,12 @@
     text-shadow: -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff, 0 3px 0 #fff, 0 -3px 0 #fff, 3px 0 0 #fff, -3px 0 0 #fff; }
   .deco.view { pointer-events: none; }
   .deco.sel { outline: 3px dashed #F39A45; outline-offset: 3px; }
+  /* 스티커 콩 찍기 */
+  .kong { position: absolute; left: 50%; bottom: -2px; pointer-events: none; }
+  .kong-ring { width: 14px; height: 14px; margin: -7px 0 0 -7px; border: 3px solid #F39A45; border-radius: 50%; }
+  .kong-dot { width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; border-radius: 50%; background: #FFE19A; border: 1.5px solid #24322C; }
+  .kong-text { bottom: auto; top: -14px; font-family: 'Jua', sans-serif; font-size: 18px; color: #A4500B; white-space: nowrap; transform: translateX(-50%);
+    text-shadow: -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff; }
 </style>
 </head>
 <body>
@@ -39,73 +50,421 @@
 <script>
 function post(o) { if (window.Golmok) Golmok.postMessage(JSON.stringify(o)); }
 
-const INK = '#24322C';
-const C = {
-  land: '#FFF9ED', residential: '#FBF1DC', grass: '#CFEBD5', wood: '#A8D8B4', park: '#C3E6CB',
-  water: '#A6D6F2', building: '#FDE3CC', road: '#FFFFFF', major: '#FFE19A', path: '#C2620F',
-};
+// ───────── 지도 그리기 공통 ─────────
 const nameKo = ['coalesce', ['get', 'name:ko'], ['get', 'name']];
 const z = (a, b) => ['interpolate', ['exponential', 1.5], ['zoom'], 12, a, 18, b];
 const MINOR = ['minor', 'service', 'track'];
 const MAJOR = ['motorway', 'trunk', 'primary', 'secondary', 'tertiary'];
-const CAS = 3.5;
-const halo = (c, w) => ({ 'text-color': c, 'text-halo-color': '#FFFFFF', 'text-halo-width': w });
+const isMinor = ['in', ['get', 'class'], ['literal', MINOR]];
+const isMajor = ['in', ['get', 'class'], ['literal', MAJOR]];
+const isRoad = ['any', isMinor, isMajor];
+const isPath = ['==', ['get', 'class'], 'path'];
+const isRes = ['==', ['get', 'class'], 'residential'];
+const round = { 'line-cap': 'round', 'line-join': 'round' };
+const road = (id, f, paint, layout) => ({ id, type: 'line', source: 'omt', 'source-layer': 'transportation', filter: f, paint, ...(layout ? { layout } : {}) });
+const fill = (id, layer, paint, extra) => ({ id, type: 'fill', source: 'omt', 'source-layer': layer, paint, ...(extra || {}) });
+const line = (id, layer, paint, extra) => ({ id, type: 'line', source: 'omt', 'source-layer': layer, paint, ...(extra || {}) });
+const bg = (c) => ({ id: 'land', type: 'background', paint: { 'background-color': c } });
+function labels(o) {
+  const hl = (c, w) => ({ 'text-color': c, 'text-halo-color': o.halo, 'text-halo-width': w });
+  const sz = o.size || 13;
+  return [
+    { id: 'road-label', type: 'symbol', source: 'omt', 'source-layer': 'transportation_name', minzoom: 15, layout: { 'symbol-placement': 'line', 'text-field': nameKo, 'text-font': ['Noto Sans Regular'], 'text-size': sz }, paint: hl(o.road, 2) },
+    { id: 'water-label', type: 'symbol', source: 'omt', 'source-layer': 'water_name', layout: { 'text-field': nameKo, 'text-font': ['Noto Sans Regular'], 'text-size': sz + 1 }, paint: hl(o.water || o.place, 2) },
+    { id: 'poi-label', type: 'symbol', source: 'omt', 'source-layer': 'poi', minzoom: 16, filter: ['<=', ['get', 'rank'], 20], layout: { 'text-field': nameKo, 'text-font': ['Noto Sans Regular'], 'text-size': sz - 1, 'text-max-width': 7 }, paint: hl(o.poi || o.road, 1.6) },
+    { id: 'place-label', type: 'symbol', source: 'omt', 'source-layer': 'place', layout: { 'text-field': nameKo, 'text-font': ['Noto Sans Bold'], 'text-size': ['match', ['get', 'class'], 'city', sz + 9, 'town', sz + 6, sz + 4] }, paint: hl(o.place, 2.5) },
+  ];
+}
 
-const style = {
-  version: 8,
-  glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
-  sources: { omt: { type: 'vector', url: 'https://tiles.openfreemap.org/planet' } },
-  layers: [
-    { id: 'land', type: 'background', paint: { 'background-color': C.land } },
-    { id: 'residential', type: 'fill', source: 'omt', 'source-layer': 'landuse', filter: ['==', ['get', 'class'], 'residential'], paint: { 'fill-color': C.residential } },
-    { id: 'landcover', type: 'fill', source: 'omt', 'source-layer': 'landcover', paint: { 'fill-color': ['match', ['get', 'class'], 'wood', C.wood, C.grass] } },
-    { id: 'park', type: 'fill', source: 'omt', 'source-layer': 'park', paint: { 'fill-pattern': 'grass-dots' } },
-    { id: 'park-line', type: 'line', source: 'omt', 'source-layer': 'park', paint: { 'line-color': '#5FAE78', 'line-width': 2 } },
-    { id: 'water', type: 'fill', source: 'omt', 'source-layer': 'water', paint: { 'fill-pattern': 'waves' } },
-    { id: 'water-line', type: 'line', source: 'omt', 'source-layer': 'water', paint: { 'line-color': INK, 'line-width': 2.2 } },
-    { id: 'waterway', type: 'line', source: 'omt', 'source-layer': 'waterway', paint: { 'line-color': C.water, 'line-width': z(1, 6) } },
-    { id: 'building-shadow', type: 'fill', source: 'omt', 'source-layer': 'building', minzoom: 14, paint: { 'fill-color': INK, 'fill-opacity': 0.85, 'fill-translate': [3, 3] } },
-    { id: 'building', type: 'fill', source: 'omt', 'source-layer': 'building', minzoom: 13, paint: { 'fill-color': C.building } },
-    { id: 'building-line', type: 'line', source: 'omt', 'source-layer': 'building', minzoom: 14, paint: { 'line-color': INK, 'line-width': 1.4 } },
-    { id: 'path', type: 'line', source: 'omt', 'source-layer': 'transportation', minzoom: 14, filter: ['==', ['get', 'class'], 'path'], layout: { 'line-cap': 'round' }, paint: { 'line-color': C.path, 'line-width': z(0.8, 2.5), 'line-dasharray': [1.5, 1.5] } },
-    { id: 'minor-casing', type: 'line', source: 'omt', 'source-layer': 'transportation', filter: ['in', ['get', 'class'], ['literal', MINOR]], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': INK, 'line-width': z(0.5 + CAS * 0.6, 10 + CAS) } },
-    { id: 'major-casing', type: 'line', source: 'omt', 'source-layer': 'transportation', filter: ['in', ['get', 'class'], ['literal', MAJOR]], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': INK, 'line-width': z(1.5 + CAS * 0.6, 18 + CAS) } },
-    { id: 'minor', type: 'line', source: 'omt', 'source-layer': 'transportation', filter: ['in', ['get', 'class'], ['literal', MINOR]], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': C.road, 'line-width': z(0.5, 10) } },
-    { id: 'major', type: 'line', source: 'omt', 'source-layer': 'transportation', filter: ['in', ['get', 'class'], ['literal', MAJOR]], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': C.major, 'line-width': z(1.5, 18) } },
-    { id: 'road-label', type: 'symbol', source: 'omt', 'source-layer': 'transportation_name', minzoom: 15, layout: { 'symbol-placement': 'line', 'text-field': nameKo, 'text-font': ['Noto Sans Regular'], 'text-size': 13 }, paint: halo(INK, 2) },
-    { id: 'water-label', type: 'symbol', source: 'omt', 'source-layer': 'water_name', layout: { 'text-field': nameKo, 'text-font': ['Noto Sans Regular'], 'text-size': 14 }, paint: halo('#1F5F86', 2) },
-    { id: 'poi-label', type: 'symbol', source: 'omt', 'source-layer': 'poi', minzoom: 16, filter: ['<=', ['get', 'rank'], 20], layout: { 'text-field': nameKo, 'text-font': ['Noto Sans Regular'], 'text-size': 12, 'text-max-width': 7 }, paint: halo('#5E6A63', 1.6) },
-    { id: 'place-label', type: 'symbol', source: 'omt', 'source-layer': 'place', layout: { 'text-field': nameKo, 'text-font': ['Noto Sans Bold'], 'text-size': ['match', ['get', 'class'], 'city', 22, 'town', 19, 17] }, paint: halo('#0E5A3C', 2.5) },
-  ],
+// 무늬(패턴) 32칸 그림
+function makePattern(draw, s = 32) {
+  const cv = document.createElement('canvas'); cv.width = cv.height = s;
+  const g = cv.getContext('2d'); draw(g, s); return g.getImageData(0, 0, s, s);
+}
+const P = {
+  waves: (bgc, fg, a = 0.85) => makePattern((g, s) => {
+    g.fillStyle = bgc; g.fillRect(0, 0, s, s); g.strokeStyle = fg; g.globalAlpha = a; g.lineWidth = 2; g.lineCap = 'round';
+    for (const y of [9, 25]) { const off = y === 25 ? 8 : 0; g.beginPath(); for (let x = -8; x <= s + 8; x++) g.lineTo(x + off, y + Math.sin((x / s) * Math.PI * 2) * 2.5); g.stroke(); }
+  }),
+  grass: (bgc, fg) => makePattern((g, s) => {
+    g.fillStyle = bgc; g.fillRect(0, 0, s, s); g.strokeStyle = fg; g.lineWidth = 1.6; g.lineCap = 'round';
+    for (const [x, y] of [[7, 10], [23, 26]]) { g.beginPath(); g.moveTo(x - 3, y); g.lineTo(x - 1, y - 4); g.moveTo(x, y); g.lineTo(x, y - 5); g.moveTo(x + 3, y); g.lineTo(x + 1, y - 4); g.stroke(); }
+  }),
+  hatch: (bgc, fg, w = 1.2, gap = 6) => makePattern((g, s) => {
+    g.fillStyle = bgc; g.fillRect(0, 0, s, s); g.strokeStyle = fg; g.lineWidth = w;
+    for (let k = -s; k < s * 2; k += gap) { g.beginPath(); g.moveTo(k, 0); g.lineTo(k - s, s); g.stroke(); }
+  }),
+  cross: (bgc, fg) => makePattern((g, s) => {
+    g.fillStyle = bgc; g.fillRect(0, 0, s, s); g.strokeStyle = fg; g.lineWidth = 0.9;
+    for (let k = -s; k < s * 2; k += 5) { g.beginPath(); g.moveTo(k, 0); g.lineTo(k - s, s); g.stroke(); g.beginPath(); g.moveTo(k - s, 0); g.lineTo(k, s); g.stroke(); }
+  }),
+  windows: (bgc, lit, dark) => makePattern((g, s) => {
+    g.fillStyle = bgc; g.fillRect(0, 0, s, s);
+    for (let y = 3; y < s; y += 8) for (let x = 3; x < s; x += 8) { g.fillStyle = hash01(x, y, 3) < 0.45 ? lit : dark; g.fillRect(x, y, 4, 4); }
+  }),
+  trees: (bgc, fg) => makePattern((g, s) => {
+    g.fillStyle = bgc; g.fillRect(0, 0, s, s); g.strokeStyle = fg; g.lineWidth = 1.3;
+    for (const [x, y] of [[8, 12], [24, 28]]) { g.beginPath(); g.arc(x, y - 4, 4, 0, Math.PI * 2); g.stroke(); g.beginPath(); g.moveTo(x, y); g.lineTo(x, y + 3); g.stroke(); }
+  }),
+  flowers: (bgc, petal, mid) => makePattern((g, s) => {
+    g.fillStyle = bgc; g.fillRect(0, 0, s, s);
+    for (const [x, y] of [[8, 9], [24, 25]]) {
+      g.fillStyle = petal; for (let k = 0; k < 5; k++) { const a = k * Math.PI * 2 / 5; g.beginPath(); g.arc(x + Math.cos(a) * 3, y + Math.sin(a) * 3, 2.3, 0, Math.PI * 2); g.fill(); }
+      g.fillStyle = mid; g.beginPath(); g.arc(x, y, 1.6, 0, Math.PI * 2); g.fill();
+    }
+  }),
+  checker: (a, b) => makePattern((g, s) => { g.fillStyle = a; g.fillRect(0, 0, s, s); g.fillStyle = b; g.fillRect(0, 0, s / 2, s / 2); g.fillRect(s / 2, s / 2, s / 2, s / 2); }),
 };
 
-function pattern(id) {
-  const s = 32, cv = document.createElement('canvas');
-  cv.width = cv.height = s;
-  const g = cv.getContext('2d');
-  if (id === 'waves') {
-    g.fillStyle = C.water; g.fillRect(0, 0, s, s);
-    g.strokeStyle = 'rgba(255,255,255,0.85)'; g.lineWidth = 2; g.lineCap = 'round';
-    for (const y of [9, 25]) {
-      const off = y === 25 ? 8 : 0;
-      g.beginPath();
-      for (let x = -8; x <= s + 8; x += 1) g.lineTo(x + off, y + Math.sin((x / s) * Math.PI * 2) * 2.5);
-      g.stroke();
-    }
-  } else {
-    g.fillStyle = C.park; g.fillRect(0, 0, s, s);
-    g.strokeStyle = '#5FAE78'; g.lineWidth = 1.6; g.lineCap = 'round';
-    for (const [x, y] of [[7, 10], [23, 26]]) {
-      g.beginPath(); g.moveTo(x - 3, y); g.lineTo(x - 1, y - 4); g.moveTo(x, y); g.lineTo(x, y - 5); g.moveTo(x + 3, y); g.lineTo(x + 1, y - 4); g.stroke();
-    }
+// 늘 같은 순서로 나오는 난수 (테마 장식 모양이 켤 때마다 바뀌지 않게)
+function seeded(n) { let x = n; return () => (x = (x * 16807) % 2147483647) / 2147483647; }
+
+// 종이 질감 그림 (CSS 배경으로 깔고 multiply로 섞는다)
+const paperCache = {};
+function paperURL(key, dots, alpha, fibers) {
+  if (paperCache[key]) return paperCache[key];
+  const rnd = seeded(key.length * 7919 + 13);
+  const s = 256, cv = document.createElement('canvas'); cv.width = cv.height = s; const g = cv.getContext('2d');
+  const im = g.createImageData(s, s);
+  for (let i = 0; i < im.data.length; i += 4) {
+    const d = (rnd() - 0.5) * alpha * 255;
+    im.data[i] = 238 + d; im.data[i + 1] = 236 + d; im.data[i + 2] = 230 + d; im.data[i + 3] = 255;
   }
-  return g.getImageData(0, 0, s, s);
+  g.putImageData(im, 0, 0);
+  if (fibers) { g.strokeStyle = fibers; g.lineWidth = 0.6; for (let k = 0; k < 40; k++) { g.beginPath(); const x = rnd() * s, y = rnd() * s; g.moveTo(x, y); g.quadraticCurveTo(x + 10, y + rnd() * 8 - 4, x + 18 + rnd() * 10, y + rnd() * 10 - 5); g.stroke(); } }
+  for (let k = 0; k < dots; k++) { g.fillStyle = `rgba(90,60,30,${rnd() * 0.08})`; g.beginPath(); g.arc(rnd() * s, rnd() * s, rnd() * 18 + 4, 0, Math.PI * 2); g.fill(); }
+  return (paperCache[key] = cv.toDataURL());
+}
+
+function mPerPxNow() { return 40075016.686 * Math.cos(map.getCenter().lat * Math.PI / 180) / (512 * Math.pow(2, map.getZoom())); }
+// 지도에 붙어 있는 장식(구멍·얼룩)을 정해진 칸 자리마다 그린다 (지도와 같이 움직임)
+function eachAnchored(cellM, salt, prob, fn) {
+  const b = map.getBounds(), dLat = cellM / 111320, dLng = cellM / (111320 * Math.cos(37.5 * Math.PI / 180));
+  const i0 = Math.floor(b.getSouth() / dLat) - 1, i1 = Math.floor(b.getNorth() / dLat) + 1;
+  const j0 = Math.floor(b.getWest() / dLng) - 1, j1 = Math.floor(b.getEast() / dLng) + 1;
+  if ((i1 - i0) * (j1 - j0) > 900) return;
+  for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) {
+    if (hash01(i, j, salt) > prob) continue;
+    const la = (i + 0.2 + 0.6 * hash01(i, j, salt + 1)) * dLat, ln = (j + 0.2 + 0.6 * hash01(i, j, salt + 2)) * dLng;
+    fn(map.project([ln, la]), i, j);
+  }
+}
+// 울퉁불퉁한 덩어리 모양
+function blob(g, x, y, r, i, j, salt, n = 14, rough = 0.35) {
+  g.beginPath();
+  for (let k = 0; k <= n; k++) {
+    const a = k / n * Math.PI * 2, rr = r * (1 - rough / 2 + rough * hash01(i * 31 + (k % n), j, salt));
+    const px = x + Math.cos(a) * rr, py = y + Math.sin(a) * rr; k ? g.lineTo(px, py) : g.moveTo(px, py);
+  }
+  g.closePath();
+}
+
+// 테마 장식 도구: 테마를 바꾸면 dispose()로 모두 치운다
+function overlayKit() {
+  const host = map.getCanvasContainer(), els = [];
+  const kit = {
+    alive: true,
+    size() { const c = map.getContainer(); return [c.clientWidth, c.clientHeight]; },
+    div(css) { const d = document.createElement('div'); d.className = 'theme-ov'; d.style.cssText += css; host.appendChild(d); els.push(d); return d; },
+    // draw(g, W, H): 크기가 바뀔 때마다 다시 그린다
+    canvas(draw) {
+      const c = document.createElement('canvas'); c.className = 'theme-ov'; host.appendChild(c); els.push(c);
+      const g = c.getContext('2d');
+      const fit = () => { const r = window.devicePixelRatio || 1, [W, H] = kit.size(); c.width = Math.round(W * r); c.height = Math.round(H * r); g.setTransform(r, 0, 0, r, 0, 0); if (draw) draw(g, W, H); };
+      fit(); map.on('resize', fit);
+      return { c, g, redraw: () => { const r = window.devicePixelRatio || 1; g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, c.width, c.height); g.setTransform(r, 0, 0, r, 0, 0); if (draw) draw(g, ...kit.size()); } };
+    },
+    // 초당 약 30번 (배터리 아끼기)
+    loop(fn) { let last = 0; const tick = (t) => { if (!kit.alive) return; if (t - last > 33) { fn(t, Math.min(80, t - last) / 1000); last = t; } requestAnimationFrame(tick); }; requestAnimationFrame(tick); },
+    dispose() { kit.alive = false; els.forEach((e) => e.remove()); },
+  };
+  return kit;
+}
+
+// ───────── 테마 ─────────
+// 각 테마: font(지도 글씨체), fog(안개 색), route(내 경로·위치 색), images()(무늬), layers()(지도 층), decorate(kit)(장식)
+const ROUTE = { old: '#2F8A61', casing: '#24322C', line: '#F39A45', me: '#0E5A3C' };
+const THEMES = {
+  pastel: {
+    name: '골목 파스텔', font: 'Jua',
+    images: () => ({ 'grass-dots': P.grass('#C3E6CB', '#5FAE78'), waves: P.waves('#A6D6F2', '#fff') }),
+    layers: () => {
+      const INK = '#24322C', CAS = 3.5;
+      return [
+        bg('#FFF9ED'),
+        fill('residential', 'landuse', { 'fill-color': '#FBF1DC' }, { filter: isRes }),
+        fill('landcover', 'landcover', { 'fill-color': ['match', ['get', 'class'], 'wood', '#A8D8B4', '#CFEBD5'] }),
+        fill('park', 'park', { 'fill-pattern': 'grass-dots' }), line('park-line', 'park', { 'line-color': '#5FAE78', 'line-width': 2 }),
+        fill('water', 'water', { 'fill-pattern': 'waves' }), line('water-line', 'water', { 'line-color': INK, 'line-width': 2.2 }),
+        line('waterway', 'waterway', { 'line-color': '#A6D6F2', 'line-width': z(1, 6) }),
+        fill('building-shadow', 'building', { 'fill-color': INK, 'fill-opacity': 0.85, 'fill-translate': [3, 3] }, { minzoom: 14 }),
+        fill('building', 'building', { 'fill-color': '#FDE3CC' }, { minzoom: 13 }), line('building-line', 'building', { 'line-color': INK, 'line-width': 1.4 }, { minzoom: 14 }),
+        { ...road('path', isPath, { 'line-color': '#C2620F', 'line-width': z(0.8, 2.5), 'line-dasharray': [1.5, 1.5] }, { 'line-cap': 'round' }), minzoom: 14 },
+        road('minor-casing', isMinor, { 'line-color': INK, 'line-width': z(0.5 + CAS * 0.6, 10 + CAS) }, round),
+        road('major-casing', isMajor, { 'line-color': INK, 'line-width': z(1.5 + CAS * 0.6, 18 + CAS) }, round),
+        road('minor', isMinor, { 'line-color': '#FFFFFF', 'line-width': z(0.5, 10) }, round),
+        road('major', isMajor, { 'line-color': '#FFE19A', 'line-width': z(1.5, 18) }, round),
+        ...labels({ halo: '#FFFFFF', road: INK, place: '#0E5A3C', water: '#1F5F86', poi: '#5E6A63' }),
+      ];
+    },
+  },
+
+  night: {
+    name: '밤 산책', font: 'Do Hyeon', bg: '#1B2140', fog: 'rgba(6, 9, 22, 0.55)',
+    route: { old: '#8CE0FF', casing: '#070B18', line: '#F39A45', me: '#FFE6A3' },
+    images: () => ({ trees: P.trees('#1F3A40', '#3F7A66'), waves: P.waves('#10304E', '#5A8FC0', 0.6), win: P.windows('#2C3358', '#FFD46B', '#232948') }),
+    layers: () => [
+      bg('#1B2140'),
+      fill('residential', 'landuse', { 'fill-color': '#1F2647' }, { filter: isRes }),
+      fill('landcover', 'landcover', { 'fill-color': '#1E3640' }), fill('park', 'park', { 'fill-pattern': 'trees' }),
+      fill('water', 'water', { 'fill-pattern': 'waves' }),
+      fill('building-shadow', 'building', { 'fill-color': '#070B18', 'fill-opacity': 0.9, 'fill-translate': [3, 3] }, { minzoom: 14 }),
+      fill('building', 'building', { 'fill-pattern': 'win' }, { minzoom: 13 }), line('building-line', 'building', { 'line-color': '#0B1022', 'line-width': 1.2 }, { minzoom: 14 }),
+      road('minor', isMinor, { 'line-color': '#3A4270', 'line-width': z(0.8, 9) }, round),
+      // 가로등 번짐: 넓고 흐린 노란 선 위에 밝은 선
+      road('major-glow', isMajor, { 'line-color': '#FFC94D', 'line-width': z(6, 40), 'line-blur': z(5, 28), 'line-opacity': 0.45 }, round),
+      road('major', isMajor, { 'line-color': '#FFE6A3', 'line-width': z(1.5, 12) }, round),
+      { ...road('path', isPath, { 'line-color': '#8CE0FF', 'line-width': z(0.8, 2.2), 'line-dasharray': [0.5, 2], 'line-opacity': 0.8 }, { 'line-cap': 'round' }), minzoom: 14 },
+      ...labels({ halo: '#0B1022', road: '#C9D2FF', place: '#FFE9A8', water: '#8FC4F0', size: 14 }),
+    ],
+    decorate(kit) {
+      kit.div('background: radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(5,8,20,0.6) 100%)');
+      const rnd = seeded(42);
+      const stars = Array.from({ length: 36 }, () => [rnd(), rnd() * 0.4, rnd() * 6]);
+      const cv = kit.canvas();
+      kit.loop((t) => {
+        const [W, H] = kit.size(); cv.g.clearRect(0, 0, W, H);
+        for (const [x, y, p] of stars) {
+          const a = (0.35 + 0.65 * Math.abs(Math.sin(t / 900 + p))) * (1 - y / 0.4);
+          cv.g.fillStyle = `rgba(255,240,200,${a * 0.9})`; const s = p > 5 ? 2 : 1.2;
+          cv.g.fillRect(x * W, y * H, s, s);
+          if (p > 5.3) { cv.g.fillRect(x * W - 3, y * H + 0.5, 7, 0.8); cv.g.fillRect(x * W + 0.5, y * H - 3, 0.8, 7); }
+        }
+      });
+    },
+  },
+
+  treasure: {
+    name: '보물 지도', font: 'Song Myung', bg: '#EFDCAE', fog: 'rgba(92, 64, 34, 0.42)',
+    route: { old: '#A8321E', casing: '#4A2E17', line: '#D9822B', me: '#7A1E10' },
+    images: () => ({ trees: P.trees('#DCCF95', '#7A6A35'), waves: P.waves('#A9C9B8', '#4E6B5C', 0.7), hatch: P.hatch('#E6CF9C', '#8A5A2B', 1, 5) }),
+    layers: () => {
+      const INK = '#4A2E17';
+      return [
+        bg('#EFDCAE'),
+        fill('landcover', 'landcover', { 'fill-color': '#DCCF95', 'fill-opacity': 0.8 }), fill('park', 'park', { 'fill-pattern': 'trees' }),
+        fill('water', 'water', { 'fill-pattern': 'waves' }),
+        line('water-line', 'water', { 'line-color': INK, 'line-width': 1.6 }),
+        line('water-line2', 'water', { 'line-color': INK, 'line-width': 0.8, 'line-offset': 5, 'line-opacity': 0.5 }),
+        fill('building', 'building', { 'fill-pattern': 'hatch' }, { minzoom: 14 }), line('building-line', 'building', { 'line-color': INK, 'line-width': 1.1 }, { minzoom: 14 }),
+        // 큰길: 잉크 두 줄, 작은 길: 손으로 그은 점선, 오솔길: 빨간 발자국 점
+        road('major-casing', isMajor, { 'line-color': INK, 'line-width': z(2.5, 13) }, round),
+        road('major', isMajor, { 'line-color': '#F3E2B6', 'line-width': z(1.2, 10) }, round),
+        road('minor', isMinor, { 'line-color': INK, 'line-width': z(0.8, 2.6), 'line-dasharray': [3, 1.6] }, { 'line-cap': 'round' }),
+        { ...road('path', isPath, { 'line-color': '#A8321E', 'line-width': z(1, 3), 'line-dasharray': [0.1, 2] }, { 'line-cap': 'round' }), minzoom: 14 },
+        ...labels({ halo: '#F3E2B6', road: '#4A2E17', place: '#7A1E10', water: '#2F4F45', size: 14 }),
+      ];
+    },
+    decorate(kit) {
+      kit.div(`background-image:url(${paperURL('treasure', 30, 0.25, 'rgba(120,80,40,.25)')}); mix-blend-mode:multiply; opacity:.55`);
+      kit.div('background: radial-gradient(ellipse at center, rgba(0,0,0,0) 50%, rgba(120,70,20,0.45) 100%)');
+      // 지도에 붙은 탄 구멍과 커피 얼룩
+      const holes = kit.canvas((g) => {
+        const mpp = mPerPxNow();
+        eachAnchored(140, 11, 0.16, (p, i, j) => {
+          const rad = (6 + 9 * hash01(i, j, 13)) / mpp;
+          if (rad < 3) return;
+          const gr = g.createRadialGradient(p.x, p.y, rad * 0.6, p.x, p.y, rad * 1.9);
+          gr.addColorStop(0, 'rgba(70,35,8,0.95)'); gr.addColorStop(0.45, 'rgba(120,65,20,0.55)'); gr.addColorStop(1, 'rgba(150,90,30,0)');
+          g.fillStyle = gr; blob(g, p.x, p.y, rad * 1.9, i, j, 17, 16, 0.4); g.fill();
+          g.fillStyle = '#2A1709'; blob(g, p.x, p.y, rad, i, j, 19, 16, 0.55); g.fill();
+        });
+        eachAnchored(220, 23, 0.1, (p, i, j) => {
+          const rad = (14 + 10 * hash01(i, j, 29)) / mpp; g.strokeStyle = 'rgba(110,60,20,0.28)'; g.lineWidth = Math.max(1.5, rad * 0.12);
+          blob(g, p.x, p.y, rad, i, j, 31, 20, 0.12); g.stroke();
+        });
+      });
+      let queued = false;
+      map.on('move', () => { if (queued || !kit.alive) return; queued = true; requestAnimationFrame(() => { queued = false; if (kit.alive) holes.redraw(); }); });
+      // 가장자리: 불에 그을려 삭은 테두리 + 나침반 (화면에 고정)
+      kit.canvas((g, W, H) => {
+        const rnd = seeded(7), per = 2 * (W + H), pts = [];
+        const bites = Array.from({ length: Math.round(per / 160) }, () => [rnd() * per, 12 + rnd() * 24, 18 + rnd() * 40]);
+        for (let d = 0; d < per; d += 5) {
+          let x, y, nx, ny;
+          if (d < W) { x = d; y = 0; nx = 0; ny = 1; } else if (d < W + H) { x = W; y = d - W; nx = -1; ny = 0; }
+          else if (d < 2 * W + H) { x = W - (d - W - H); y = H; nx = 0; ny = -1; } else { x = 0; y = H - (d - 2 * W - H); nx = 1; ny = 0; }
+          let inset = 9 + 4 * Math.sin(d / 23) + 3 * Math.sin(d / 7.3) + rnd() * 4;
+          for (const [c0, depth, wdt] of bites) { const dd = Math.abs(d - c0); if (dd < wdt) inset += depth * Math.cos(dd / wdt * Math.PI / 2) ** 2; }
+          pts.push([x + nx * inset, y + ny * inset]);
+        }
+        const path = () => { g.beginPath(); pts.forEach(([x, y], k) => (k ? g.lineTo(x, y) : g.moveTo(x, y))); g.closePath(); };
+        g.fillStyle = '#2E1B0C'; g.fillRect(0, 0, W, H); g.globalCompositeOperation = 'destination-out'; path(); g.fill();
+        g.globalCompositeOperation = 'source-over';
+        g.save(); path(); g.clip(); g.shadowColor = 'rgba(80,35,5,0.95)'; g.shadowBlur = 22;
+        g.beginPath(); g.rect(-50, -50, W + 100, H + 100); pts.slice().reverse().forEach(([x, y], k) => (k ? g.lineTo(x, y) : g.moveTo(x, y))); g.closePath();
+        g.fillStyle = '#3A1E08'; g.fill('evenodd'); g.restore();
+        g.strokeStyle = '#2A1709'; g.lineWidth = 2.2; path(); g.stroke();
+        const cx = 54, cy = Math.round(H * 0.58); g.save(); g.translate(cx, cy); g.globalAlpha = 0.85; g.strokeStyle = '#4A2E17'; g.fillStyle = '#4A2E17'; g.lineWidth = 1.4;
+        g.beginPath(); g.arc(0, 0, 24, 0, Math.PI * 2); g.stroke(); g.beginPath(); g.arc(0, 0, 19, 0, Math.PI * 2); g.stroke();
+        for (let k = 0; k < 4; k++) { g.rotate(Math.PI / 2); g.beginPath(); g.moveTo(0, -31); g.lineTo(5, 0); g.lineTo(-5, 0); g.closePath(); k % 2 ? g.stroke() : g.fill(); }
+        g.restore(); g.fillStyle = '#7A1E10'; g.font = '700 14px "Song Myung", serif'; g.textAlign = 'center'; g.fillText('N', cx, cy - 37);
+      });
+    },
+  },
+
+  sketch: {
+    name: '연필 스케치', font: 'Gaegu', bg: '#FCFCFA', fog: 'rgba(120, 120, 120, 0.45)',
+    route: { old: '#5B7FB0', casing: '#3B3B3B', line: '#F39A45', me: '#2A2A2A' },
+    images: () => ({ trees: P.trees('#F2F3EE', '#8A8F86'), waves: P.hatch('#EEF2F5', '#9AA7B2', 0.8, 4), hatch: P.cross('#FFFFFF', 'rgba(70,70,70,.55)') }),
+    layers: () => {
+      const G = '#3B3B3B';
+      return [
+        bg('#FCFCFA'),
+        fill('park', 'park', { 'fill-pattern': 'trees' }), line('park-line', 'park', { 'line-color': '#8A8F86', 'line-width': 1, 'line-dasharray': [4, 2] }),
+        fill('water', 'water', { 'fill-pattern': 'waves' }), line('water-line', 'water', { 'line-color': G, 'line-width': 1.2 }),
+        fill('building', 'building', { 'fill-pattern': 'hatch' }, { minzoom: 14 }),
+        line('building-line', 'building', { 'line-color': G, 'line-width': 1.1 }, { minzoom: 14 }),
+        line('building-line2', 'building', { 'line-color': G, 'line-width': 0.7, 'line-opacity': 0.45, 'line-translate': [1.5, -1] }, { minzoom: 15 }),
+        road('road-casing', isRoad, { 'line-color': G, 'line-width': z(1.6, 13), 'line-opacity': 0.85 }, round),
+        road('road', isRoad, { 'line-color': '#FCFCFA', 'line-width': z(0.6, 11) }, round),
+        // 연필로 한 번 더 그은 듯 살짝 어긋난 선
+        road('road-sketch', isRoad, { 'line-color': G, 'line-width': 0.7, 'line-opacity': 0.4, 'line-offset': z(1, 6) }, round),
+        { ...road('path', isPath, { 'line-color': G, 'line-width': 1, 'line-dasharray': [2, 2] }), minzoom: 14 },
+        ...labels({ halo: '#FCFCFA', road: '#2A2A2A', place: '#1F1F1F', size: 15 }),
+      ];
+    },
+    decorate(kit) {
+      kit.div('background-image: linear-gradient(rgba(90,140,200,.18) 1px, transparent 1px), linear-gradient(90deg, rgba(90,140,200,.18) 1px, transparent 1px); background-size: 18px 18px; mix-blend-mode: multiply');
+      kit.div('left:30px; width:2px; background: rgba(220,90,90,.45)');
+      kit.div(`background-image:url(${paperURL('sketch', 0, 0.18)}); mix-blend-mode:multiply; opacity:.35`);
+    },
+  },
+
+  watercolor: {
+    name: '수채화', font: 'Nanum Pen Script', bg: '#FBF6EC', fog: 'rgba(150, 140, 125, 0.42)',
+    route: { old: '#4E93C9', casing: '#8A6A55', line: '#F39A45', me: '#4C6B8A' },
+    images: () => ({}),
+    layers: () => [
+      bg('#FBF6EC'),
+      fill('landcover', 'landcover', { 'fill-color': '#B9D9A8', 'fill-opacity': 0.55 }),
+      line('landcover-bleed', 'landcover', { 'line-color': '#8DBF7A', 'line-width': 6, 'line-blur': 5, 'line-opacity': 0.45 }),
+      fill('park', 'park', { 'fill-color': '#A9D49A', 'fill-opacity': 0.55 }),
+      line('park-bleed', 'park', { 'line-color': '#7DB56B', 'line-width': 8, 'line-blur': 7, 'line-opacity': 0.5 }),
+      fill('water', 'water', { 'fill-color': '#8EC3E6', 'fill-opacity': 0.75 }),
+      line('water-bleed', 'water', { 'line-color': '#4E93C9', 'line-width': 7, 'line-blur': 6, 'line-opacity': 0.55 }),
+      fill('building-pool', 'building', { 'fill-color': '#D98E6A', 'fill-opacity': 0.25, 'fill-translate': [2, 2] }, { minzoom: 14 }),
+      fill('building', 'building', { 'fill-color': ['match', ['%', ['to-number', ['id'], 0], 3], 0, '#F2B48C', 1, '#F5CE7E', '#E9A3A8'], 'fill-opacity': 0.8 }, { minzoom: 14 }),
+      line('building-bleed', 'building', { 'line-color': '#D98E6A', 'line-width': 2.5, 'line-blur': 2, 'line-opacity': 0.5 }, { minzoom: 14 }),
+      road('minor', isMinor, { 'line-color': '#D9CBB2', 'line-width': z(1.5, 13), 'line-blur': 1.5 }, round),
+      road('major', isMajor, { 'line-color': '#F0B98A', 'line-width': z(2.5, 20), 'line-blur': 2.5, 'line-opacity': 0.85 }, round),
+      { ...road('path', isPath, { 'line-color': '#B07A55', 'line-width': 1.4, 'line-dasharray': [2, 2], 'line-opacity': 0.7 }, { 'line-cap': 'round' }), minzoom: 14 },
+      ...labels({ halo: 'rgba(251,246,236,.9)', road: '#6B4E3D', place: '#4C6B8A', size: 17 }),
+    ],
+    decorate(kit) {
+      kit.div(`background-image:url(${paperURL('watercolor', 50, 0.22, 'rgba(160,140,110,.25)')}); mix-blend-mode:multiply; opacity:.45`);
+      kit.div('box-shadow: inset 0 0 40px 18px #FBF6EC');
+    },
+  },
+
+  sakura: {
+    name: '벚꽃 골목', font: 'Gamja Flower', bg: '#FFF5F7', fog: 'rgba(150, 110, 125, 0.42)',
+    route: { old: '#E06C98', casing: '#7A4A5E', line: '#F39A45', me: '#C0386E' },
+    images: () => ({ flowers: P.flowers('#FADCE6', '#F7A8C2', '#FFE08A'), waves: P.waves('#CFE0FF', '#fff'), petals: P.flowers('#FFFFFF', '#FBE3EC', '#FBE3EC') }),
+    layers: () => {
+      const INK = '#7A4A5E', CAS = 2.5;
+      return [
+        bg('#FFF5F7'),
+        fill('residential', 'landuse', { 'fill-color': '#FDEBF0' }, { filter: isRes }),
+        fill('landcover', 'landcover', { 'fill-color': '#F9D9E4' }), fill('park', 'park', { 'fill-pattern': 'flowers' }),
+        line('park-line', 'park', { 'line-color': '#E88DAE', 'line-width': 2, 'line-dasharray': [2, 1.5] }),
+        fill('water', 'water', { 'fill-pattern': 'waves' }), line('water-line', 'water', { 'line-color': INK, 'line-width': 1.8 }),
+        fill('building-shadow', 'building', { 'fill-color': '#F2A7C0', 'fill-translate': [3, 3] }, { minzoom: 14 }),
+        fill('building', 'building', { 'fill-pattern': 'petals' }, { minzoom: 13 }), line('building-line', 'building', { 'line-color': INK, 'line-width': 1.3 }, { minzoom: 14 }),
+        road('road-casing', isRoad, { 'line-color': INK, 'line-width': z(0.5 + CAS * 0.6, 14 + CAS) }, round),
+        road('minor', isMinor, { 'line-color': '#FFFFFF', 'line-width': z(0.5, 10) }, round),
+        road('major', isMajor, { 'line-color': '#FFC6D8', 'line-width': z(1.5, 14) }, round),
+        { ...road('path', isPath, { 'line-color': '#E06C98', 'line-width': z(1, 3), 'line-dasharray': [0.1, 2] }, { 'line-cap': 'round' }), minzoom: 14 },
+        ...labels({ halo: '#FFFFFF', road: INK, place: '#C0386E', size: 15 }),
+      ];
+    },
+    decorate(kit) {
+      kit.div('background: radial-gradient(ellipse at center, rgba(255,255,255,0) 60%, rgba(255,190,210,0.45) 100%)');
+      const rnd = seeded(99), cv = kit.canvas();
+      const ps = Array.from({ length: 22 }, () => ({ x: rnd(), y: rnd(), s: 5 + rnd() * 6, v: 0.25 + rnd() * 0.35, a: rnd() * 6, w: rnd() * 6 }));
+      kit.loop((t, dt) => {
+        const [W, H] = kit.size(), g = cv.g, r = window.devicePixelRatio || 1;
+        g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, cv.c.width, cv.c.height);
+        for (const p of ps) {
+          p.y += p.v * dt * 0.25; p.a += dt * 1.5; if (p.y > 1.05) { p.y = -0.05; p.x = rnd(); }
+          const x = (p.x + Math.sin(t / 1400 + p.w) * 0.03) * W, y = p.y * H;
+          g.setTransform(r, 0, 0, r, x * r, y * r); g.rotate(p.a); g.scale(1, Math.abs(Math.sin(p.a * 0.7)) * 0.6 + 0.4);
+          g.fillStyle = 'rgba(247,160,190,.9)'; g.beginPath(); g.moveTo(0, -p.s); g.quadraticCurveTo(p.s * 0.9, 0, 0, p.s); g.quadraticCurveTo(-p.s * 0.9, 0, 0, -p.s); g.fill();
+          g.fillStyle = 'rgba(255,255,255,.6)'; g.beginPath(); g.moveTo(0, -p.s); g.lineTo(-1.2, -p.s * 0.55); g.lineTo(1.2, -p.s * 0.55); g.fill();
+        }
+      });
+    },
+  },
+
+  retro: {
+    name: '레트로 게임', font: 'Do Hyeon', bg: '#B9D77A', pixelRatio: 0.5, cls: 'retro', fog: 'rgba(22, 33, 15, 0.45)',
+    route: { old: '#3D6B22', casing: '#16210F', line: '#F08A4B', me: '#16210F' },
+    images: () => ({ grass: P.checker('#7DB650', '#6FA845'), waves: P.checker('#4FA8D8', '#62B6E2') }),
+    layers: () => {
+      const INK = '#16210F', CAS = 5;
+      return [
+        bg('#B9D77A'),
+        fill('landcover', 'landcover', { 'fill-color': '#8EC05A' }), fill('park', 'park', { 'fill-pattern': 'grass' }),
+        fill('water', 'water', { 'fill-pattern': 'waves' }), line('water-line', 'water', { 'line-color': INK, 'line-width': 3 }),
+        fill('building-shadow', 'building', { 'fill-color': INK, 'fill-translate': [4, 4] }, { minzoom: 14 }),
+        fill('building', 'building', { 'fill-color': ['match', ['%', ['to-number', ['id'], 0], 3], 0, '#F4D35E', 1, '#EE964B', '#F7EFC6'] }, { minzoom: 13 }),
+        line('building-line', 'building', { 'line-color': INK, 'line-width': 2.5 }, { minzoom: 14 }),
+        road('road-casing', isRoad, { 'line-color': INK, 'line-width': z(0.5 + CAS * 0.6, 16 + CAS) }),
+        road('minor', isMinor, { 'line-color': '#E8D7A3', 'line-width': z(0.5, 12) }),
+        road('major', isMajor, { 'line-color': '#C9C9C9', 'line-width': z(1.5, 16) }),
+        road('major-mid', isMajor, { 'line-color': '#FFFFFF', 'line-width': z(0.4, 2), 'line-dasharray': [3, 3] }),
+        ...labels({ halo: '#16210F', road: '#FFFFFF', place: '#FFE45E', size: 18 }),
+      ];
+    },
+    decorate(kit) {
+      kit.div('background: repeating-linear-gradient(0deg, rgba(0,0,0,.12) 0 1px, transparent 1px 3px)');
+      kit.div('box-shadow: inset 0 0 0 5px #16210F, inset 0 0 0 9px #F7EFC6, inset 0 0 0 13px #16210F');
+    },
+  },
+};
+
+function buildStyle(t) {
+  return {
+    version: 8,
+    glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
+    sources: { omt: { type: 'vector', url: 'https://tiles.openfreemap.org/planet' } },
+    layers: t.layers(),
+  };
+}
+
+// 테마 글씨체 (구글 글꼴). 한글 글자 조각을 미리 받아 둬야 지도 글자가 그 글씨체로 그려진다.
+// 인터넷이 느리거나 없으면 몇 초만 기다리고 기본 글씨체로 그린다.
+const FONT_CSS = { 'Jua': 'Jua', 'Do Hyeon': 'Do+Hyeon', 'Song Myung': 'Song+Myung', 'Gaegu': 'Gaegu:wght@700', 'Nanum Pen Script': 'Nanum+Pen+Script', 'Gamja Flower': 'Gamja+Flower' };
+const HANGUL = Array.from({ length: 11172 }, (_, k) => String.fromCharCode(0xAC00 + k)).join('');
+const fontsDone = {};
+function loadFont(f) {
+  if (fontsDone[f]) return fontsDone[f];
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  fontsDone[f] = (async () => {
+    const l = document.createElement('link');
+    l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=' + FONT_CSS[f] + '&display=swap';
+    const css = new Promise((r) => { l.onload = r; l.onerror = r; });
+    document.head.appendChild(l);
+    await Promise.race([css, wait(3000)]);
+    await Promise.race([document.fonts.load('20px "' + f + '"', HANGUL).catch(() => {}), wait(4000)]);
+  })();
+  return fontsDone[f];
 }
 
 let map;
 let ready = false;
 const queue = [];
-// 지도가 준비되기 전에 Flutter가 보낸 명령은 모아 뒀다가 준비되면 실행한다.
+// 지도가 준비되기 전(또는 테마를 바꿔 다시 그리는 중)에 Flutter가 보낸 명령은 모아 뒀다가 준비되면 실행한다.
 function whenReady(fn) { if (ready) fn(); else queue.push(fn); }
 
 // ── 안개: Flutter의 lib/data/geo.dart 와 같은 격자(20m 칸) ──
@@ -117,7 +476,8 @@ let fogOn = true;
 
 // 안개는 지도 위에 얹은 투명한 캔버스에 그린다.
 // 밝힌 칸마다 크기가 조금씩 다른 동그라미로 구멍을 뚫어서, 안개 가장자리가 구름처럼 몽글몽글해진다.
-const FOG_COLOR = 'rgba(112, 120, 114, 0.5)';
+const FOG_DEFAULT = 'rgba(112, 120, 114, 0.5)';
+let FOG_COLOR = FOG_DEFAULT;
 let fogCanvas = null, fogCtx = null, fogQueued = false;
 
 // 칸마다 늘 같은 값이 나오는 0~1 난수 (그릴 때마다 모양이 바뀌지 않게)
@@ -208,45 +568,41 @@ function drawFog() {
   ctx.globalCompositeOperation = 'source-over';
 }
 
-const line = (coords) => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: coords } });
+const lineF = (coords) => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: coords } });
+const EMPTY = { type: 'FeatureCollection', features: [] };
 let spotMarkers = [];
 let decoMarkers = [];
 let decoTouchedAt = 0; // 꾸미기를 누른 시각 (같은 누름이 지도 빈 곳 누름으로도 잡히지 않게)
 
-window.goTo = (lng, lat, zoom) => whenReady(() => map.flyTo({ center: [lng, lat], zoom: zoom || map.getZoom(), speed: 1.6 }));
-window.setWobble = (on) => document.getElementById('map').classList.toggle('wobble', !!on);
-window.setFog = (on) => { fogOn = !!on; whenReady(renderFog); };
-window.setExplored = (keys) => { explored = new Set(keys); whenReady(renderFog); };
-window.addExplored = (keys) => { keys.forEach((k) => explored.add(k)); whenReady(renderFog); };
-/** 산책 경로. coords = [[경도, 위도], ...] */
-window.setPath = (coords) => whenReady(() => map.getSource('path').setData(line(coords.length > 1 ? coords : [])));
-/** 지난 산책 경로들 (내 지도). paths = [[[경도, 위도], ...], ...] */
-window.setOldPaths = (paths) => whenReady(() => map.getSource('oldpaths').setData({ type: 'FeatureCollection', features: paths.filter((p) => p.length > 1).map(line) }));
-window.setMe = (lng, lat) => whenReady(() => map.getSource('me').setData({ type: 'Feature', geometry: { type: 'Point', coordinates: [lng, lat] } }));
-/** 스티커 표시. items = [{id, lng, lat, sticker, kind}] — kind: 'spot' | 'stamp' | 'store' | 'stamped' */
-window.setSpots = (items) => whenReady(() => {
+// 마지막으로 받은 내용 (테마를 바꿔 지도를 새로 만들 때 다시 올린다)
+const last = { path: [], old: [], me: null, spots: [], decos: [[], false, null] };
+
+function applyPath() { map.getSource('path').setData(lineF(last.path.length > 1 ? last.path : [])); }
+function applyOld() { map.getSource('oldpaths').setData({ type: 'FeatureCollection', features: last.old.filter((p) => p.length > 1).map(lineF) }); }
+function applyMe() { map.getSource('me').setData(last.me ? { type: 'Feature', geometry: { type: 'Point', coordinates: last.me } } : EMPTY); }
+
+function drawSpots() {
   spotMarkers.forEach((m) => m.remove());
-  spotMarkers = items.map((it) => {
+  spotMarkers = last.spots.map((it) => {
     const el = document.createElement('button');
     el.type = 'button';
     el.setAttribute('aria-label', it.label || '기록');
     const size = it.kind === 'spot' ? 46 : 40;
-    el.style.cssText = 'width:' + size + 'px;height:' + size + 'px;padding:0;border:0;background:none;cursor:pointer;filter:drop-shadow(2px 2px 0 #24322C)' + (it.kind === 'stamp' ? ';opacity:.55' : '');
+    el.style.cssText = 'position:relative;overflow:visible;width:' + size + 'px;height:' + size + 'px;padding:0;border:0;background:none;cursor:pointer;filter:drop-shadow(2px 2px 0 #24322C)' + (it.kind === 'stamp' ? ';opacity:.55' : '');
     const img = document.createElement('img');
     img.src = 'stickers/' + it.sticker + '.webp';
     img.alt = '';
     img.style.cssText = 'width:100%;height:100%;object-fit:contain';
     el.appendChild(img);
     el.addEventListener('click', (e) => { e.stopPropagation(); post({ type: 'tap', kind: it.kind, id: it.id }); });
-    return new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat([it.lng, it.lat]).addTo(map);
+    const m = new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat([it.lng, it.lat]).addTo(map);
+    m._gid = it.id;
+    return m;
   });
-});
+}
 
-/**
- * 지도 꾸미기. items = [{id, lng, lat, sticker?, text?, size}]
- * editing = true면 눌러서 고르고 끌어서 옮길 수 있다. selected = 고른 것의 id
- */
-window.setDecos = (items, editing, selected) => whenReady(() => {
+function drawDecos() {
+  const [items, editing, selected] = last.decos;
   decoMarkers.forEach((m) => m.remove());
   decoMarkers = items.map((it) => {
     const el = document.createElement('div');
@@ -271,45 +627,147 @@ window.setDecos = (items, editing, selected) => whenReady(() => {
     }
     return m;
   });
+}
+
+window.goTo = (lng, lat, zoom) => whenReady(() => map.flyTo({ center: [lng, lat], zoom: zoom || map.getZoom(), speed: 1.6 }));
+window.setWobble = (on) => document.getElementById('map').classList.toggle('wobble', !!on);
+window.setFog = (on) => { fogOn = !!on; whenReady(renderFog); };
+window.setExplored = (keys) => { explored = new Set(keys); whenReady(renderFog); };
+window.addExplored = (keys) => { keys.forEach((k) => explored.add(k)); whenReady(renderFog); };
+/** 산책 경로. coords = [[경도, 위도], ...] */
+window.setPath = (coords) => { last.path = coords; whenReady(applyPath); };
+/** 지난 산책 경로들 (내 지도). paths = [[[경도, 위도], ...], ...] */
+window.setOldPaths = (paths) => { last.old = paths; whenReady(applyOld); };
+window.setMe = (lng, lat) => { last.me = [lng, lat]; whenReady(applyMe); };
+/** 스티커 표시. items = [{id, lng, lat, sticker, kind}] — kind: 'spot' | 'stamp' | 'store' | 'stamped' */
+window.setSpots = (items) => { last.spots = items; whenReady(drawSpots); };
+/**
+ * 지도 꾸미기. items = [{id, lng, lat, sticker?, text?, size}]
+ * editing = true면 눌러서 고르고 끌어서 옮길 수 있다. selected = 고른 것의 id
+ */
+window.setDecos = (items, editing, selected) => { last.decos = [items, editing, selected]; whenReady(drawDecos); };
+
+/**
+ * 스티커를 도장처럼 "콩" 찍는다. fly = true면 화면 위쪽에서 날아와서 붙는다 (친구에게 받은 스티커).
+ * 붙는 순간 {"type":"stamped", id}를 보낸다 (Flutter가 폰을 톡 떨게 함).
+ */
+window.stamp = (id, fly) => whenReady(() => {
+  const m = spotMarkers.find((x) => x._gid === id);
+  if (!m) return;
+  const el = m.getElement(), img = el.querySelector('img');
+  if (!img || !img.animate) return;
+  let landAt;
+  if (fly) {
+    const p = map.project(m.getLngLat()), W = map.getContainer().clientWidth;
+    const dy = -(p.y + 140), dx = (W * 0.85 - p.x);
+    img.animate([
+      { transform: `translate(${dx}px, ${dy}px) scale(1.9) rotate(-30deg)`, offset: 0 },
+      { transform: `translate(${dx * 0.35}px, ${dy * 0.55}px) scale(1.7) rotate(160deg)`, offset: 0.45 },
+      { transform: 'translate(0, -36px) scale(1.5) rotate(350deg)', offset: 0.78 },
+      { transform: 'translate(0, 0) scale(1.3, 0.72) rotate(360deg)', offset: 0.88 },
+      { transform: 'scale(0.9, 1.12) rotate(360deg)', offset: 0.95 },
+      { transform: 'none', offset: 1 },
+    ], { duration: 1300, easing: 'cubic-bezier(.45,.05,.55,.95)' });
+    landAt = 1140;
+  } else {
+    img.animate([
+      { transform: 'translateY(-46px) scale(2.3)', opacity: 0 },
+      { transform: 'translateY(0) scale(1.32, 0.7)', opacity: 1, offset: 0.55 },
+      { transform: 'scale(0.9, 1.12)', offset: 0.75 },
+      { transform: 'none' },
+    ], { duration: 650, easing: 'cubic-bezier(.3,0,.4,1)' });
+    landAt = 360;
+  }
+  setTimeout(() => { kongBurst(el); post({ type: 'stamped', id }); }, landAt);
 });
 
-document.fonts.load('20px Jua').finally(() => {
-  map = new maplibregl.Map({
-    container: 'map',
-    style,
-    center: [127.0140, 37.2826],
-    zoom: 16.3,
-    localIdeographFontFamily: "'Jua', sans-serif",
-    attributionControl: { compact: true },
-    dragRotate: false,
-    pitchWithRotate: false,
-  });
-  map.touchZoomRotate.disableRotation();
-  map.on('styleimagemissing', (e) => { if (!map.hasImage(e.id)) map.addImage(e.id, pattern(e.id)); });
-  map.once('load', () => {
-    const empty = { type: 'FeatureCollection', features: [] };
-    map.addSource('oldpaths', { type: 'geojson', data: empty });
-    map.addSource('path', { type: 'geojson', data: empty });
-    map.addSource('me', { type: 'geojson', data: empty });
+// 붙는 순간: 퍼지는 동그라미 + 튀는 점 + "콩!"
+function kongBurst(el) {
+  const add = (cls, text) => { const d = document.createElement('div'); d.className = 'kong ' + cls; if (text) d.textContent = text; el.appendChild(d); return d; };
+  const ring = add('kong-ring');
+  ring.animate([{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(6)', opacity: 0 }], { duration: 480, easing: 'ease-out' }).onfinish = () => ring.remove();
+  for (let k = 0; k < 6; k++) {
+    const a = k / 6 * Math.PI * 2 + 0.3, dot = add('kong-dot');
+    dot.animate([{ transform: 'translate(0,0) scale(1)', opacity: 1 }, { transform: `translate(${Math.cos(a) * 34}px, ${Math.sin(a) * 20 - 6}px) scale(.4)`, opacity: 0 }],
+      { duration: 520, easing: 'ease-out' }).onfinish = () => dot.remove();
+  }
+  const t = add('kong-text', '콩!');
+  t.animate([{ transform: 'translate(-50%, 6px) scale(.6)', opacity: 0 }, { transform: 'translate(-50%, -12px) scale(1.15)', opacity: 1, offset: 0.3 },
+    { transform: 'translate(-50%, -26px) scale(1)', opacity: 0 }], { duration: 900, easing: 'ease-out' }).onfinish = () => t.remove();
+}
+
+// ───────── 지도 만들기 / 테마 바꾸기 ─────────
+let theme = null, kit = null, booted = false, starting = false, makeToken = 0;
+
+async function makeMap(id) {
+  const t = THEMES[id] || THEMES.pastel;
+  const token = ++makeToken;
+  ready = false;
+  await loadFont(t.font);
+  if (token !== makeToken) return; // 그 사이에 다른 테마를 골랐다
+  let center = [127.0140, 37.2826], zoom = 16.3;
+  if (map) {
+    const c = map.getCenter(); center = [c.lng, c.lat]; zoom = map.getZoom();
+    if (kit) kit.dispose();
+    kit = null; spotMarkers = []; decoMarkers = [];
+    map.remove(); map = null; fogCanvas = null; fogCtx = null;
+  }
+  theme = t;
+  FOG_COLOR = t.fog || FOG_DEFAULT;
+  const box = document.getElementById('map');
+  box.classList.toggle('retro', t.cls === 'retro');
+  document.body.style.background = box.style.background = t.bg || '#FFF9ED';
+  const images = t.images();
+  const R = Object.assign({}, ROUTE, t.route || {});
+  const opts = {
+    container: 'map', style: buildStyle(t), center, zoom,
+    localIdeographFontFamily: "'" + t.font + "', sans-serif",
+    attributionControl: { compact: true }, dragRotate: false, pitchWithRotate: false,
+  };
+  if (t.pixelRatio) opts.pixelRatio = t.pixelRatio;
+  const m = (map = new maplibregl.Map(opts));
+  m.touchZoomRotate.disableRotation();
+  m.on('styleimagemissing', (e) => { if (!m.hasImage(e.id) && images[e.id]) m.addImage(e.id, images[e.id]); });
+  m.once('load', () => {
+    if (map !== m) return;
+    m.addSource('oldpaths', { type: 'geojson', data: EMPTY });
+    m.addSource('path', { type: 'geojson', data: EMPTY });
+    m.addSource('me', { type: 'geojson', data: EMPTY });
     setupFogCanvas();
-    map.addLayer({ id: 'oldpaths', type: 'line', source: 'oldpaths', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#2F8A61', 'line-width': 4, 'line-opacity': 0.7 } });
-    map.addLayer({ id: 'path-casing', type: 'line', source: 'path', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': INK, 'line-width': 9 } });
-    map.addLayer({ id: 'path', type: 'line', source: 'path', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#F39A45', 'line-width': 5 } });
-    map.addLayer({ id: 'me-halo', type: 'circle', source: 'me', paint: { 'circle-radius': 18, 'circle-color': '#0E5A3C', 'circle-opacity': 0.18 } });
-    map.addLayer({ id: 'me', type: 'circle', source: 'me', paint: { 'circle-radius': 8, 'circle-color': '#0E5A3C', 'circle-stroke-color': '#FFFFFF', 'circle-stroke-width': 3 } });
+    m.addLayer({ id: 'oldpaths', type: 'line', source: 'oldpaths', layout: round, paint: { 'line-color': R.old, 'line-width': 4, 'line-opacity': 0.7 } });
+    m.addLayer({ id: 'route-casing', type: 'line', source: 'path', layout: round, paint: { 'line-color': R.casing, 'line-width': 9 } });
+    // 지도 스타일에 오솔길 층 'path'가 있어서 내 경로 층은 route라고 부른다 (같은 이름이면 경로가 안 그려짐)
+    m.addLayer({ id: 'route', type: 'line', source: 'path', layout: round, paint: { 'line-color': R.line, 'line-width': 5 } });
+    m.addLayer({ id: 'me-halo', type: 'circle', source: 'me', paint: { 'circle-radius': 18, 'circle-color': R.me, 'circle-opacity': 0.2 } });
+    m.addLayer({ id: 'me', type: 'circle', source: 'me', paint: { 'circle-radius': 8, 'circle-color': R.me, 'circle-stroke-color': '#FFFFFF', 'circle-stroke-width': 3 } });
+    kit = overlayKit();
+    if (t.decorate) { try { t.decorate(kit); } catch (e) {} }
+    applyPath(); applyOld(); applyMe(); drawSpots(); drawDecos();
     ready = true;
     renderFog();
     queue.splice(0).forEach((fn) => fn());
-    post({ type: 'ready' });
+    if (!booted) { booted = true; post({ type: 'ready' }); }
   });
-  map.on('move', renderFog);
-  map.on('click', () => setTimeout(() => { if (Date.now() - decoTouchedAt > 400) post({ type: 'mapTap' }); }, 60));
-  map.on('resize', resizeFog);
-  map.on('moveend', () => {
-    const c = map.getCenter();
-    post({ type: 'move', lat: c.lat, lng: c.lng, zoom: map.getZoom() });
+  m.on('move', renderFog);
+  m.on('click', () => setTimeout(() => { if (Date.now() - decoTouchedAt > 400) post({ type: 'mapTap' }); }, 60));
+  m.on('resize', resizeFog);
+  m.on('moveend', () => {
+    const c = m.getCenter();
+    post({ type: 'move', lat: c.lat, lng: c.lng, zoom: m.getZoom() });
   });
-});
+}
+
+/** 처음 한 번: Flutter가 고른 테마로 지도를 만든다 */
+window.boot = (id) => { if (starting) return window.setTheme(id); starting = true; makeMap(id); };
+/** 테마 바꾸기 (지도를 새로 그리고, 안개·경로·스티커·꾸미기는 그대로 다시 올린다) */
+window.setTheme = (id) => {
+  if (!starting) return window.boot(id);
+  if (THEMES[id] && THEMES[id] === theme) return;
+  makeMap(id);
+};
+window.themeIds = () => Object.keys(THEMES);
+// Flutter가 boot를 부르지 못한 경우(브라우저 미리보기 등)에는 주소의 ?theme= 또는 기본 테마로 시작
+setTimeout(() => { if (!starting) window.boot(new URLSearchParams(location.search).get('theme') || 'pastel'); }, 3000);
 
 // ── 미리보기: 주소 끝에 ?demo=walk 를 붙이면 골목을 걷는 흉내를 내며 안개를 걷는다 (앱에서는 쓰지 않음) ──
 if (new URLSearchParams(location.search).get('demo') === 'walk') {
@@ -331,7 +789,7 @@ if (new URLSearchParams(location.search).get('demo') === 'walk') {
       lng += Math.sin(heading) * 12 / (M_PER_DEG_LAT * Math.cos(lat * Math.PI / 180));
       path.push([lng, lat]);
       window.addExplored(cellsAround(lat, lng, 40));
-      window.setPath(path);
+      window.setPath(path.slice());
       window.setMe(lng, lat);
       if (path.length % 15 === 0) map.easeTo({ center: [lng, lat], duration: 800 });
     };

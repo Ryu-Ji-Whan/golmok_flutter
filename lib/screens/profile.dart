@@ -7,7 +7,10 @@ import '../data/stickers.dart';
 import '../data/store.dart';
 import '../theme.dart';
 import '../widgets/area_picker.dart';
+import '../widgets/cartoon_map.dart' show mapThemes;
 import '../widgets/ui.dart';
+import 'friends.dart';
+import 'map_theme.dart';
 
 /// 부록 · 프로필·설정 (로그아웃·초기화)
 class ProfileScreen extends StatelessWidget {
@@ -108,6 +111,21 @@ class ProfileScreen extends StatelessWidget {
             Stat('${s.spots.length}곳', '기록'),
           ]),
         ),
+        const SizedBox(height: 12),
+        _MenuRow(
+          icon: Icons.people_alt_outlined,
+          title: '친구',
+          sub: s.friendRequests > 0 ? '받은 친구 요청 ${s.friendRequests}개' : '아이디·닉네임으로 친구 추가, 스티커 주고받기',
+          badge: s.friendRequests,
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const FriendsScreen())),
+        ),
+        const SizedBox(height: 8),
+        _MenuRow(
+          icon: Icons.palette_outlined,
+          title: '지도 테마',
+          sub: mapThemes.firstWhere((t) => t.id == s.mapTheme, orElse: () => mapThemes.first).name,
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MapThemeScreen())),
+        ),
         SectionTitle('내 스티커 보관함 ${s.owned.length}/${stickers.length}'),
         CardBox(
           padding: const EdgeInsets.all(10),
@@ -154,4 +172,41 @@ class ProfileScreen extends StatelessWidget {
       ]),
     );
   }
+}
+
+/// 프로필 메뉴 한 줄
+class _MenuRow extends StatelessWidget {
+  const _MenuRow({required this.icon, required this.title, required this.sub, required this.onTap, this.badge = 0});
+  final IconData icon;
+  final String title, sub;
+  final VoidCallback onTap;
+  final int badge;
+
+  @override
+  Widget build(BuildContext context) => CardBox(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        onTap: onTap,
+        child: Row(children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(color: C.mint, borderRadius: BorderRadius.circular(12)),
+            child: Icon(icon, color: C.forest),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+              Text(sub, style: const TextStyle(fontSize: 12, color: C.muted)),
+            ]),
+          ),
+          if (badge > 0)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(color: C.orange, borderRadius: BorderRadius.circular(999)),
+              child: Text('$badge', style: const TextStyle(color: C.white, fontWeight: FontWeight.w700, fontSize: 12)),
+            ),
+          const Icon(Icons.chevron_right, color: C.muted),
+        ]),
+      );
 }

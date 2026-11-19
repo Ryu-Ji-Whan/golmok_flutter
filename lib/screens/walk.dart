@@ -9,6 +9,7 @@ import '../theme.dart';
 import '../widgets/cartoon_map.dart';
 import '../widgets/route_thumb.dart';
 import '../widgets/ui.dart';
+import 'gift_receive.dart';
 import 'profile.dart';
 import 'record.dart';
 import 'spot_detail.dart';
@@ -119,6 +120,18 @@ class _WalkTabState extends State<WalkTab> {
     if (w != null) nav.push(MaterialPageRoute(builder: (_) => WalkSummaryScreen(walk: w)));
   }
 
+  /// 기록하고 돌아오면 방금 붙인 스티커를 도장처럼 콩 찍는다
+  Future<void> _record() async {
+    final saved = await Navigator.of(context).push<bool>(MaterialPageRoute(builder: (_) => const RecordScreen()));
+    if (saved != true || !mounted) return;
+    final s = StoreScope.read(context);
+    if (s.spots.isEmpty) return;
+    _spotCount = s.spots.length;
+    await _map.setMarks(buildMarks(s));
+    await Future<void>.delayed(const Duration(milliseconds: 250));
+    await _map.stamp(s.spots.first.id);
+  }
+
   Future<void> _locate() async {
     final s = StoreScope.read(context);
     final r = await s.locate();
@@ -182,6 +195,25 @@ class _WalkTabState extends State<WalkTab> {
                     Stat('${s.spots.length}곳', '기록한 장소'),
                   ]),
           ),
+          // 친구가 보낸 스티커가 있으면
+          if (s.gifts.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            GestureDetector(
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const GiftReceiveScreen())),
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(10, 8, 16, 8),
+                decoration: BoxDecoration(color: C.orange, borderRadius: BorderRadius.circular(999), boxShadow: cardShadow),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  StickerImg(s.gifts.first.stickerId, size: 30),
+                  const SizedBox(width: 8),
+                  Text(s.gifts.length == 1 ? '${s.gifts.first.fromName}님이 스티커를 보냈어요' : '친구가 보낸 스티커 ${s.gifts.length}개',
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: C.white)),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.chevron_right, color: C.white, size: 20),
+                ]),
+              ),
+            ),
+          ],
         ]),
       ),
       // 오른쪽: 내 위치
@@ -219,9 +251,7 @@ class _WalkTabState extends State<WalkTab> {
                 const SizedBox(height: 8),
                 Row(children: [
                   Expanded(
-                    child: OutlineButton('여기 기록하기', icon: Icons.add_location_alt_outlined, onPressed: () {
-                      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RecordScreen()));
-                    }),
+                    child: OutlineButton('여기 기록하기', icon: Icons.add_location_alt_outlined, onPressed: _record),
                   ),
                   const SizedBox(width: 10),
                   Expanded(child: PrimaryButton('산책 끝내기', onPressed: _end, color: C.orangeText)),

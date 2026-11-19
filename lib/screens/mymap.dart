@@ -8,6 +8,7 @@ import '../widgets/cartoon_map.dart';
 import '../widgets/route_thumb.dart';
 import '../widgets/ui.dart';
 import 'map_decorate.dart';
+import 'map_theme.dart';
 import 'spot_detail.dart';
 import 'walk.dart';
 
@@ -53,6 +54,11 @@ class _MyMapTabState extends State<MyMapTab> {
         title: const Text('내 지도'),
         actions: [
           Pill('총 ${formatDistance(s.totalDistance)}'),
+          IconButton(
+            tooltip: '지도 테마',
+            icon: const Icon(Icons.palette_outlined, color: C.forest),
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MapThemeScreen())),
+          ),
           TextButton.icon(
             onPressed: () async {
               final saved = await Navigator.of(context).push<bool>(MaterialPageRoute(builder: (_) => const MapDecorateScreen()));
@@ -130,7 +136,7 @@ class _MyMapTabState extends State<MyMapTab> {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(sp.title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700), maxLines: 1, overflow: TextOverflow.ellipsis),
                 const SizedBox(height: 2),
-                Text('${formatDate(sp.createdAt)} · ${visibilityLabel[sp.visibility]}${sp.shared ? ' · 피드 공유' : ''}',
+                Text('${formatDate(sp.createdAt)} · ${sp.fromName != null ? '${sp.fromName}님이 보냄' : visibilityLabel[sp.visibility]}${sp.shared ? ' · 피드 공유' : ''}',
                     style: const TextStyle(fontSize: 12, color: C.muted)),
               ]),
             ),

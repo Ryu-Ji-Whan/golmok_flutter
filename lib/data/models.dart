@@ -104,6 +104,7 @@ class Spot {
     this.photo,
     this.visibility = SpotVisibility.all,
     this.shared = false,
+    this.fromName,
   });
 
   final String id;
@@ -122,6 +123,9 @@ class Spot {
   /// 골목 피드에 공유했는지
   final bool shared;
 
+  /// 친구에게 받은 기록이면 보낸 사람 닉네임 (받은 순간부터 내 기록)
+  final String? fromName;
+
   LatLng get pos => LatLng(lat, lng);
 
   /// [clearPhoto]가 true면 사진을 뺀다 (photo: null 만으로는 "그대로 두기"와 구분이 안 되므로)
@@ -137,6 +141,7 @@ class Spot {
         photo: clearPhoto ? null : (photo ?? this.photo),
         visibility: visibility ?? this.visibility,
         shared: shared ?? this.shared,
+        fromName: fromName,
       );
 
   Map<String, Object?> toRow() => {
@@ -151,6 +156,7 @@ class Spot {
         'visibility': visibility.name,
         'shared': shared ? 1 : 0,
         'created_at': createdAt.millisecondsSinceEpoch,
+        'from_name': fromName,
       };
 
   static Spot fromRow(Map<String, Object?> r) => Spot(
@@ -165,6 +171,7 @@ class Spot {
         visibility: SpotVisibility.values.firstWhere((v) => v.name == r['visibility'], orElse: () => SpotVisibility.all),
         shared: (r['shared'] as int) == 1,
         createdAt: DateTime.fromMillisecondsSinceEpoch(r['created_at'] as int),
+        fromName: r['from_name'] as String?,
       );
 }
 

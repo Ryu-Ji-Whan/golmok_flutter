@@ -4,7 +4,7 @@ import 'package:sqflite/sqflite.dart';
 import 'geo.dart';
 import 'models.dart';
 
-/// 폰 안 데이터베이스 (SQLite).
+/// 폰 안 데이터베이스 (SQLite). 지금 3판 (3: spots.from_name)
 /// 나중에 서버(예: Supabase)를 붙일 때도 같은 표 구조를 쓰면 된다 → supabase/schema.sql
 class AppDb {
   AppDb._(this._db);
@@ -12,12 +12,14 @@ class AppDb {
 
   static Future<AppDb> open() async {
     final path = p.join(await getDatabasesPath(), 'golmok.db');
-    final db = await openDatabase(path, version: 2, onUpgrade: (db, from, to) async {
+    final db = await openDatabase(path, version: 3, onUpgrade: (db, from, to) async {
       // 2: 밝힌 칸에 '그때 있던 동네'(area)와 밝힌 시각(at)을 같이 저장
       if (from < 2) {
         await db.execute('ALTER TABLE explored ADD COLUMN area TEXT');
         await db.execute('ALTER TABLE explored ADD COLUMN at INTEGER');
       }
+      // 3: 친구에게 받은 기록이면 보낸 사람 닉네임
+      if (from < 3) await db.execute('ALTER TABLE spots ADD COLUMN from_name TEXT');
     }, onCreate: (db, _) async {
       final b = db.batch();
       b.execute('''CREATE TABLE profile (
@@ -35,7 +37,7 @@ class AppDb {
       b.execute('''CREATE TABLE spots (
         id TEXT PRIMARY KEY, walk_id TEXT, lat REAL NOT NULL, lng REAL NOT NULL,
         sticker_id TEXT NOT NULL, title TEXT NOT NULL, memo TEXT NOT NULL, photo TEXT,
-        visibility TEXT NOT NULL, shared INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL)''');
+        visibility TEXT NOT NULL, shared INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL, from_name TEXT)''');
       b.execute('CREATE TABLE explored (cell TEXT PRIMARY KEY, area TEXT, at INTEGER)');
       // kind: owned(가진 스티커) / stamp(스탬프) / reward(받은 보상) / store(방문한 가게)
       b.execute('CREATE TABLE marks (kind TEXT NOT NULL, id TEXT NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (kind, id))');

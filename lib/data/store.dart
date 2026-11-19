@@ -11,6 +11,7 @@ import 'geo.dart';
 import 'models.dart';
 import 'places.dart';
 import 'remote.dart';
+import '../widgets/photo.dart';
 
 final _rand = math.Random();
 String newId(String prefix) =>
@@ -55,6 +56,16 @@ class AppStore extends ChangeNotifier {
 
   /// 리더보드에 내 이름 숨기기
   bool hideRank = false;
+
+  /// 지도 테마 (assets/map/cartoon_map.html 의 THEMES). 폰에만 저장
+  String mapTheme = 'pastel';
+
+  /// 친구에게 받았지만 아직 받기·거절하지 않은 스티커
+  List<Gift> gifts = [];
+
+  /// 나에게 온 친구 요청 수
+  int friendRequests = 0;
+  DateTime? _inboxAt;
 
   /// 새로 밝힌 칸 (지도에 바로 보내기 위해)
   final List<String> _freshCells = [];
@@ -107,6 +118,7 @@ class AppStore extends ChangeNotifier {
     }
     s.lastPos = s.home;
     s.hideRank = await db.kv('hide_rank') == '1';
+    s.mapTheme = await db.kv('map_theme') ?? 'pastel';
     try {
       final raw = await db.kv('map_deco');
       if (raw != null) s.decos = [for (final j in jsonDecode(raw) as List) MapDeco.fromJson(j as Map<String, dynamic>)];
@@ -247,6 +259,8 @@ class AppStore extends ChangeNotifier {
     visitedStores = {};
     coupons = [];
     decos = [];
+    gifts = [];
+    friendRequests = 0;
     likedPosts.clear();
     home = null;
     lastPos = null;
@@ -487,6 +501,66 @@ class AppStore extends ChangeNotifier {
     decos = list;
     await _db.setKv('map_deco', jsonEncode([for (final d in list) d.toJson()]));
     notifyListeners();
+  }
+
+  Future<void> setMapTheme(String id) async {
+    mapTheme = id;
+    await _db.setKv('map_theme', id);
+    notifyListeners();
+  }
+
+  // ── 친구에게 받은 스티커 ──
+  /// 받은 스티커·친구 요청을 서버에서 확인한다. [force]가 아니면 30초 안에 다시 묻지 않는다.
+  Future<void> refreshInbox({bool force = false}) async {
+    if (!Remote.signedIn) return;
+    final at = _inboxAt;
+    if (!force && at != null && DateTime.now().difference(at) < const Duration(seconds: 30)) return;
+    _inboxAt = DateTime.now();
+    final g = await Remote.gifts();
+    final f = await Remote.friends();
+    gifts = g;
+    if (f != null) friendRequests = f.where((x) => x.state == 'received').length;
+    notifyListeners();
+  }
+
+  void setFriendRequests(int n) {
+    if (n == friendRequests) return;
+    friendRequests = n;
+    notifyListeners();
+  }
+
+  /// 받기: 사진을 내려받아 내 기록으로 만든다. 받은 순간부터 내 것 (보낸 사람이 지워도 남음)
+  Future<Spot> acceptGift(Gift g) async {
+    String? photo;
+    if (g.photo != null) {
+      final bytes = await Remote.giftPhoto(g.photo!);
+      if (bytes != null) photo = await Photos.saveBytes(bytes, ext: g.photo!.toLowerCase().endsWith('.png') ? '.png' : '.jpg');
+    }
+    final sp = Spot(
+      id: newId('spot'),
+      lat: g.lat,
+      lng: g.lng,
+      stickerId: g.stickerId,
+      title: g.title,
+      memo: g.memo,
+      photo: photo,
+      visibility: SpotVisibility.me,
+      createdAt: DateTime.now(),
+      fromName: g.fromName,
+    );
+    spots.insert(0, sp);
+    await _db.saveSpot(sp);
+    gifts.removeWhere((x) => x.id == g.id);
+    notifyListeners();
+    Remote.saveSpot(sp);
+    await Remote.closeGift(g);
+    return sp;
+  }
+
+  Future<void> declineGift(Gift g) async {
+    gifts.removeWhere((x) => x.id == g.id);
+    notifyListeners();
+    await Remote.closeGift(g);
   }
 
   Spot? spotById(String id) {

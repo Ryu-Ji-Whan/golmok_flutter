@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show ContentType, HttpClient;
+import 'dart:typed_data';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -43,6 +44,29 @@ class MyArea {
   final String area;
   final int meters, rank, people;
 }
+
+/// 친구 한 명. state: friend(친구) / sent(내가 요청함) / received(나에게 요청함)
+class Friend {
+  Friend(this.id, this.nickname, this.character, this.state);
+  final String id, nickname, character, state;
+  bool get isFriend => state == 'friend';
+}
+
+/// 친구가 나에게 보낸 스티커 기록 (받기 전)
+class Gift {
+  Gift({required this.id, required this.fromName, required this.fromCharacter, required this.lat, required this.lng,
+      required this.stickerId, required this.title, required this.memo, this.photo, required this.madeAt});
+  final String id, fromName, fromCharacter, stickerId, title, memo;
+  final double lat, lng;
+
+  /// 서버 저장소(gifts) 안 경로. 없으면 null
+  final String? photo;
+  final DateTime madeAt;
+  LatLng get pos => LatLng(lat, lng);
+}
+
+/// 친구 요청 결과
+enum FriendRequestResult { sent, accepted, already, self, tooMany, failed }
 
 String _iso(DateTime t) => t.toUtc().toIso8601String();
 DateTime _dt(Object? v) => DateTime.parse(v as String).toLocal();
@@ -311,6 +335,8 @@ class Remote {
         'visibility': s.visibility.name,
         'shared': s.shared,
         'created_at': _iso(s.createdAt),
+        // 받은 기록일 때만 보낸다 (005 수정 전 서버에서도 일반 기록은 그대로 올라가게)
+        if (s.fromName != null) 'from_name': s.fromName,
       }));
 
   static Future<void> deleteSpot(String id) => _try(() => _c.from('spots').delete().eq('id', id));
@@ -488,6 +514,7 @@ class Remote {
               visibility: SpotVisibility.values.firstWhere((v) => v.name == s['visibility'], orElse: () => SpotVisibility.all),
               shared: s['shared'] as bool,
               createdAt: _dt(s['created_at']),
+              fromName: s['from_name'] as String?,
             ),
         ],
         explored: {for (final c in cells) c['cell'] as String},
@@ -577,5 +604,155 @@ class Remote {
     } catch (_) {
       return null;
     }
+  }
+
+  // ── 친구 (supabase/migrations/005_friends_gifts.sql) ──
+  /// 아이디 또는 닉네임으로 한 사람 찾기. 없으면 null, 서버 오류면 예외
+  static Future<Friend?> findFriend(String q) async {
+    final rows = await _c.rpc('find_friend', params: {'q': q.trim()}) as List;
+    if (rows.isEmpty) return null;
+    final r = rows.first as Map<String, dynamic>;
+    return Friend(r['user_id'] as String, r['nickname'] as String, r['character_id'] as String, '');
+  }
+
+  static Future<FriendRequestResult> requestFriend(String userId) async {
+    try {
+      final r = await _c.rpc('request_friend', params: {'target': userId});
+      return switch (r) {
+        'sent' => FriendRequestResult.sent,
+        'accepted' => FriendRequestResult.accepted,
+        'already' => FriendRequestResult.already,
+        'self' => FriendRequestResult.self,
+        'too_many' => FriendRequestResult.tooMany,
+        _ => FriendRequestResult.failed,
+      };
+    } catch (_) {
+      return FriendRequestResult.failed;
+    }
+  }
+
+  static Future<bool> answerFriend(String userId, bool ok) async {
+    try {
+      await _c.rpc('answer_friend', params: {'other': userId, 'ok': ok});
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<bool> removeFriend(String userId) async {
+    try {
+      await _c.rpc('remove_friend', params: {'other': userId});
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// 친구·요청 목록. 로그인 안 했거나 실패하면 null
+  static Future<List<Friend>?> friends() async {
+    if (!signedIn) return null;
+    try {
+      final rows = await _c.rpc('my_friends') as List;
+      return [
+        for (final r in rows)
+          Friend(r['user_id'] as String, r['nickname'] as String, r['character_id'] as String, r['state'] as String),
+      ];
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // ── 스티커 보내기 ──
+  /// 친구에게 기록 하나를 보낸다. [photoBytes]가 있으면 사진도 올린다. 성공하면 null, 실패하면 보여 줄 문장
+  static Future<String?> sendGift({
+    required String toUser,
+    required Spot spot,
+    List<int>? photoBytes,
+    String photoExt = '.jpg',
+  }) async {
+    if (!signedIn) return '로그인하면 친구에게 보낼 수 있어요';
+    String? path;
+    try {
+      if (photoBytes != null) {
+        path = '$toUser/${DateTime.now().millisecondsSinceEpoch}_${spot.id.hashCode.abs()}$photoExt';
+        await _c.storage.from('gifts').uploadBinary(
+              path,
+              Uint8List.fromList(photoBytes),
+              fileOptions: FileOptions(contentType: photoExt == '.png' ? 'image/png' : 'image/jpeg'),
+            );
+      }
+      await _c.from('gifts').insert({
+        'to_user': toUser,
+        'lat': spot.lat,
+        'lng': spot.lng,
+        'sticker_id': spot.stickerId,
+        'title': spot.title,
+        'memo': spot.memo,
+        'photo': path,
+        'made_at': _iso(spot.createdAt),
+      });
+      return null;
+    } on StorageException catch (e) {
+      if (e.statusCode == '413') return '사진이 너무 커요';
+      return '사진을 올리지 못했어요. 친구 사이인지 확인해 주세요';
+    } on PostgrestException catch (_) {
+      if (path != null) await _removeGiftPhoto(path);
+      return '보내지 못했어요. 친구 사이인지 확인해 주세요';
+    } catch (_) {
+      if (path != null) await _removeGiftPhoto(path);
+      return '인터넷 연결을 확인해 주세요';
+    }
+  }
+
+  /// 나에게 온 스티커들. 로그인 안 했거나 실패하면 빈 목록
+  static Future<List<Gift>> gifts() async {
+    if (!signedIn) return [];
+    try {
+      final rows = await _c.rpc('my_gifts') as List;
+      return [
+        for (final r in rows)
+          Gift(
+            id: r['id'] as String,
+            fromName: r['from_nickname'] as String,
+            fromCharacter: r['from_character'] as String,
+            lat: (r['lat'] as num).toDouble(),
+            lng: (r['lng'] as num).toDouble(),
+            stickerId: r['sticker_id'] as String,
+            title: r['title'] as String,
+            memo: (r['memo'] as String?) ?? '',
+            photo: r['photo'] as String?,
+            madeAt: _dt(r['made_at']),
+          ),
+      ];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  /// 받은 스티커 사진 받기. 없거나 실패하면 null
+  static Future<Uint8List?> giftPhoto(String path) async {
+    try {
+      return await _c.storage.from('gifts').download(path);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// 받기·거절이 끝난 스티커를 서버에서 지운다 (사진 포함)
+  static Future<bool> closeGift(Gift g) async {
+    try {
+      if (g.photo != null) await _removeGiftPhoto(g.photo!);
+      await _c.from('gifts').delete().eq('id', g.id);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<void> _removeGiftPhoto(String path) async {
+    try {
+      await _c.storage.from('gifts').remove([path]);
+    } catch (_) {}
   }
 }

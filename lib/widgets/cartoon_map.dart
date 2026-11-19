@@ -3,11 +3,32 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../data/geo.dart';
 import '../data/models.dart' show MapDeco;
+import '../data/store.dart';
 import '../theme.dart';
+
+/// 지도 테마 (assets/map/cartoon_map.html 의 THEMES 와 같은 이름)
+class MapTheme {
+  const MapTheme(this.id, this.name, this.desc, this.colors);
+  final String id, name, desc;
+
+  /// 고르는 화면에 보여 줄 대표 색 (바탕, 건물, 길, 포인트)
+  final List<Color> colors;
+}
+
+const mapThemes = [
+  MapTheme('pastel', '골목 파스텔', '기본 만화풍. 굵은 외곽선과 건물 그림자', [Color(0xFFFFF9ED), Color(0xFFFDE3CC), Color(0xFFFFE19A), Color(0xFF24322C)]),
+  MapTheme('night', '밤 산책', '창문마다 불이 켜진 밤 골목, 가로등 길, 반짝이는 별', [Color(0xFF1B2140), Color(0xFF2C3358), Color(0xFFFFE6A3), Color(0xFFFFD46B)]),
+  MapTheme('treasure', '보물 지도', '그을려 삭은 테두리와 탄 구멍, 점선 길, 나침반', [Color(0xFFEFDCAE), Color(0xFFE6CF9C), Color(0xFF4A2E17), Color(0xFFA8321E)]),
+  MapTheme('sketch', '연필 스케치', '모눈 공책에 연필로 그린 흑백 지도', [Color(0xFFFCFCFA), Color(0xFFE6E8E0), Color(0xFF3B3B3B), Color(0xFF5B7FB0)]),
+  MapTheme('watercolor', '수채화', '외곽선 없이 물감이 번진 지도', [Color(0xFFFBF6EC), Color(0xFFF2B48C), Color(0xFF8EC3E6), Color(0xFFA9D49A)]),
+  MapTheme('sakura', '벚꽃 골목', '꽃 무늬 공원과 살랑살랑 떨어지는 꽃잎', [Color(0xFFFFF5F7), Color(0xFFF9D9E4), Color(0xFFFFC6D8), Color(0xFFC0386E)]),
+  MapTheme('retro', '레트로 게임', '도트 그림처럼 네모난 점이 보이는 게임 화면', [Color(0xFFB9D77A), Color(0xFFF4D35E), Color(0xFFEE964B), Color(0xFF16210F)]),
+];
 
 /// 지도에 올릴 스티커 하나
 class MapMark {
@@ -48,6 +69,12 @@ class MapHandle {
   Future<void> setMarks(List<MapMark> marks) => _js('setSpots', [marks.map((m) => m.toJson()).toList()]);
   Future<void> setWobble(bool on) => _js('setWobble', [on]);
 
+  /// 지도 테마 바꾸기 (지도를 새로 그림, 표시하던 것은 그대로)
+  Future<void> setTheme(String id) => _js('setTheme', [id]);
+
+  /// 기록 스티커를 도장처럼 콩 찍기. [fly]면 화면 위에서 날아와 붙는다 (친구에게 받은 스티커)
+  Future<void> stamp(String spotId, {bool fly = false}) => _js('stamp', [spotId, fly]);
+
   /// 지도 꾸미기 표시. [editing]이면 눌러서 고르고 끌어서 옮길 수 있다.
   Future<void> setDecos(List<MapDeco> decos, {bool editing = false, String? selected}) =>
       _js('setDecos', [decos.map((d) => d.toJson()).toList(), editing, selected]);
@@ -55,8 +82,11 @@ class MapHandle {
 
 /// 만화풍 지도 (assets/map/cartoon_map.html 을 WebView로 띄운다)
 class CartoonMap extends StatefulWidget {
-  const CartoonMap({super.key, required this.handle, this.onReady, this.onTap, this.onEvent});
+  const CartoonMap({super.key, required this.handle, this.onReady, this.onTap, this.onEvent, this.theme});
   final MapHandle handle;
+
+  /// 정하면 이 테마로 그린다 (테마 고르는 화면의 미리보기). 없으면 설정한 테마
+  final String? theme;
   final VoidCallback? onReady;
 
   /// 지도 위 스티커를 눌렀을 때 (kind, id)
@@ -72,6 +102,8 @@ class CartoonMap extends StatefulWidget {
 class _CartoonMapState extends State<CartoonMap> {
   late final WebViewController _c;
   bool _ready = false;
+  bool _booted = false;
+  String _theme = 'pastel';
 
   @override
   void initState() {
@@ -80,8 +112,37 @@ class _CartoonMapState extends State<CartoonMap> {
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(C.cream)
       ..addJavaScriptChannel('Golmok', onMessageReceived: _onMessage)
+      ..setNavigationDelegate(NavigationDelegate(onPageFinished: (_) => _boot()))
       ..loadFlutterAsset('assets/map/cartoon_map.html');
     widget.handle._c = _c;
+  }
+
+  /// 페이지가 열리면 고른 테마로 지도를 만든다
+  Future<void> _boot() async {
+    _booted = true;
+    try {
+      await _c.runJavaScript('window.boot(${jsonEncode(_theme)})');
+    } catch (_) {}
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _follow();
+  }
+
+  @override
+  void didUpdateWidget(CartoonMap old) {
+    super.didUpdateWidget(old);
+    _follow();
+  }
+
+  /// 설정한 테마(또는 미리보기 테마)가 바뀌면 지도에도 알린다
+  void _follow() {
+    final want = widget.theme ?? StoreScope.of(context).mapTheme;
+    if (want == _theme) return;
+    _theme = want;
+    if (_booted) _c.runJavaScript('window.setTheme(${jsonEncode(want)})').catchError((_) {});
   }
 
   void _onMessage(JavaScriptMessage m) {
@@ -98,6 +159,9 @@ class _CartoonMapState extends State<CartoonMap> {
         widget.onReady?.call();
       case 'tap':
         widget.onTap?.call(msg['kind'] as String, msg['id'] as String);
+      case 'stamped':
+        HapticFeedback.mediumImpact(); // 스티커가 콩 붙을 때 폰이 톡
+        widget.onEvent?.call(msg);
       default:
         widget.onEvent?.call(msg);
     }

@@ -8,6 +8,7 @@ import '../widgets/photo.dart';
 import '../widgets/ui.dart';
 import 'photo_edit.dart';
 import 'record.dart';
+import 'send_sticker.dart';
 import 'share_card.dart';
 
 /// ③-1 저장된 기록
@@ -78,6 +79,7 @@ class SpotDetailScreen extends StatelessWidget {
         Wrap(spacing: 6, runSpacing: 6, children: [
           Pill(formatDate(sp.createdAt), bg: C.sand, fg: C.muted),
           Pill(visibilityLabel[sp.visibility]!),
+          if (sp.fromName != null) Pill('${sp.fromName}님이 보낸 스티커', bg: C.peach, fg: C.orangeText),
           if (sp.shared) const Pill('피드에 공유됨', bg: C.peach, fg: C.orangeText),
         ]),
         if (sp.memo.isNotEmpty) ...[
@@ -87,7 +89,10 @@ class SpotDetailScreen extends StatelessWidget {
         const SizedBox(height: 14),
         Text('위치 ${sp.lat.toStringAsFixed(5)}, ${sp.lng.toStringAsFixed(5)}', style: const TextStyle(fontSize: 12, color: C.muted)),
         const SizedBox(height: 24),
-        PrimaryButton('친구에게 보내기', icon: Icons.send_outlined, color: C.orange,
+        PrimaryButton('친구에게 스티커 보내기', icon: Icons.send, color: C.orange,
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => SendStickerScreen(spot: sp)))),
+        const SizedBox(height: 10),
+        OutlineButton('카드 사진으로 공유하기', icon: Icons.image_outlined,
             onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ShareCardScreen(spot: sp)))),
         const SizedBox(height: 10),
         if (!sp.shared)
