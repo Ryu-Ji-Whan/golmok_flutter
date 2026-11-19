@@ -111,7 +111,9 @@ class _WalkTabState extends State<WalkTab> {
     // 첫 화면에서 현재 위치를 한 번 잡아 둔다 (권한은 가입 때 물어봄)
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final s = StoreScope.read(context);
-      if (s.lastPos == null) await s.locate();
+      // 앱을 켜면 늘 지금 위치를 새로 잡고 그리로 간다 (예전엔 처음 쓴 자리(home)에 머물러 있었음)
+      await s.locate();
+      if (mounted && s.lastPos != null) await _map.goTo(s.center, zoom: 16.5);
       if (s.activeWalk != null) await s.startTracking(); // 앱을 다시 켰을 때 이어서 기록
     });
   }

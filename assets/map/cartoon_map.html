@@ -598,7 +598,8 @@ function drawSpots() {
     el.type = 'button';
     el.setAttribute('aria-label', it.label || '기록');
     const size = it.kind === 'spot' ? 46 : 40;
-    el.style.cssText = 'position:relative;overflow:visible;width:' + size + 'px;height:' + size + 'px;padding:0;border:0;background:none;cursor:pointer;filter:drop-shadow(2px 2px 0 #24322C)' + (it.kind === 'stamp' ? ';opacity:.55' : '');
+    // position은 건드리지 않는다: 지도 표시는 position:absolute여야 자리에 고정된다 (relative로 바꾸면 확대·축소할 때 스티커가 밀려남)
+    el.style.cssText = 'overflow:visible;width:' + size + 'px;height:' + size + 'px;padding:0;border:0;background:none;cursor:pointer;filter:drop-shadow(2px 2px 0 #24322C)' + (it.kind === 'stamp' ? ';opacity:.55' : '');
     const img = document.createElement('img');
     img.src = 'stickers/' + it.sticker + '.webp';
     img.alt = '';
