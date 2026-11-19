@@ -59,7 +59,11 @@
 - 내 기록 저장하면 지도에서 스티커가 도장처럼 콩 찍힘 (`window.stamp`, 폰 진동)
 - 이미 밝힌 곳에 스티커 붙이기 (2026-11-19): 산책·내 지도에서 지도 빈 곳을 누르면 그 칸이 밝힌 칸(`cellOf`)일 때만 "이 자리에 붙일까요?" → `RecordScreen(at:)`. 안개 낀 곳은 안내만
   - 지도 표시(Marker) 바깥 요소에 CSS transform 애니메이션을 걸면 위치가 틀어진다 → 움직임은 안쪽 요소에만
-- 지도 테마 7가지 (기본 pastel): `cartoon_map.html`의 `THEMES` + `lib/widgets/cartoon_map.dart`의 `mapThemes` (이름 맞출 것). 폰 kv `map_theme`
+- 지도 테마 7가지 (기본 pastel) = **앱 테마**: 테마를 바꾸면 앱 전체 색·제목 글씨체도 바뀜 (`lib/theme.dart`의 `palettes`, 이름은 지도 THEMES와 같게)
+  - 색은 `C.forest` 등 getter라서 **const 자리에 못 씀**. `C.white`는 카드 바탕이자 주 색 위 글자(밤 테마에선 남색). 늘 어두운 화면(사진 꾸미기)은 `Colors.white`
+  - 테마를 바꾸면 `C.use` + `reassembleApplication()`으로 모든 화면 다시 그림(상태 유지). 제목 글씨체는 Jua 말고는 google_fonts로 처음 쓸 때 받음
+  - 2026-11-19 사용자 의견: 테두리가 지도를 많이 가림 → 얇게, 보물 지도 탄 구멍 뺌
+- 지도 테마: `cartoon_map.html`의 `THEMES` + `lib/widgets/cartoon_map.dart`의 `mapThemes` (이름 맞출 것). 폰 kv `map_theme`
   - 테마마다 색·선·무늬·글씨체(구글 글꼴, 한글 조각 미리 받음)·종이 질감·테두리·움직임이 다름. 테마를 바꾸면 지도를 새로 만들고 안개·경로·스티커·꾸미기를 다시 올림
   - 지도 스타일의 오솔길 층 이름이 'path'라서 내 산책 경로 층은 'route'(같은 이름이면 경로가 안 그려지던 버그 고침)
 - 앱 아이콘: 초록 지도 핀 속 참새 (`assets/icon/`)

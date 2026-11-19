@@ -11,6 +11,7 @@ import 'geo.dart';
 import 'models.dart';
 import 'places.dart';
 import 'remote.dart';
+import '../theme.dart';
 import '../widgets/photo.dart';
 
 final _rand = math.Random();
@@ -119,6 +120,7 @@ class AppStore extends ChangeNotifier {
     s.lastPos = s.home;
     s.hideRank = await db.kv('hide_rank') == '1';
     s.mapTheme = await db.kv('map_theme') ?? 'pastel';
+    C.use(s.mapTheme);
     try {
       final raw = await db.kv('map_deco');
       if (raw != null) s.decos = [for (final j in jsonDecode(raw) as List) MapDeco.fromJson(j as Map<String, dynamic>)];
@@ -504,10 +506,14 @@ class AppStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 지도 테마 = 앱 테마. 색·제목 글씨체를 바꾸고 화면 전체를 새 색으로 다시 그린다
   Future<void> setMapTheme(String id) async {
     mapTheme = id;
+    C.use(id);
     await _db.setKv('map_theme', id);
     notifyListeners();
+    // 화면들이 색을 C에서 직접 읽으므로 모든 화면을 한 번 다시 그린다 (지금 보던 화면·상태는 그대로)
+    WidgetsBinding.instance.reassembleApplication();
   }
 
   // ── 친구에게 받은 스티커 ──

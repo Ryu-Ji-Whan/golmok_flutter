@@ -91,7 +91,7 @@ class _FeedTabState extends State<FeedTab> {
               const SizedBox(height: 12),
               Text('아직 올라온 골목 이야기가 없어요', style: jua(20)),
               const SizedBox(height: 6),
-              const Text('산책하다 붙인 스티커 기록을\n"골목 피드에 공유하기"로 첫 글을 올려 보세요',
+              Text('산책하다 붙인 스티커 기록을\n"골목 피드에 공유하기"로 첫 글을 올려 보세요',
                   textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: C.muted, height: 1.5)),
             ]),
           ),
@@ -99,7 +99,7 @@ class _FeedTabState extends State<FeedTab> {
         Text(
           online ? '당겨서 새로고침할 수 있어요' : '로그인하면 이웃이 공유한 글도 보여요',
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 12, color: C.muted),
+          style: TextStyle(fontSize: 12, color: C.muted),
         ),
       ]),
       ),
@@ -140,7 +140,7 @@ class _Post extends StatelessWidget {
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(author, style: const TextStyle(fontWeight: FontWeight.w700)),
-                  Text(meta, style: const TextStyle(fontSize: 12, color: C.muted)),
+                  Text(meta, style: TextStyle(fontSize: 12, color: C.muted)),
                 ]),
               ),
             ]),
@@ -154,17 +154,17 @@ class _Post extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-            if (body.isNotEmpty) Text(body, style: const TextStyle(fontSize: 14, color: C.muted, height: 1.5)),
+            if (body.isNotEmpty) Text(body, style: TextStyle(fontSize: 14, color: C.muted, height: 1.5)),
             const SizedBox(height: 6),
             Row(children: [
               TextButton.icon(
                 onPressed: onLike,
                 icon: Icon(liked ? Icons.favorite : Icons.favorite_border, color: C.pink, size: 20),
-                label: Text('$likes', style: const TextStyle(color: C.ink)),
+                label: Text('$likes', style: TextStyle(color: C.ink)),
               ),
-              const Icon(Icons.chat_bubble_outline, color: C.muted, size: 18),
+              Icon(Icons.chat_bubble_outline, color: C.muted, size: 18),
               const SizedBox(width: 4),
-              Text('$comments', style: const TextStyle(color: C.muted)),
+              Text('$comments', style: TextStyle(color: C.muted)),
             ]),
           ]),
         ),

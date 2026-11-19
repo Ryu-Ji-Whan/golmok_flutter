@@ -23,7 +23,20 @@ class GolmokApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) => StoreScope(
         store: store,
-        child: MaterialApp(
+        child: _Themed(store: store),
+      );
+}
+
+/// 테마(지도 테마 = 앱 테마)가 바뀌면 앱 전체 색을 다시 만든다
+class _Themed extends StatelessWidget {
+  const _Themed({required this.store});
+  final AppStore store;
+
+  // 산책 중에는 상태가 1초마다 바뀌므로, 테마 이름이 바뀔 때만 다시 만든다
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder<String>(
+        valueListenable: C.changes,
+        builder: (_, __, ___) => MaterialApp(
           title: '골목대장',
           debugShowCheckedModeBanner: false,
           theme: buildTheme(),

@@ -106,7 +106,7 @@ class _RecordScreenState extends State<RecordScreen> {
               const Text('사진 넣기', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
               const SizedBox(height: 8),
               ListTile(
-                leading: const Icon(Icons.photo_camera_outlined, color: C.forest),
+                leading: Icon(Icons.photo_camera_outlined, color: C.forest),
                 title: const Text('사진 찍기'),
                 onTap: () {
                   Navigator.pop(c);
@@ -114,7 +114,7 @@ class _RecordScreenState extends State<RecordScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.photo_library_outlined, color: C.forest),
+                leading: Icon(Icons.photo_library_outlined, color: C.forest),
                 title: const Text('앨범에서 고르기'),
                 onTap: () {
                   Navigator.pop(c);
@@ -158,7 +158,7 @@ class _RecordScreenState extends State<RecordScreen> {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(stickerOf(_sticker).name, style: jua(20)),
                 const SizedBox(height: 4),
-                Text(widget.edit == null ? '지금 서 있는 곳에 붙여요' : '붙인 자리는 그대로예요', style: const TextStyle(fontSize: 13, color: C.muted)),
+                Text(widget.edit == null ? '지금 서 있는 곳에 붙여요' : '붙인 자리는 그대로예요', style: TextStyle(fontSize: 13, color: C.muted)),
               ]),
             ),
           ]),

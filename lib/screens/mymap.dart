@@ -70,7 +70,7 @@ class _MyMapTabState extends State<MyMapTab> {
           Pill('총 ${formatDistance(s.totalDistance)}'),
           IconButton(
             tooltip: '지도 테마',
-            icon: const Icon(Icons.palette_outlined, color: C.forest),
+            icon: Icon(Icons.palette_outlined, color: C.forest),
             onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MapThemeScreen())),
           ),
           TextButton.icon(
@@ -134,7 +134,7 @@ class _MyMapTabState extends State<MyMapTab> {
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           const StickerImg('a02', size: 90),
           const SizedBox(height: 8),
-          Text(text, textAlign: TextAlign.center, style: const TextStyle(color: C.muted, height: 1.5)),
+          Text(text, textAlign: TextAlign.center, style: TextStyle(color: C.muted, height: 1.5)),
         ]),
       );
 
@@ -166,11 +166,11 @@ class _MyMapTabState extends State<MyMapTab> {
                 Text(sp.title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700), maxLines: 1, overflow: TextOverflow.ellipsis),
                 const SizedBox(height: 2),
                 Text('${formatDate(sp.createdAt)} · ${sp.fromName != null ? '${sp.fromName}님이 보냄' : visibilityLabel[sp.visibility]}${sp.shared ? ' · 피드 공유' : ''}',
-                    style: const TextStyle(fontSize: 12, color: C.muted)),
+                    style: TextStyle(fontSize: 12, color: C.muted)),
               ]),
             ),
-            if (sp.photo != null) const Icon(Icons.photo_outlined, color: C.leaf, size: 20),
-            const Icon(Icons.chevron_right, color: C.muted),
+            if (sp.photo != null) Icon(Icons.photo_outlined, color: C.leaf, size: 20),
+            Icon(Icons.chevron_right, color: C.muted),
           ]),
         );
       },
@@ -195,7 +195,7 @@ class _MyMapTabState extends State<MyMapTab> {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('${formatDate(w.startedAt)} 산책', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
                 Text('${formatDistance(w.distanceM)} · ${formatDuration(w.duration)}',
-                    style: const TextStyle(fontSize: 12, color: C.muted)),
+                    style: TextStyle(fontSize: 12, color: C.muted)),
               ]),
             ),
           ]),

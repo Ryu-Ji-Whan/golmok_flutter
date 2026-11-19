@@ -215,7 +215,7 @@ class _MapDecorateScreenState extends State<MapDecorateScreen> {
                       ? Container(
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                           decoration: BoxDecoration(color: C.ink.withValues(alpha: 0.82), borderRadius: BorderRadius.circular(999)),
-                          child: const Text('스티커를 누르면 지도 가운데에 붙어요', style: TextStyle(color: C.white, fontSize: 13)),
+                          child: Text('스티커를 누르면 지도 가운데에 붙어요', style: TextStyle(color: C.white, fontSize: 13)),
                         )
                       : Row(mainAxisSize: MainAxisSize.min, children: [
                           _toolBtn(Icons.remove, '작게', () => _resize(1 / 1.2)),
@@ -228,7 +228,7 @@ class _MapDecorateScreenState extends State<MapDecorateScreen> {
           ),
           // 아래 판: 스티커 / 글씨
           Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: C.white,
               borderRadius: BorderRadius.vertical(top: Radius.circular(R.sheet)),
               boxShadow: cardShadow,
@@ -239,9 +239,9 @@ class _MapDecorateScreenState extends State<MapDecorateScreen> {
                 _tabBtn(0, '스티커'),
                 _tabBtn(1, '글씨'),
                 const Spacer(),
-                Text('꾸미기 ${_decos.length}/$maxDecos', style: const TextStyle(fontSize: 13, color: C.muted)),
+                Text('꾸미기 ${_decos.length}/$maxDecos', style: TextStyle(fontSize: 13, color: C.muted)),
               ]),
-              const Divider(height: 1, color: C.lineSoft),
+              Divider(height: 1, color: C.lineSoft),
               const SizedBox(height: 10),
               if (_tab == 0) ...[
                 SizedBox(
@@ -290,7 +290,7 @@ class _MapDecorateScreenState extends State<MapDecorateScreen> {
                   ),
                 ]),
                 const SizedBox(height: 8),
-                const Text('글씨는 12자까지, 붙인 뒤 끌어서 옮길 수 있어요', style: TextStyle(fontSize: 12, color: C.muted)),
+                Text('글씨는 12자까지, 붙인 뒤 끌어서 옮길 수 있어요', style: TextStyle(fontSize: 12, color: C.muted)),
                 const SizedBox(height: 8),
               ],
             ]),
@@ -310,7 +310,7 @@ class _MapDecorateScreenState extends State<MapDecorateScreen> {
         ),
       );
 
-  Widget _toolBtn(IconData icon, String label, VoidCallback onTap, {Color color = C.ink}) => Padding(
+  Widget _toolBtn(IconData icon, String label, VoidCallback onTap, {Color? color}) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4),
         child: TextButton.icon(
           onPressed: onTap,
@@ -318,7 +318,7 @@ class _MapDecorateScreenState extends State<MapDecorateScreen> {
           label: Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
           style: TextButton.styleFrom(
             backgroundColor: C.white,
-            foregroundColor: color,
+            foregroundColor: color ?? C.ink,
             elevation: 2,
             shadowColor: C.shadow,
             shape: const StadiumBorder(),
@@ -336,7 +336,7 @@ class _MapDecorateScreenState extends State<MapDecorateScreen> {
           selectedColor: C.forest,
           backgroundColor: C.white,
           labelStyle: TextStyle(color: _cat == c ? C.white : C.ink, fontWeight: FontWeight.w700),
-          shape: const StadiumBorder(side: BorderSide(color: C.line)),
+          shape: StadiumBorder(side: BorderSide(color: C.line)),
           onSelected: (_) => setState(() => _cat = c),
         ),
       );

@@ -46,7 +46,7 @@ class _MapThemeScreenState extends State<MapThemeScreen> {
             ),
           ),
         ),
-        const Padding(
+        Padding(
           padding: EdgeInsets.fromLTRB(20, 10, 20, 4),
           child: Text('테마를 누르면 위 지도가 바로 바뀌어요. 처음 고를 때는 글씨체를 받느라 몇 초 걸릴 수 있어요.',
               style: TextStyle(fontSize: 12, color: C.muted, height: 1.4)),
@@ -92,7 +92,7 @@ class _MapThemeScreenState extends State<MapThemeScreen> {
                           if (t.id == s.mapTheme) ...[const SizedBox(width: 6), const Pill('지금 쓰는 중')],
                         ]),
                         const SizedBox(height: 2),
-                        Text(t.desc, style: const TextStyle(fontSize: 12, color: C.muted)),
+                        Text(t.desc, style: TextStyle(fontSize: 12, color: C.muted)),
                       ]),
                     ),
                     Icon(on ? Icons.radio_button_checked : Icons.radio_button_off, color: on ? C.forest : C.line),

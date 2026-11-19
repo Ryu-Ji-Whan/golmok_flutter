@@ -58,15 +58,15 @@ class PickCard extends StatelessWidget {
   Widget build(BuildContext context) => CardBox(
         padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
         child: Row(children: [
-          const Icon(Icons.add_location_alt, color: C.orange),
+          Icon(Icons.add_location_alt, color: C.orange),
           const SizedBox(width: 10),
-          const Expanded(
+          Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
               Text('이 자리에 스티커를 붙일까요?', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
               Text('내가 걸어서 밝힌 골목이에요', style: TextStyle(fontSize: 12, color: C.muted)),
             ]),
           ),
-          TextButton(onPressed: onCancel, child: const Text('취소', style: TextStyle(color: C.muted))),
+          TextButton(onPressed: onCancel, child: Text('취소', style: TextStyle(color: C.muted))),
           FilledButton(
             onPressed: onOk,
             style: FilledButton.styleFrom(backgroundColor: C.orange, shape: const StadiumBorder()),
@@ -231,7 +231,7 @@ class _WalkTabState extends State<WalkTab> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(color: C.white, borderRadius: BorderRadius.circular(999), boxShadow: cardShadow),
-              child: Text((p?.areaName ?? '').split(' ').last, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: C.forest)),
+              child: Text((p?.areaName ?? '').split(' ').last, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: C.forest)),
             ),
           ]),
           const SizedBox(height: 10),
@@ -266,9 +266,9 @@ class _WalkTabState extends State<WalkTab> {
                   StickerImg(s.gifts.first.stickerId, size: 30),
                   const SizedBox(width: 8),
                   Text(s.gifts.length == 1 ? '${s.gifts.first.fromName}님이 스티커를 보냈어요' : '친구가 보낸 스티커 ${s.gifts.length}개',
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: C.white)),
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: C.white)),
                   const SizedBox(width: 4),
-                  const Icon(Icons.chevron_right, color: C.white, size: 20),
+                  Icon(Icons.chevron_right, color: C.white, size: 20),
                 ]),
               ),
             ),

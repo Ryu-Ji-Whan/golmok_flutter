@@ -23,7 +23,7 @@ class MapTheme {
 const mapThemes = [
   MapTheme('pastel', '골목 파스텔', '기본 만화풍. 굵은 외곽선과 건물 그림자', [Color(0xFFFFF9ED), Color(0xFFFDE3CC), Color(0xFFFFE19A), Color(0xFF24322C)]),
   MapTheme('night', '밤 산책', '창문마다 불이 켜진 밤 골목, 가로등 길, 반짝이는 별', [Color(0xFF1B2140), Color(0xFF2C3358), Color(0xFFFFE6A3), Color(0xFFFFD46B)]),
-  MapTheme('treasure', '보물 지도', '그을려 삭은 테두리와 탄 구멍, 점선 길, 나침반', [Color(0xFFEFDCAE), Color(0xFFE6CF9C), Color(0xFF4A2E17), Color(0xFFA8321E)]),
+  MapTheme('treasure', '보물 지도', '누런 종이에 그을린 테두리, 점선 길, 나침반', [Color(0xFFEFDCAE), Color(0xFFE6CF9C), Color(0xFF4A2E17), Color(0xFFA8321E)]),
   MapTheme('sketch', '연필 스케치', '모눈 공책에 연필로 그린 흑백 지도', [Color(0xFFFCFCFA), Color(0xFFE6E8E0), Color(0xFF3B3B3B), Color(0xFF5B7FB0)]),
   MapTheme('watercolor', '수채화', '외곽선 없이 물감이 번진 지도', [Color(0xFFFBF6EC), Color(0xFFF2B48C), Color(0xFF8EC3E6), Color(0xFFA9D49A)]),
   MapTheme('sakura', '벚꽃 골목', '꽃 무늬 공원과 살랑살랑 떨어지는 꽃잎', [Color(0xFFFFF5F7), Color(0xFFF9D9E4), Color(0xFFFFC6D8), Color(0xFFC0386E)]),
@@ -191,7 +191,7 @@ class _CartoonMapState extends State<CartoonMap> {
               color: C.cream,
               child: Center(
                 child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  const CircularProgressIndicator(color: C.forest),
+                  CircularProgressIndicator(color: C.forest),
                   const SizedBox(height: 12),
                   Text('골목 지도를 그리는 중이에요', style: jua(18, color: C.forest)),
                 ]),

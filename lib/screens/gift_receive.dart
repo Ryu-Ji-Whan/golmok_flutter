@@ -117,13 +117,13 @@ class _GiftReceiveScreenState extends State<GiftReceiveScreen> {
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(g.title, style: jua(22), maxLines: 1, overflow: TextOverflow.ellipsis),
-                if (g.memo.isNotEmpty) Text(g.memo, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: C.muted)),
-                Text('${formatDate(g.madeAt)}에 남긴 기록${g.photo != null ? ' · 사진 있음' : ''}', style: const TextStyle(fontSize: 12, color: C.muted)),
+                if (g.memo.isNotEmpty) Text(g.memo, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, color: C.muted)),
+                Text('${formatDate(g.madeAt)}에 남긴 기록${g.photo != null ? ' · 사진 있음' : ''}', style: TextStyle(fontSize: 12, color: C.muted)),
               ]),
             ),
           ]),
           const SizedBox(height: 6),
-          const Text('지도 가운데가 친구가 기록한 자리예요.', style: TextStyle(fontSize: 12, color: C.muted)),
+          Text('지도 가운데가 친구가 기록한 자리예요.', style: TextStyle(fontSize: 12, color: C.muted)),
           const SizedBox(height: 12),
           Row(children: [
             Expanded(child: OutlineButton('받지 않기', height: 50, color: C.muted, onPressed: _busy ? null : () => _decline(g))),
@@ -139,7 +139,7 @@ class _GiftReceiveScreenState extends State<GiftReceiveScreen> {
           Text('내 지도에 콩 붙었어요!', style: jua(24)),
           const SizedBox(height: 4),
           Text('$_landed님이 보낸 스티커는 이제 내 기록이에요.\n"내 지도"에서 언제든 보고, 지울 수도 있어요.',
-              textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: C.muted, height: 1.5)),
+              textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: C.muted, height: 1.5)),
           const SizedBox(height: 12),
           PrimaryButton(left > 0 ? '다음 스티커 보기 ($left)' : '확인', height: 50, onPressed: _next),
         ]),

@@ -83,7 +83,7 @@ class SpotPhoto extends StatelessWidget {
           width: width,
           color: C.sand,
           alignment: Alignment.center,
-          child: const Icon(Icons.broken_image_outlined, color: C.muted),
+          child: Icon(Icons.broken_image_outlined, color: C.muted),
         );
     if (stored.startsWith('assets/')) {
       return Image.asset(stored, height: height, width: width, fit: fit, errorBuilder: broken);

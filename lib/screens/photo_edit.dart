@@ -227,9 +227,9 @@ class _PhotoEditScreenState extends State<PhotoEditScreen> {
         backgroundColor: _bg,
         appBar: AppBar(
           backgroundColor: _bg,
-          foregroundColor: C.white,
+          foregroundColor: Colors.white,
           centerTitle: true,
-          title: Text('사진 꾸미기', style: jua(22, color: C.white)),
+          title: Text('사진 꾸미기', style: jua(22, color: Colors.white)),
           leading: IconButton(
             tooltip: '닫기',
             icon: const Icon(Icons.close),
@@ -251,7 +251,7 @@ class _PhotoEditScreenState extends State<PhotoEditScreen> {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
               child: _imgSize == null
-                  ? const Center(child: CircularProgressIndicator(color: C.orange))
+                  ? Center(child: CircularProgressIndicator(color: C.orange))
                   : Center(
                       child: AspectRatio(
                         aspectRatio: _imgSize!.width / _imgSize!.height,
@@ -278,7 +278,7 @@ class _PhotoEditScreenState extends State<PhotoEditScreen> {
           const SizedBox(height: 12),
           // 스티커 고르기 + 저장·공유
           Container(
-            decoration: const BoxDecoration(color: C.cream, borderRadius: BorderRadius.vertical(top: Radius.circular(R.sheet))),
+            decoration: BoxDecoration(color: C.cream, borderRadius: BorderRadius.vertical(top: Radius.circular(R.sheet))),
             padding: EdgeInsets.fromLTRB(16, 14, 16, 12 + MediaQuery.paddingOf(context).bottom),
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               SizedBox(
@@ -287,8 +287,8 @@ class _PhotoEditScreenState extends State<PhotoEditScreen> {
                   Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: ActionChip(
-                      avatar: const Icon(Icons.event_outlined, size: 18, color: C.white),
-                      label: const Text('날짜 도장', style: TextStyle(color: C.white, fontWeight: FontWeight.w700)),
+                      avatar: Icon(Icons.event_outlined, size: 18, color: Colors.white),
+                      label: Text('날짜 도장', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
                       backgroundColor: C.orange,
                       side: BorderSide.none,
                       shape: const StadiumBorder(),
@@ -309,7 +309,7 @@ class _PhotoEditScreenState extends State<PhotoEditScreen> {
                   children: [
                     for (final st in mine)
                       Material(
-                        color: C.white,
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(14),
                         child: InkWell(
                           borderRadius: BorderRadius.circular(14),
@@ -381,7 +381,7 @@ class _PhotoEditScreenState extends State<PhotoEditScreen> {
         angle: it.rot,
         child: Container(
           decoration: selected
-              ? BoxDecoration(border: Border.all(color: C.white, width: 2), borderRadius: BorderRadius.circular(10))
+              ? BoxDecoration(border: Border.all(color: Colors.white, width: 2), borderRadius: BorderRadius.circular(10))
               : null,
           child: it.isStamp
               ? FittedBox(child: _Stamp(text: stampText, character: character))
@@ -391,7 +391,7 @@ class _PhotoEditScreenState extends State<PhotoEditScreen> {
     );
   }
 
-  Widget _toolBtn(IconData icon, String label, VoidCallback onTap, {Color color = C.white}) {
+  Widget _toolBtn(IconData icon, String label, VoidCallback onTap, {Color? color}) {
     final on = _sel != null && !_busy;
     return Padding(
       padding: const EdgeInsets.only(right: 8),
@@ -401,7 +401,7 @@ class _PhotoEditScreenState extends State<PhotoEditScreen> {
         label: Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
         style: TextButton.styleFrom(
           backgroundColor: _tool,
-          foregroundColor: color,
+          foregroundColor: color ?? Colors.white,
           disabledForegroundColor: C.muted,
           shape: const StadiumBorder(),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -419,7 +419,7 @@ class _PhotoEditScreenState extends State<PhotoEditScreen> {
           selectedColor: C.forest,
           backgroundColor: C.white,
           labelStyle: TextStyle(color: _cat == c ? C.white : C.ink, fontWeight: FontWeight.w700),
-          shape: const StadiumBorder(side: BorderSide(color: C.line)),
+          shape: StadiumBorder(side: BorderSide(color: C.line)),
           onSelected: (_) => setState(() => _cat = c),
         ),
       );
@@ -434,13 +434,14 @@ class _Stamp extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.fromLTRB(10, 6, 16, 6),
+        // 도장은 늘 크림 바탕이라 글자 색도 테마와 상관없이 고정 (밤 테마에서도 읽히게)
         decoration: BoxDecoration(color: const Color(0xF2FFF9ED), borderRadius: BorderRadius.circular(999)),
         child: Row(mainAxisSize: MainAxisSize.min, children: [
           StickerImg(character, size: 30),
           const SizedBox(width: 6),
-          Text('골목대장', style: jua(18)),
+          Text('골목대장', style: jua(18, color: const Color(0xFF0E5A3C))),
           const SizedBox(width: 8),
-          Text(text, style: const TextStyle(fontSize: 14, color: C.ink, fontWeight: FontWeight.w600)),
+          Text(text, style: const TextStyle(fontSize: 14, color: Color(0xFF24322C), fontWeight: FontWeight.w600)),
         ]),
       );
 }

@@ -125,7 +125,7 @@ class _AccountSignupScreenState extends State<AccountSignupScreen> {
   Widget _form() => ListView(padding: const EdgeInsets.fromLTRB(24, 8, 24, 32), children: [
         Text('골목대장 계정 만들기', style: jua(26)),
         const SizedBox(height: 6),
-        const Text('아이디와 비밀번호로 로그인하고, 이메일은 본인 확인과 비밀번호 찾기에 써요.',
+        Text('아이디와 비밀번호로 로그인하고, 이메일은 본인 확인과 비밀번호 찾기에 써요.',
             style: TextStyle(fontSize: 14, color: C.muted, height: 1.5)),
         const SizedBox(height: 24),
         TextField(
@@ -203,6 +203,6 @@ class _AccountSignupScreenState extends State<AccountSignupScreen> {
         const SizedBox(height: 24),
         PrimaryButton('로그인하러 가기', onPressed: () => Navigator.of(context).pop(id)),
         const SizedBox(height: 8),
-        TextButton(onPressed: _resend, child: const Text('메일이 안 왔어요 · 다시 보내기', style: TextStyle(color: C.forest, fontWeight: FontWeight.w700))),
+        TextButton(onPressed: _resend, child: Text('메일이 안 왔어요 · 다시 보내기', style: TextStyle(color: C.forest, fontWeight: FontWeight.w700))),
       ]);
 }

@@ -90,12 +90,12 @@ class ProfileScreen extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      Flexible(child: Text(p?.areaName ?? '동네 미설정', style: const TextStyle(fontSize: 13, color: C.muted))),
-                      if (!guest) const Text('  바꾸기 ›', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: C.leaf)),
+                      Flexible(child: Text(p?.areaName ?? '동네 미설정', style: TextStyle(fontSize: 13, color: C.muted))),
+                      if (!guest) Text('  바꾸기 ›', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: C.leaf)),
                     ]),
                   ),
                 ),
-                Text('가입 ${p == null ? '-' : formatDate(p.joinedAt)}', style: const TextStyle(fontSize: 12, color: C.muted)),
+                Text('가입 ${p == null ? '-' : formatDate(p.joinedAt)}', style: TextStyle(fontSize: 12, color: C.muted)),
                 Text(Remote.signedIn ? '${Remote.email ?? ({'kakao': '카카오 계정', 'google': 'Google 계정'}[p?.provider] ?? '내 계정')} · 서버에 저장 중' : '이 폰에만 저장 중',
                     style: TextStyle(fontSize: 12, color: Remote.signedIn ? C.leafText : C.muted)),
               ]),
@@ -139,7 +139,7 @@ class ProfileScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(color: C.sand, borderRadius: BorderRadius.circular(16)),
-          child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('데모 버전 안내', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
             SizedBox(height: 4),
             Text('산책 경로, 안개 걷기, 스티커 기록은 이 폰에 저장되고, 카카오·이메일로 로그인하면 내 계정(서버)에도 저장돼요. 스티커 팩 결제는 아직 준비 중이에요.',
@@ -168,7 +168,7 @@ class ProfileScreen extends StatelessWidget {
           nav.popUntil((r) => r.isFirst);
         }),
         const SizedBox(height: 10),
-        const Text('골목대장 Flutter 데모 v0.1.0', textAlign: TextAlign.center, style: TextStyle(fontSize: 11, color: C.muted)),
+        Text('골목대장 Flutter 데모 v0.1.0', textAlign: TextAlign.center, style: TextStyle(fontSize: 11, color: C.muted)),
       ]),
     );
   }
@@ -197,16 +197,16 @@ class _MenuRow extends StatelessWidget {
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
-              Text(sub, style: const TextStyle(fontSize: 12, color: C.muted)),
+              Text(sub, style: TextStyle(fontSize: 12, color: C.muted)),
             ]),
           ),
           if (badge > 0)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(color: C.orange, borderRadius: BorderRadius.circular(999)),
-              child: Text('$badge', style: const TextStyle(color: C.white, fontWeight: FontWeight.w700, fontSize: 12)),
+              child: Text('$badge', style: TextStyle(color: C.white, fontWeight: FontWeight.w700, fontSize: 12)),
             ),
-          const Icon(Icons.chevron_right, color: C.muted),
+          Icon(Icons.chevron_right, color: C.muted),
         ]),
       );
 }

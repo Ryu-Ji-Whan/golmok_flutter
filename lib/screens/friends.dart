@@ -90,7 +90,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
         const SizedBox(width: 8),
       ]),
       body: list == null
-          ? const Center(child: CircularProgressIndicator(color: C.forest))
+          ? Center(child: CircularProgressIndicator(color: C.forest))
           : RefreshIndicator(
               color: C.forest,
               onRefresh: _load,
@@ -104,7 +104,7 @@ class _FriendsScreenState extends State<FriendsScreen> {
                   SectionTitle('받은 친구 요청 ${received.length}'),
                   for (final f in received)
                     _Row(f, trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-                      TextButton(onPressed: () => _answer(f, false), child: const Text('거절', style: TextStyle(color: C.muted))),
+                      TextButton(onPressed: () => _answer(f, false), child: Text('거절', style: TextStyle(color: C.muted))),
                       FilledButton(
                         onPressed: () => _answer(f, true),
                         style: FilledButton.styleFrom(backgroundColor: C.forest, shape: const StadiumBorder()),
@@ -119,13 +119,13 @@ class _FriendsScreenState extends State<FriendsScreen> {
                   for (final f in friends)
                     _Row(f, trailing: IconButton(
                       tooltip: '친구 끊기',
-                      icon: const Icon(Icons.more_horiz, color: C.muted),
+                      icon: Icon(Icons.more_horiz, color: C.muted),
                       onPressed: () => _remove(f),
                     )),
                 if (sent.isNotEmpty) ...[
                   SectionTitle('보낸 친구 요청 ${sent.length}'),
                   for (final f in sent)
-                    _Row(f, sub: '수락을 기다리는 중', trailing: TextButton(onPressed: () => _remove(f), child: const Text('취소', style: TextStyle(color: C.muted)))),
+                    _Row(f, sub: '수락을 기다리는 중', trailing: TextButton(onPressed: () => _remove(f), child: Text('취소', style: TextStyle(color: C.muted)))),
                 ],
               ]),
             ),
@@ -150,7 +150,7 @@ class _Row extends StatelessWidget {
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(f.nickname, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
-                if (sub != null) Text(sub!, style: const TextStyle(fontSize: 12, color: C.muted)),
+                if (sub != null) Text(sub!, style: TextStyle(fontSize: 12, color: C.muted)),
               ]),
             ),
             trailing,
@@ -170,7 +170,7 @@ class _Empty extends StatelessWidget {
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           StickerImg('a02', size: small ? 64 : 100),
           const SizedBox(height: 8),
-          Text(text, textAlign: TextAlign.center, style: const TextStyle(color: C.muted, height: 1.5)),
+          Text(text, textAlign: TextAlign.center, style: TextStyle(color: C.muted, height: 1.5)),
         ]),
       );
 }
@@ -243,7 +243,7 @@ class _AddFriendSheetState extends State<_AddFriendSheet> {
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text('친구 추가', style: jua(24)),
           const SizedBox(height: 4),
-          const Text('친구의 아이디나 닉네임을 정확히 입력해 주세요.\n카카오로 가입한 친구는 닉네임으로 찾을 수 있어요.',
+          Text('친구의 아이디나 닉네임을 정확히 입력해 주세요.\n카카오로 가입한 친구는 닉네임으로 찾을 수 있어요.',
               style: TextStyle(fontSize: 13, color: C.muted, height: 1.5)),
           const SizedBox(height: 12),
           Row(children: [

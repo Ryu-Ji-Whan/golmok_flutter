@@ -22,7 +22,7 @@ class ShopTab extends StatelessWidget {
         const SectionTitle('스티커 팩'),
         for (final p in packs) _PackCard(pack: p),
         const SizedBox(height: 8),
-        const Text('데모 버전이라 결제 없이 받을 수 있어요.', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: C.muted)),
+        Text('데모 버전이라 결제 없이 받을 수 있어요.', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: C.muted)),
       ]),
     );
   }
@@ -68,12 +68,12 @@ class _PackCard extends StatelessWidget {
                 Row(children: [
                   Text(pack.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                   const SizedBox(width: 6),
-                  if (pack.kind == PackKind.reward) const Pill('한정', bg: C.peach, fg: C.orangeText),
+                  if (pack.kind == PackKind.reward) Pill('한정', bg: C.peach, fg: C.orangeText),
                 ]),
-                Text(pack.howToGet ?? pack.desc, style: const TextStyle(fontSize: 12, color: C.muted)),
+                Text(pack.howToGet ?? pack.desc, style: TextStyle(fontSize: 12, color: C.muted)),
               ]),
             ),
-            Text('$have/${pack.stickers.length}', style: const TextStyle(fontSize: 12, color: C.muted)),
+            Text('$have/${pack.stickers.length}', style: TextStyle(fontSize: 12, color: C.muted)),
             const SizedBox(width: 8),
             FilledButton(
               onPressed: action,

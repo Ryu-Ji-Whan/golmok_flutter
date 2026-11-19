@@ -164,7 +164,7 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
         child: ListView(padding: const EdgeInsets.fromLTRB(24, 0, 24, 24), children: [
           Center(child: Text('골목대장', style: jua(44))),
           const SizedBox(height: 4),
-          const Text('내가 걸은 골목이 지도로 남아요', textAlign: TextAlign.center, style: TextStyle(fontSize: 15, color: C.muted)),
+          Text('내가 걸은 골목이 지도로 남아요', textAlign: TextAlign.center, style: TextStyle(fontSize: 15, color: C.muted)),
           const SizedBox(height: 12),
           const Center(child: StickerImg('a04', size: 120)),
           const SizedBox(height: 20),
@@ -207,21 +207,21 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
           PrimaryButton(_loading == 'id' ? '로그인 중…' : '로그인', height: 54, onPressed: canLogin ? _idLogin : null),
           const SizedBox(height: 4),
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            const Text('처음이에요?', style: TextStyle(fontSize: 13, color: C.muted)),
+            Text('처음이에요?', style: TextStyle(fontSize: 13, color: C.muted)),
             TextButton(
               onPressed: busy ? null : _openSignup,
-              child: const Text('회원가입', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: C.forest)),
+              child: Text('회원가입', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: C.forest)),
             ),
-            const Text('·', style: TextStyle(color: C.muted)),
+            Text('·', style: TextStyle(color: C.muted)),
             TextButton(
               onPressed: busy || !Remote.available
                   ? null
                   : () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ForgotPasswordScreen())),
-              child: const Text('아이디·비밀번호 찾기', style: TextStyle(fontSize: 13, color: C.muted)),
+              child: Text('아이디·비밀번호 찾기', style: TextStyle(fontSize: 13, color: C.muted)),
             ),
           ]),
           const SizedBox(height: 8),
-          const Row(children: [
+          Row(children: [
             Expanded(child: Divider(color: C.line)),
             Padding(padding: EdgeInsets.symmetric(horizontal: 12), child: Text('또는', style: TextStyle(fontSize: 12, color: C.muted))),
             Expanded(child: Divider(color: C.line)),
@@ -238,7 +238,7 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
                   foregroundColor: fg,
                   disabledBackgroundColor: bg,
                   disabledForegroundColor: fg,
-                  shape: StadiumBorder(side: border ? const BorderSide(color: C.line) : BorderSide.none),
+                  shape: StadiumBorder(side: border ? BorderSide(color: C.line) : BorderSide.none),
                   textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                 ),
                 child: _loading == id
@@ -254,12 +254,12 @@ class _LoginScreenState extends State<LoginScreen> with WidgetsBindingObserver {
           ],
           TextButton(
             onPressed: busy ? null : _browse,
-            child: const Text('로그인 없이 둘러보기', style: TextStyle(fontSize: 13, color: C.muted)),
+            child: Text('로그인 없이 둘러보기', style: TextStyle(fontSize: 13, color: C.muted)),
           ),
           Text(
             Remote.available ? '로그인하면 기록이 내 계정에 저장돼서 폰을 바꿔도 이어져요' : '데모 버전: 이 폰에만 저장돼요',
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 11, color: C.muted),
+            style: TextStyle(fontSize: 11, color: C.muted),
           ),
         ]),
       ),

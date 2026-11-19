@@ -123,7 +123,7 @@ class _TownTabState extends State<TownTab> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                const Text(
+                Text(
                   '이번 주에 그 동네에서 걸은 거리로 순위를 매겨요. 다른 사람에게는 닉네임과 거리만 보이고, 위치나 경로는 보이지 않아요. 당겨서 새로고침할 수 있어요.',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 12, color: C.muted, height: 1.5),
@@ -149,7 +149,7 @@ class _TownTabState extends State<TownTab> {
         child: Column(children: [
           const StickerImg('a04', size: 110),
           const SizedBox(height: 12),
-          Text(text, textAlign: TextAlign.center, style: const TextStyle(fontSize: 14, color: C.muted, height: 1.6)),
+          Text(text, textAlign: TextAlign.center, style: TextStyle(fontSize: 14, color: C.muted, height: 1.6)),
         ]),
       );
 
@@ -164,7 +164,7 @@ class _TownTabState extends State<TownTab> {
         const SizedBox(width: 14),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(area, style: const TextStyle(fontSize: 12, color: C.mint)),
+            Text(area, style: TextStyle(fontSize: 12, color: C.mint)),
             Text(me == null ? '아직 0m' : '${i + 1}위 · ${formatDistance(me.meters.toDouble())}', style: jua(28, color: C.white)),
             Text(
               _rows == null
@@ -174,7 +174,7 @@ class _TownTabState extends State<TownTab> {
                       : rows.length == 1
                           ? '이번 주 이 동네를 걸은 사람은 나뿐이에요'
                           : '이번 주 이 동네를 걸은 ${rows.length}명 중',
-              style: const TextStyle(fontSize: 12, color: C.mint),
+              style: TextStyle(fontSize: 12, color: C.mint),
             ),
           ]),
         ),
@@ -188,7 +188,7 @@ class _TownTabState extends State<TownTab> {
       return [
         Padding(
           padding: const EdgeInsets.all(24),
-          child: Center(child: _loading ? const CircularProgressIndicator(color: C.forest) : const Text('순위를 불러오지 못했어요. 당겨서 다시 해 보세요', style: TextStyle(color: C.muted))),
+          child: Center(child: _loading ? CircularProgressIndicator(color: C.forest) : Text('순위를 불러오지 못했어요. 당겨서 다시 해 보세요', style: TextStyle(color: C.muted))),
         ),
       ];
     }
@@ -198,7 +198,7 @@ class _TownTabState extends State<TownTab> {
         for (final i in [1, 0, 2])
           if (i < rows.length) Expanded(child: _Podium(row: rows[i], place: i + 1)),
       ]),
-      const SectionTitle('전체 순위', trailing: Text('이번 주 걸은 거리', style: TextStyle(fontSize: 12, color: C.muted))),
+      SectionTitle('전체 순위', trailing: Text('이번 주 걸은 거리', style: TextStyle(fontSize: 12, color: C.muted))),
       for (var i = 0; i < rows.length; i++)
         Container(
           margin: const EdgeInsets.only(bottom: 6),
@@ -213,7 +213,7 @@ class _TownTabState extends State<TownTab> {
             Avatar(rows[i].character, size: 36),
             const SizedBox(width: 10),
             Expanded(child: Text(rows[i].isMe ? '${rows[i].nickname} (나)' : rows[i].nickname, style: const TextStyle(fontWeight: FontWeight.w700))),
-            Text(formatDistance(rows[i].meters.toDouble()), style: const TextStyle(fontWeight: FontWeight.w700, color: C.forest)),
+            Text(formatDistance(rows[i].meters.toDouble()), style: TextStyle(fontWeight: FontWeight.w700, color: C.forest)),
           ]),
         ),
     ];
@@ -238,12 +238,12 @@ class _TownTabState extends State<TownTab> {
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(_short(a.area), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
-                  Text(a.area, style: const TextStyle(fontSize: 11, color: C.muted)),
+                  Text(a.area, style: TextStyle(fontSize: 11, color: C.muted)),
                 ]),
               ),
               Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                 Text('${a.rank}위', style: jua(20, color: a.rank <= 3 ? C.orangeText : C.forest)),
-                Text('${a.people}명 중 · ${formatDistance(a.meters.toDouble())}', style: const TextStyle(fontSize: 11, color: C.muted)),
+                Text('${a.people}명 중 · ${formatDistance(a.meters.toDouble())}', style: TextStyle(fontSize: 11, color: C.muted)),
               ]),
             ]),
           ),
@@ -270,7 +270,7 @@ class _TownTabState extends State<TownTab> {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(pack.name, style: const TextStyle(fontWeight: FontWeight.w700)),
               Text(rows.length < 4 ? '내 동네 이웃이 4명 이상 모이면 경쟁이 시작돼요' : '내 동네 이번 주 3위 안에 들면 받아요',
-                  style: const TextStyle(fontSize: 12, color: C.muted)),
+                  style: TextStyle(fontSize: 12, color: C.muted)),
             ]),
           ),
           FilledButton(

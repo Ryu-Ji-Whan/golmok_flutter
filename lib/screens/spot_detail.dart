@@ -80,14 +80,14 @@ class SpotDetailScreen extends StatelessWidget {
           Pill(formatDate(sp.createdAt), bg: C.sand, fg: C.muted),
           Pill(visibilityLabel[sp.visibility]!),
           if (sp.fromName != null) Pill('${sp.fromName}님이 보낸 스티커', bg: C.peach, fg: C.orangeText),
-          if (sp.shared) const Pill('피드에 공유됨', bg: C.peach, fg: C.orangeText),
+          if (sp.shared) Pill('피드에 공유됨', bg: C.peach, fg: C.orangeText),
         ]),
         if (sp.memo.isNotEmpty) ...[
           const SizedBox(height: 14),
           CardBox(child: Text(sp.memo, style: const TextStyle(fontSize: 15, height: 1.6))),
         ],
         const SizedBox(height: 14),
-        Text('위치 ${sp.lat.toStringAsFixed(5)}, ${sp.lng.toStringAsFixed(5)}', style: const TextStyle(fontSize: 12, color: C.muted)),
+        Text('위치 ${sp.lat.toStringAsFixed(5)}, ${sp.lng.toStringAsFixed(5)}', style: TextStyle(fontSize: 12, color: C.muted)),
         const SizedBox(height: 24),
         PrimaryButton('친구에게 스티커 보내기', icon: Icons.send, color: C.orange,
             onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => SendStickerScreen(spot: sp)))),
@@ -125,7 +125,7 @@ class _ShareScreenState extends State<ShareScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('기록 공유하기')),
       body: ListView(padding: const EdgeInsets.fromLTRB(16, 4, 16, 24), children: [
-        const Text('이웃에게 이렇게 보여요', style: TextStyle(fontSize: 13, color: C.muted)),
+        Text('이웃에게 이렇게 보여요', style: TextStyle(fontSize: 13, color: C.muted)),
         const SizedBox(height: 8),
         CardBox(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -135,7 +135,7 @@ class _ShareScreenState extends State<ShareScreen> {
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(p?.nickname ?? '손님', style: const TextStyle(fontWeight: FontWeight.w700)),
-                  Text(_showArea ? '${(p?.areaName ?? '').split(' ').last} · 방금' : '방금', style: const TextStyle(fontSize: 12, color: C.muted)),
+                  Text(_showArea ? '${(p?.areaName ?? '').split(' ').last} · 방금' : '방금', style: TextStyle(fontSize: 12, color: C.muted)),
                 ]),
               ),
             ]),
@@ -146,7 +146,7 @@ class _ShareScreenState extends State<ShareScreen> {
               Expanded(
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Text(sp.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                  if (sp.memo.isNotEmpty) Text(sp.memo, style: const TextStyle(fontSize: 13, color: C.muted)),
+                  if (sp.memo.isNotEmpty) Text(sp.memo, style: TextStyle(fontSize: 13, color: C.muted)),
                 ]),
               ),
             ]),

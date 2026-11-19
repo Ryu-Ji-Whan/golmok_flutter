@@ -5,12 +5,12 @@ import '../theme.dart';
 
 /// 주 버튼 (포레스트, 둥근 알약 모양)
 class PrimaryButton extends StatelessWidget {
-  const PrimaryButton(this.label, {super.key, this.onPressed, this.icon, this.height = 56, this.color = C.forest});
+  const PrimaryButton(this.label, {super.key, this.onPressed, this.icon, this.height = 56, this.color});
   final String label;
   final VoidCallback? onPressed;
   final IconData? icon;
   final double height;
-  final Color color;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +18,7 @@ class PrimaryButton extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(height / 2),
-        boxShadow: enabled ? const [BoxShadow(color: C.buttonShadow, blurRadius: 14, offset: Offset(0, 6))] : null,
+        boxShadow: enabled ? [BoxShadow(color: C.buttonShadow, blurRadius: 14, offset: Offset(0, 6))] : null,
       ),
       child: SizedBox(
         height: height,
@@ -26,7 +26,7 @@ class PrimaryButton extends StatelessWidget {
         child: FilledButton(
           onPressed: onPressed,
           style: FilledButton.styleFrom(
-            backgroundColor: color,
+            backgroundColor: color ?? C.forest,
             foregroundColor: C.white,
             disabledBackgroundColor: C.line,
             disabledForegroundColor: C.muted,
@@ -45,12 +45,12 @@ class PrimaryButton extends StatelessWidget {
 
 /// 테두리 버튼 (흰 바탕, 포레스트 글자)
 class OutlineButton extends StatelessWidget {
-  const OutlineButton(this.label, {super.key, this.onPressed, this.icon, this.height = 56, this.color = C.forest});
+  const OutlineButton(this.label, {super.key, this.onPressed, this.icon, this.height = 56, this.color});
   final String label;
   final VoidCallback? onPressed;
   final IconData? icon;
   final double height;
-  final Color color;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) => SizedBox(
@@ -60,8 +60,8 @@ class OutlineButton extends StatelessWidget {
           onPressed: onPressed,
           style: OutlinedButton.styleFrom(
             backgroundColor: C.white,
-            foregroundColor: color,
-            side: const BorderSide(color: C.line),
+            foregroundColor: color ?? C.forest,
+            side: BorderSide(color: C.line),
             shape: const StadiumBorder(),
             textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
           ),
@@ -106,10 +106,10 @@ class Avatar extends StatelessWidget {
 
 /// 흰 카드
 class CardBox extends StatelessWidget {
-  const CardBox({super.key, required this.child, this.padding = const EdgeInsets.all(16), this.color = C.white, this.onTap, this.shadow = true});
+  const CardBox({super.key, required this.child, this.padding = const EdgeInsets.all(16), this.color, this.onTap, this.shadow = true});
   final Widget child;
   final EdgeInsets padding;
-  final Color color;
+  final Color? color;
   final VoidCallback? onTap;
   final bool shadow;
 
@@ -117,7 +117,7 @@ class CardBox extends StatelessWidget {
   Widget build(BuildContext context) {
     final box = Container(
       padding: padding,
-      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(R.card), boxShadow: shadow ? cardShadow : null),
+      decoration: BoxDecoration(color: color ?? C.white, borderRadius: BorderRadius.circular(R.card), boxShadow: shadow ? cardShadow : null),
       child: child,
     );
     if (onTap == null) return box;
@@ -130,16 +130,16 @@ class CardBox extends StatelessWidget {
 
 /// 작은 알약 배지
 class Pill extends StatelessWidget {
-  const Pill(this.label, {super.key, this.bg = C.mint, this.fg = C.forest});
+  const Pill(this.label, {super.key, this.bg, this.fg});
   final String label;
-  final Color bg;
-  final Color fg;
+  final Color? bg;
+  final Color? fg;
 
   @override
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
-        child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: fg)),
+        decoration: BoxDecoration(color: bg ?? C.mint, borderRadius: BorderRadius.circular(999)),
+        child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: fg ?? C.forest)),
       );
 }
 
@@ -152,7 +152,7 @@ class SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.only(top: 20, bottom: 10),
         child: Row(children: [
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: C.ink))),
+          Expanded(child: Text(text, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: C.ink))),
           if (trailing != null) trailing!,
         ]),
       );
@@ -186,7 +186,7 @@ class StepHeader extends StatelessWidget {
           child: Row(children: [
             IconButton(onPressed: onBack ?? () => Navigator.of(context).maybePop(), icon: const Icon(Icons.chevron_left, size: 28), tooltip: '뒤로'),
             const Spacer(),
-            Text('$step / $total', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: C.muted)),
+            Text('$step / $total', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: C.muted)),
             const SizedBox(width: 12),
           ]),
         ),
@@ -205,9 +205,9 @@ Future<bool> confirm(BuildContext context, String title, String body, {String ok
       backgroundColor: C.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(R.big)),
       title: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-      content: Text(body, style: const TextStyle(fontSize: 14, color: C.muted, height: 1.5)),
+      content: Text(body, style: TextStyle(fontSize: 14, color: C.muted, height: 1.5)),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('취소', style: TextStyle(color: C.muted))),
+        TextButton(onPressed: () => Navigator.pop(c, false), child: Text('취소', style: TextStyle(color: C.muted))),
         TextButton(
           onPressed: () => Navigator.pop(c, true),
           child: Text(ok, style: TextStyle(color: danger ? C.danger : C.forest, fontWeight: FontWeight.w700)),

@@ -96,10 +96,10 @@ class _AreaPickerState extends State<AreaPicker> {
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-              if (sub != null) Text(sub, style: const TextStyle(fontSize: 12, color: C.muted)),
+              if (sub != null) Text(sub, style: TextStyle(fontSize: 12, color: C.muted)),
             ]),
           ),
-          if (on) const Icon(Icons.check_circle, color: C.forest),
+          if (on) Icon(Icons.check_circle, color: C.forest),
         ]),
       ),
     );
@@ -137,7 +137,7 @@ class _AreaPickerState extends State<AreaPicker> {
       const SizedBox(height: 12),
       for (final p in _results) _tile(p.name),
       if (_searched && _results.isEmpty)
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(bottom: 8),
           child: Text('찾는 동네가 없어요. 이름을 조금 바꿔 보거나, 아래처럼 그대로 쓸 수 있어요.', style: TextStyle(fontSize: 13, color: C.muted)),
         ),
@@ -147,7 +147,7 @@ class _AreaPickerState extends State<AreaPicker> {
       if (widget.selected.isNotEmpty && widget.selected != _here?.name && !_results.any((p) => p.name == widget.selected) && widget.selected != typed)
         _tile(widget.selected, sub: '지금 고른 동네'),
       const SizedBox(height: 4),
-      const Text('동네 이름 © OpenStreetMap 기여자', style: TextStyle(fontSize: 11, color: C.muted)),
+      Text('동네 이름 © OpenStreetMap 기여자', style: TextStyle(fontSize: 11, color: C.muted)),
     ]);
   }
 }
@@ -172,7 +172,7 @@ class _AreaPickerScreenState extends State<AreaPickerScreen> {
           child: Column(children: [
             Expanded(
               child: ListView(padding: const EdgeInsets.fromLTRB(16, 4, 16, 16), children: [
-                const Text('동네 리더보드와 골목 피드가 이 동네 기준으로 보여요', style: TextStyle(fontSize: 13, color: C.muted)),
+                Text('동네 리더보드와 골목 피드가 이 동네 기준으로 보여요', style: TextStyle(fontSize: 13, color: C.muted)),
                 const SizedBox(height: 14),
                 AreaPicker(selected: _sel, onSelected: (v) => setState(() => _sel = v)),
               ]),

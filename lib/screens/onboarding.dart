@@ -34,7 +34,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               alignment: Alignment.centerRight,
               child: TextButton(
                 onPressed: () => _goLogin(context),
-                child: const Text('건너뛰기', style: TextStyle(color: C.muted)),
+                child: Text('건너뛰기', style: TextStyle(color: C.muted)),
               ),
             ),
             Expanded(
@@ -48,14 +48,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     Container(
                       width: 220,
                       height: 220,
-                      decoration: const BoxDecoration(color: C.peach, shape: BoxShape.circle),
+                      decoration: BoxDecoration(color: C.peach, shape: BoxShape.circle),
                       alignment: Alignment.center,
                       child: StickerImg(sticker, size: 170),
                     ),
                     const SizedBox(height: 36),
                     Text(title, textAlign: TextAlign.center, style: jua(32)),
                     const SizedBox(height: 12),
-                    Text(body, textAlign: TextAlign.center, style: const TextStyle(fontSize: 15, color: C.muted, height: 1.5)),
+                    Text(body, textAlign: TextAlign.center, style: TextStyle(fontSize: 15, color: C.muted, height: 1.5)),
                   ]);
                 },
               ),

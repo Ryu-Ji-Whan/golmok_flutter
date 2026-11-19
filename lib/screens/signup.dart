@@ -43,7 +43,7 @@ class _StepScaffold extends StatelessWidget {
                   Text(title, style: jua(26)),
                   if (subtitle != null) ...[
                     const SizedBox(height: 6),
-                    Text(subtitle!, style: const TextStyle(fontSize: 14, color: C.muted, height: 1.5)),
+                    Text(subtitle!, style: TextStyle(fontSize: 14, color: C.muted, height: 1.5)),
                   ],
                   const SizedBox(height: 20),
                   ...children,
@@ -80,7 +80,7 @@ class _TermsScreenState extends State<TermsScreen> {
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
               const SizedBox(height: 12),
-              const Expanded(
+              Expanded(
                 child: SingleChildScrollView(
                   child: Text(
                     '[약관 본문 자리]\n\n실제 서비스에서는 법무 검토를 거친 약관 전문이 들어가요.\n\n'
@@ -107,7 +107,7 @@ class _TermsScreenState extends State<TermsScreen> {
             ]), style: const TextStyle(fontSize: 14)),
           ),
         ),
-        TextButton(onPressed: () => _detail(label), child: const Text('보기', style: TextStyle(color: C.muted, fontSize: 13))),
+        TextButton(onPressed: () => _detail(label), child: Text('보기', style: TextStyle(color: C.muted, fontSize: 13))),
       ]);
 
   @override
@@ -216,7 +216,7 @@ class _NicknameScreenState extends State<NicknameScreen> {
           decoration: InputDecoration(hintText: '예: 골목냥이', errorText: _error, counterText: '${t.length}/10'),
         ),
         if (ok)
-          const Row(children: [
+          Row(children: [
             Icon(Icons.check_circle, size: 16, color: C.leaf),
             SizedBox(width: 4),
             Text('멋진 이름이에요!', style: TextStyle(fontSize: 13, color: C.leafText)),
@@ -258,9 +258,9 @@ class _CharacterScreenState extends State<CharacterScreen> {
             const SizedBox(width: 16),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('미리보기', style: TextStyle(fontSize: 12, color: C.muted)),
+                Text('미리보기', style: TextStyle(fontSize: 12, color: C.muted)),
                 Text(sel.name, style: jua(22)),
-                const Text('프로필·리더보드·피드에\n이 캐릭터가 보여요', style: TextStyle(fontSize: 12, color: C.muted, height: 1.5)),
+                Text('프로필·리더보드·피드에\n이 캐릭터가 보여요', style: TextStyle(fontSize: 12, color: C.muted, height: 1.5)),
               ]),
             ),
           ]),
@@ -294,7 +294,7 @@ class _CharacterScreenState extends State<CharacterScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        const Text('나중에 프로필에서 언제든 바꿀 수 있어요.', style: TextStyle(fontSize: 12, color: C.muted)),
+        Text('나중에 프로필에서 언제든 바꿀 수 있어요.', style: TextStyle(fontSize: 12, color: C.muted)),
       ],
     );
   }
@@ -331,7 +331,7 @@ class _LocationScreenState extends State<LocationScreen> {
           PrimaryButton(_busy ? '위치 확인 중…' : '위치 허용하기', icon: Icons.my_location, onPressed: _busy ? null : _allow),
           TextButton(
             onPressed: () => _push(context, AreaScreen(draft: widget.draft)),
-            child: const Text('나중에 할게요', style: TextStyle(color: C.muted)),
+            child: Text('나중에 할게요', style: TextStyle(color: C.muted)),
           ),
         ]),
         children: const [
@@ -364,7 +364,7 @@ class _Reason extends StatelessWidget {
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
-              Text(body, style: const TextStyle(fontSize: 13, color: C.muted)),
+              Text(body, style: TextStyle(fontSize: 13, color: C.muted)),
             ]),
           ),
         ]),
@@ -443,7 +443,7 @@ class DoneScreen extends StatelessWidget {
             const SizedBox(height: 14),
             Text('$name님, 환영해요!', textAlign: TextAlign.center, style: jua(28)),
             const SizedBox(height: 8),
-            const Text('골목대장이 될 준비 끝!\n첫 산책에서 골목을 밝혀 보세요',
+            Text('골목대장이 될 준비 끝!\n첫 산책에서 골목을 밝혀 보세요',
                 textAlign: TextAlign.center, style: TextStyle(fontSize: 15, color: C.muted, height: 1.5)),
             const SizedBox(height: 20),
             CardBox(
@@ -468,7 +468,7 @@ class DoneScreen extends StatelessWidget {
               ]),
             ),
             const SizedBox(height: 12),
-            Text('내 동네 · ${draft.areaName}', style: const TextStyle(fontSize: 13, color: C.muted)),
+            Text('내 동네 · ${draft.areaName}', style: TextStyle(fontSize: 13, color: C.muted)),
             const Spacer(),
             PrimaryButton('첫 산책 시작하기', onPressed: () => _start(context)),
           ]),

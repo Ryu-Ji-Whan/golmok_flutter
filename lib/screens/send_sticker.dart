@@ -129,7 +129,7 @@ class _SendStickerScreenState extends State<SendStickerScreen> with SingleTicker
   Widget _done() => Padding(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
         child: Column(children: [
-          const Text('친구가 "받기"를 누르면 친구 지도의 이 자리에 스티커가 콩 붙어요.\n받은 스티커는 그때부터 친구의 것이 돼요.',
+          Text('친구가 "받기"를 누르면 친구 지도의 이 자리에 스티커가 콩 붙어요.\n받은 스티커는 그때부터 친구의 것이 돼요.',
               textAlign: TextAlign.center, style: TextStyle(color: C.muted, height: 1.6)),
           const Spacer(),
           PrimaryButton('확인', onPressed: () => Navigator.pop(context)),
@@ -138,15 +138,15 @@ class _SendStickerScreenState extends State<SendStickerScreen> with SingleTicker
 
   Widget _picker() {
     if (!Remote.signedIn) {
-      return const Center(child: Text('로그인하면 친구에게 보낼 수 있어요', style: TextStyle(color: C.muted)));
+      return Center(child: Text('로그인하면 친구에게 보낼 수 있어요', style: TextStyle(color: C.muted)));
     }
     final list = _friends;
-    if (list == null) return const Center(child: CircularProgressIndicator(color: C.forest));
+    if (list == null) return Center(child: CircularProgressIndicator(color: C.forest));
     if (list.isEmpty) {
       return Padding(
         padding: const EdgeInsets.all(24),
         child: Column(children: [
-          const Text('아직 친구가 없어요.\n친구를 추가하면 스티커를 보낼 수 있어요.', textAlign: TextAlign.center, style: TextStyle(color: C.muted, height: 1.6)),
+          Text('아직 친구가 없어요.\n친구를 추가하면 스티커를 보낼 수 있어요.', textAlign: TextAlign.center, style: TextStyle(color: C.muted, height: 1.6)),
           const SizedBox(height: 16),
           OutlineButton('친구 추가하러 가기', icon: Icons.person_add_alt_1_outlined, onPressed: () async {
             await Navigator.of(context).push(MaterialPageRoute(builder: (_) => const FriendsScreen()));
@@ -156,7 +156,7 @@ class _SendStickerScreenState extends State<SendStickerScreen> with SingleTicker
       );
     }
     return Column(children: [
-      const Padding(
+      Padding(
         padding: EdgeInsets.fromLTRB(20, 4, 20, 6),
         child: Text('누구에게 보낼까요? 이 기록의 정확한 위치와 사진이 함께 가요. 걸은 길은 가지 않아요.',
             style: TextStyle(fontSize: 13, color: C.muted, height: 1.5)),

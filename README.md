@@ -75,7 +75,7 @@
   <tr>
     <td align="center"><img src="assets/map/stickers/a04.webp" width="96" alt=""><br><b>친구</b><br><sub>아이디·닉네임으로 친구를 추가하고<br>요청을 수락해 친구가 돼요.</sub></td>
     <td align="center"><img src="assets/map/stickers/c13.webp" width="96" alt=""><br><b>스티커 보내기</b><br><sub>기록을 친구에게 보내면 슝 날아가고,<br>친구가 받으면 그 자리에 콩 붙어요.</sub></td>
-    <td align="center"><img src="assets/map/stickers/a02.webp" width="96" alt=""><br><b>지도 테마 7가지</b><br><sub>파스텔·밤 산책·보물 지도·연필 스케치·<br>수채화·벚꽃·레트로 게임.</sub></td>
+    <td align="center"><img src="assets/map/stickers/a02.webp" width="96" alt=""><br><b>지도 테마 7가지</b><br><sub>파스텔·밤 산책·보물 지도·연필 스케치·<br>수채화·벚꽃·레트로 게임. 앱 색·글씨체도 같이 바뀌어요.</sub></td>
   </tr>
 </table>
 

@@ -61,7 +61,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         const SizedBox(height: 16),
         Text('가입할 때 쓴 이메일을 알려 주세요', style: jua(22)),
         const SizedBox(height: 6),
-        const Text(
+        Text(
           '비밀번호를 새로 정하는 링크를 메일로 보내 드려요.\n아이디를 잊었을 때도 그 링크에서 확인할 수 있어요.',
           style: TextStyle(fontSize: 14, color: C.muted, height: 1.5),
         ),
@@ -79,7 +79,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         const SizedBox(height: 20),
         PrimaryButton(_sending ? '보내는 중…' : '링크 보내기', height: 54, onPressed: _sending || _email.text.trim().isEmpty ? null : _send),
         const SizedBox(height: 16),
-        const Text('카카오로 가입했다면 비밀번호 없이 "카카오로 계속하기"로 로그인하면 돼요.',
+        Text('카카오로 가입했다면 비밀번호 없이 "카카오로 계속하기"로 로그인하면 돼요.',
             textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: C.muted)),
       ];
 
@@ -92,7 +92,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         Text(
           '$_sentTo 로 메일을 보냈어요.\n(가입한 이메일이 맞을 때만 메일이 가요)',
           textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 14, color: C.muted, height: 1.5),
+          style: TextStyle(fontSize: 14, color: C.muted, height: 1.5),
         ),
         const SizedBox(height: 20),
         const CardBox(
@@ -109,7 +109,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         const SizedBox(height: 8),
         TextButton(
           onPressed: () => setState(() => _sentTo = null),
-          child: const Text('메일이 안 왔어요 (다시 보내기)', style: TextStyle(color: C.muted)),
+          child: Text('메일이 안 왔어요 (다시 보내기)', style: TextStyle(color: C.muted)),
         ),
       ];
 }

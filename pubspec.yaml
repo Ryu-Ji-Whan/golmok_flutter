@@ -18,6 +18,7 @@ dependencies:
   path_provider: ^2.1.4      # 사진을 넣어 둘 앱 폴더
   gal: ^3.0.1
   share_plus: ^13.3.1
+  google_fonts: ^9.0.0
 
 dev_dependencies:
   flutter_test:

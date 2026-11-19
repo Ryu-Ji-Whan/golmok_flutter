@@ -78,7 +78,7 @@ class _ShareCardScreenState extends State<ShareCardScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('친구에게 보내기')),
       body: ListView(padding: const EdgeInsets.fromLTRB(16, 4, 16, 24), children: [
-        const Text('이 카드 한 장이 사진으로 보내져요', style: TextStyle(fontSize: 13, color: C.muted)),
+        Text('이 카드 한 장이 사진으로 보내져요', style: TextStyle(fontSize: 13, color: C.muted)),
         const SizedBox(height: 10),
         Center(
           child: ConstrainedBox(
@@ -169,16 +169,16 @@ class SpotCard extends StatelessWidget {
         Text(spot.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: jua(24)),
         if (memo.isNotEmpty) ...[
           const SizedBox(height: 4),
-          Text(memo, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: C.ink, height: 1.45)),
+          Text(memo, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, color: C.ink, height: 1.45)),
         ],
         const SizedBox(height: 10),
         Row(children: [
-          const Icon(Icons.place, size: 15, color: C.orange),
+          Icon(Icons.place, size: 15, color: C.orange),
           const SizedBox(width: 3),
           Expanded(
             child: Text(
               [if (area != null) area!, formatDate(spot.createdAt)].join(' · '),
-              style: const TextStyle(fontSize: 12, color: C.muted, fontWeight: FontWeight.w600),
+              style: TextStyle(fontSize: 12, color: C.muted, fontWeight: FontWeight.w600),
             ),
           ),
           const StickerImg('c13', size: 26),

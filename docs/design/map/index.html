@@ -234,7 +234,7 @@ const THEMES = {
       ...labels({ halo: '#0B1022', road: '#C9D2FF', place: '#FFE9A8', water: '#8FC4F0', size: 14 }),
     ],
     decorate(kit) {
-      kit.div('background: radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(5,8,20,0.6) 100%)');
+      kit.div('background: radial-gradient(ellipse at center, rgba(0,0,0,0) 70%, rgba(5,8,20,0.35) 100%)');
       const rnd = seeded(42);
       const stars = Array.from({ length: 36 }, () => [rnd(), rnd() * 0.4, rnd() * 6]);
       const cv = kit.canvas();
@@ -273,44 +273,36 @@ const THEMES = {
     },
     decorate(kit) {
       kit.div(`background-image:url(${paperURL('treasure', 30, 0.25, 'rgba(120,80,40,.25)')}); mix-blend-mode:multiply; opacity:.55`);
-      kit.div('background: radial-gradient(ellipse at center, rgba(0,0,0,0) 50%, rgba(120,70,20,0.45) 100%)');
-      // 지도에 붙은 탄 구멍과 커피 얼룩
+      kit.div('background: radial-gradient(ellipse at center, rgba(0,0,0,0) 65%, rgba(120,70,20,0.3) 100%)');
+      // 지도에 붙은 옅은 커피 얼룩 (지도와 같이 움직임). 탄 구멍은 지도를 가려서 뺐다
       const holes = kit.canvas((g) => {
         const mpp = mPerPxNow();
-        eachAnchored(140, 11, 0.16, (p, i, j) => {
-          const rad = (6 + 9 * hash01(i, j, 13)) / mpp;
-          if (rad < 3) return;
-          const gr = g.createRadialGradient(p.x, p.y, rad * 0.6, p.x, p.y, rad * 1.9);
-          gr.addColorStop(0, 'rgba(70,35,8,0.95)'); gr.addColorStop(0.45, 'rgba(120,65,20,0.55)'); gr.addColorStop(1, 'rgba(150,90,30,0)');
-          g.fillStyle = gr; blob(g, p.x, p.y, rad * 1.9, i, j, 17, 16, 0.4); g.fill();
-          g.fillStyle = '#2A1709'; blob(g, p.x, p.y, rad, i, j, 19, 16, 0.55); g.fill();
-        });
         eachAnchored(220, 23, 0.1, (p, i, j) => {
-          const rad = (14 + 10 * hash01(i, j, 29)) / mpp; g.strokeStyle = 'rgba(110,60,20,0.28)'; g.lineWidth = Math.max(1.5, rad * 0.12);
+          const rad = (14 + 10 * hash01(i, j, 29)) / mpp; g.strokeStyle = 'rgba(110,60,20,0.22)'; g.lineWidth = Math.max(1.5, rad * 0.12);
           blob(g, p.x, p.y, rad, i, j, 31, 20, 0.12); g.stroke();
         });
       });
       let queued = false;
       map.on('move', () => { if (queued || !kit.alive) return; queued = true; requestAnimationFrame(() => { queued = false; if (kit.alive) holes.redraw(); }); });
-      // 가장자리: 불에 그을려 삭은 테두리 + 나침반 (화면에 고정)
+      // 가장자리: 얇게 그을린 테두리 + 나침반 (화면에 고정). 지도를 덜 가리게 4~10px 안쪽만
       kit.canvas((g, W, H) => {
         const rnd = seeded(7), per = 2 * (W + H), pts = [];
-        const bites = Array.from({ length: Math.round(per / 160) }, () => [rnd() * per, 12 + rnd() * 24, 18 + rnd() * 40]);
+        const bites = Array.from({ length: Math.round(per / 220) }, () => [rnd() * per, 3 + rnd() * 5, 14 + rnd() * 24]);
         for (let d = 0; d < per; d += 5) {
           let x, y, nx, ny;
           if (d < W) { x = d; y = 0; nx = 0; ny = 1; } else if (d < W + H) { x = W; y = d - W; nx = -1; ny = 0; }
           else if (d < 2 * W + H) { x = W - (d - W - H); y = H; nx = 0; ny = -1; } else { x = 0; y = H - (d - 2 * W - H); nx = 1; ny = 0; }
-          let inset = 9 + 4 * Math.sin(d / 23) + 3 * Math.sin(d / 7.3) + rnd() * 4;
+          let inset = 4 + 1.5 * Math.sin(d / 23) + 1.2 * Math.sin(d / 7.3) + rnd() * 1.5;
           for (const [c0, depth, wdt] of bites) { const dd = Math.abs(d - c0); if (dd < wdt) inset += depth * Math.cos(dd / wdt * Math.PI / 2) ** 2; }
           pts.push([x + nx * inset, y + ny * inset]);
         }
         const path = () => { g.beginPath(); pts.forEach(([x, y], k) => (k ? g.lineTo(x, y) : g.moveTo(x, y))); g.closePath(); };
         g.fillStyle = '#2E1B0C'; g.fillRect(0, 0, W, H); g.globalCompositeOperation = 'destination-out'; path(); g.fill();
         g.globalCompositeOperation = 'source-over';
-        g.save(); path(); g.clip(); g.shadowColor = 'rgba(80,35,5,0.95)'; g.shadowBlur = 22;
+        g.save(); path(); g.clip(); g.shadowColor = 'rgba(80,35,5,0.8)'; g.shadowBlur = 12;
         g.beginPath(); g.rect(-50, -50, W + 100, H + 100); pts.slice().reverse().forEach(([x, y], k) => (k ? g.lineTo(x, y) : g.moveTo(x, y))); g.closePath();
         g.fillStyle = '#3A1E08'; g.fill('evenodd'); g.restore();
-        g.strokeStyle = '#2A1709'; g.lineWidth = 2.2; path(); g.stroke();
+        g.strokeStyle = '#2A1709'; g.lineWidth = 1.6; path(); g.stroke();
         const cx = 54, cy = Math.round(H * 0.58); g.save(); g.translate(cx, cy); g.globalAlpha = 0.85; g.strokeStyle = '#4A2E17'; g.fillStyle = '#4A2E17'; g.lineWidth = 1.4;
         g.beginPath(); g.arc(0, 0, 24, 0, Math.PI * 2); g.stroke(); g.beginPath(); g.arc(0, 0, 19, 0, Math.PI * 2); g.stroke();
         for (let k = 0; k < 4; k++) { g.rotate(Math.PI / 2); g.beginPath(); g.moveTo(0, -31); g.lineTo(5, 0); g.lineTo(-5, 0); g.closePath(); k % 2 ? g.stroke() : g.fill(); }
@@ -369,7 +361,7 @@ const THEMES = {
     ],
     decorate(kit) {
       kit.div(`background-image:url(${paperURL('watercolor', 50, 0.22, 'rgba(160,140,110,.25)')}); mix-blend-mode:multiply; opacity:.45`);
-      kit.div('box-shadow: inset 0 0 40px 18px #FBF6EC');
+      kit.div('box-shadow: inset 0 0 18px 4px #FBF6EC');
     },
   },
 
@@ -395,7 +387,7 @@ const THEMES = {
       ];
     },
     decorate(kit) {
-      kit.div('background: radial-gradient(ellipse at center, rgba(255,255,255,0) 60%, rgba(255,190,210,0.45) 100%)');
+      kit.div('background: radial-gradient(ellipse at center, rgba(255,255,255,0) 72%, rgba(255,190,210,0.3) 100%)');
       const rnd = seeded(99), cv = kit.canvas();
       const ps = Array.from({ length: 22 }, () => ({ x: rnd(), y: rnd(), s: 5 + rnd() * 6, v: 0.25 + rnd() * 0.35, a: rnd() * 6, w: rnd() * 6 }));
       kit.loop((t, dt) => {
@@ -438,7 +430,7 @@ const THEMES = {
       // 화면 격자(옛날 액정의 네모 점) + 주사선 + 게임 화면 테두리
       kit.div('background-image: linear-gradient(rgba(22,33,15,.10) 1px, transparent 1px), linear-gradient(90deg, rgba(22,33,15,.10) 1px, transparent 1px); background-size: 4px 4px');
       kit.div('background: repeating-linear-gradient(0deg, rgba(0,0,0,.08) 0 1px, transparent 1px 3px)');
-      kit.div('box-shadow: inset 0 0 0 5px #16210F, inset 0 0 0 9px #F7EFC6, inset 0 0 0 13px #16210F');
+      kit.div('box-shadow: inset 0 0 0 2px #16210F, inset 0 0 0 4px #F7EFC6, inset 0 0 0 6px #16210F');
     },
   },
 };
