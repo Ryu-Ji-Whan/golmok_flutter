@@ -56,7 +56,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
         body: IndexedStack(index: _tab, children: [
           const WalkTab(),
           _visited.contains(1) ? MyMapTab(active: _tab == 1) : const SizedBox(),
-          _visited.contains(2) ? const FeedTab() : const SizedBox(),
+          _visited.contains(2) ? FeedTab(active: _tab == 2) : const SizedBox(),
           _visited.contains(3) ? const TownTab() : const SizedBox(),
           _visited.contains(4) ? const ShopTab() : const SizedBox(),
         ]),

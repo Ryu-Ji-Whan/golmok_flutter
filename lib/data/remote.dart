@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io' show ContentType, HttpClient;
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config.dart';
@@ -535,25 +536,31 @@ class Remote {
     }
   }
 
-  static Future<List<RemoteFeedPost>> feed() async {
+  /// 골목 피드. 로그인 안 했으면 [], 서버에서 못 받으면 null
+  static Future<List<RemoteFeedPost>?> feed() async {
     if (!signedIn) return [];
     try {
       final rows = await _c.from('public_feed').select();
-      return [
-        for (final r in rows)
-          RemoteFeedPost(
+      final out = <RemoteFeedPost>[];
+      for (final r in rows) {
+        // 한 줄이 이상해도 나머지 글은 보여 준다
+        try {
+          out.add(RemoteFeedPost(
             r['id'] as String,
-            r['nickname'] as String,
-            r['character_id'] as String,
-            r['area_name'] as String,
-            r['sticker_id'] as String,
-            r['title'] as String,
+            (r['nickname'] as String?) ?? '이웃',
+            (r['character_id'] as String?) ?? 'a00',
+            (r['area_name'] as String?) ?? '',
+            (r['sticker_id'] as String?) ?? 'a00',
+            (r['title'] as String?) ?? '',
             (r['memo'] as String?) ?? '',
-            _dt(r['created_at']),
-          ),
-      ];
-    } catch (_) {
-      return [];
+            r['created_at'] == null ? DateTime.now() : _dt(r['created_at']),
+          ));
+        } catch (_) {}
+      }
+      return out;
+    } catch (e) {
+      debugPrint('feed: $e');
+      return null;
     }
   }
 

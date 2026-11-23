@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../data/geo.dart';
-import '../data/models.dart';
 import '../data/remote.dart';
 import '../data/store.dart';
 import '../theme.dart';
@@ -19,7 +18,10 @@ String _ago(DateTime t) {
 
 /// ④-2 골목 피드 (로그인했으면 서버의 공유 글, 아니면 이 폰에서 공유한 기록)
 class FeedTab extends StatefulWidget {
-  const FeedTab({super.key});
+  const FeedTab({super.key, this.active = true});
+
+  /// 탭이 보일 때마다 새로 받는다
+  final bool active;
 
   @override
   State<FeedTab> createState() => _FeedTabState();
@@ -27,6 +29,8 @@ class FeedTab extends StatefulWidget {
 
 class _FeedTabState extends State<FeedTab> {
   List<RemoteFeedPost> _remote = [];
+  bool _failed = false;
+  bool _loading = true;
 
   @override
   void initState() {
@@ -34,9 +38,20 @@ class _FeedTabState extends State<FeedTab> {
     _load();
   }
 
+  @override
+  void didUpdateWidget(FeedTab old) {
+    super.didUpdateWidget(old);
+    if (widget.active && !old.active) _load();
+  }
+
   Future<void> _load() async {
     final r = await Remote.feed();
-    if (mounted) setState(() => _remote = r);
+    if (!mounted) return;
+    setState(() {
+      _loading = false;
+      _failed = r == null;
+      if (r != null) _remote = r;
+    });
   }
 
   @override
@@ -44,64 +59,79 @@ class _FeedTabState extends State<FeedTab> {
     final s = StoreScope.of(context);
     final p = s.profile;
     final online = Remote.signedIn;
-    // 로그인했으면 서버 글(내 공유 글 포함), 아니면 이 폰의 공유 기록
-    final mine = online ? <Spot>[] : s.spots.where((x) => x.shared).toList();
+    // 서버 글 + 아직 서버에 없는 이 폰의 공유 기록 (서버를 못 받아도 내 글은 보인다)
+    final ids = {for (final r in _remote) r.id};
+    final mine = s.spots.where((x) => x.shared && !ids.contains(x.id)).toList();
     final area = (p?.areaName ?? '').split(' ').last;
     return Scaffold(
       appBar: AppBar(title: Text('$area 골목 피드')),
       body: RefreshIndicator(
         color: C.forest,
         onRefresh: _load,
-        child: ListView(padding: const EdgeInsets.fromLTRB(16, 4, 16, 24), children: [
-        for (final r in _remote)
-          _Post(
-            author: r.nickname,
-            character: r.character,
-            meta: '${r.area.split(' ').last} · ${_ago(r.createdAt)}',
-            sticker: r.sticker,
-            title: r.title,
-            body: r.memo,
-            likes: s.likedPosts.contains(r.id) ? 1 : 0,
-            liked: s.likedPosts.contains(r.id),
-            comments: 0,
-            onLike: () => s.toggleLike(r.id),
-            onTap: s.spotById(r.id) == null
-                ? null
-                : () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => SpotDetailScreen(spotId: r.id))),
+        child: ListView(physics: const AlwaysScrollableScrollPhysics(), padding: const EdgeInsets.fromLTRB(16, 4, 16, 24), children: [
+          if (online && _failed)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: CardBox(
+                child: Row(children: [
+                  Icon(Icons.wifi_off, color: C.muted),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text('이웃 글을 불러오지 못했어요', style: TextStyle(color: C.ink))),
+                  TextButton(onPressed: _load, child: const Text('다시 시도')),
+                ]),
+              ),
+            ),
+          if (online && _loading && _remote.isEmpty)
+            Padding(padding: const EdgeInsets.only(top: 40), child: Center(child: CircularProgressIndicator(color: C.forest))),
+          for (final r in _remote)
+            _Post(
+              author: r.nickname,
+              character: r.character,
+              meta: '${r.area.split(' ').last} · ${_ago(r.createdAt)}',
+              sticker: r.sticker,
+              title: r.title,
+              body: r.memo,
+              likes: s.likedPosts.contains(r.id) ? 1 : 0,
+              liked: s.likedPosts.contains(r.id),
+              comments: 0,
+              onLike: () => s.toggleLike(r.id),
+              onTap: s.spotById(r.id) == null
+                  ? null
+                  : () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => SpotDetailScreen(spotId: r.id))),
+            ),
+          for (final sp in mine)
+            _Post(
+              author: p?.nickname ?? '나',
+              character: p?.characterId ?? 'a00',
+              meta: '$area · 내 기록',
+              sticker: sp.stickerId,
+              title: sp.title,
+              body: sp.memo,
+              likes: s.likedPosts.contains(sp.id) ? 1 : 0,
+              liked: s.likedPosts.contains(sp.id),
+              comments: 0,
+              onLike: () => s.toggleLike(sp.id),
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => SpotDetailScreen(spotId: sp.id))),
+            ),
+          if (_remote.isEmpty && mine.isEmpty && !(online && _loading))
+            Padding(
+              padding: const EdgeInsets.only(top: 60),
+              child: Column(children: [
+                const StickerImg('a02', size: 110),
+                const SizedBox(height: 12),
+                Text('아직 올라온 골목 이야기가 없어요', style: jua(20)),
+                const SizedBox(height: 6),
+                Text('산책하다 붙인 스티커 기록을\n"골목 피드에 공유하기"로 첫 글을 올려 보세요',
+                    textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: C.muted, height: 1.5)),
+              ]),
+            ),
+          const SizedBox(height: 8),
+          Text(
+            online ? '당겨서 새로고침할 수 있어요' : '로그인하면 이웃이 공유한 글도 보여요',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: C.muted),
           ),
-        for (final sp in mine)
-          _Post(
-            author: p?.nickname ?? '나',
-            character: p?.characterId ?? 'a00',
-            meta: '$area · 내 기록',
-            sticker: sp.stickerId,
-            title: sp.title,
-            body: sp.memo,
-            likes: s.likedPosts.contains(sp.id) ? 1 : 0,
-            liked: s.likedPosts.contains(sp.id),
-            comments: 0,
-            onLike: () => s.toggleLike(sp.id),
-            onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => SpotDetailScreen(spotId: sp.id))),
-          ),
-        if (_remote.isEmpty && mine.isEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 60),
-            child: Column(children: [
-              const StickerImg('a02', size: 110),
-              const SizedBox(height: 12),
-              Text('아직 올라온 골목 이야기가 없어요', style: jua(20)),
-              const SizedBox(height: 6),
-              Text('산책하다 붙인 스티커 기록을\n"골목 피드에 공유하기"로 첫 글을 올려 보세요',
-                  textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: C.muted, height: 1.5)),
-            ]),
-          ),
-        const SizedBox(height: 8),
-        Text(
-          online ? '당겨서 새로고침할 수 있어요' : '로그인하면 이웃이 공유한 글도 보여요',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 12, color: C.muted),
-        ),
-      ]),
+        ]),
       ),
     );
   }
