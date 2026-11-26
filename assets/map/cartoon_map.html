@@ -41,6 +41,14 @@
   .kong-dot { width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; border-radius: 50%; background: #FFE19A; border: 1.5px solid #24322C; }
   .kong-text { bottom: auto; top: -14px; font-family: 'Jua', sans-serif; font-size: 18px; color: #A4500B; white-space: nowrap; transform: translateX(-50%);
     text-shadow: -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff; }
+
+/* 겹친 스티커 묶음 표시 (멀리서 볼 때) */
+.pile { padding: 0 0 10px; border: 0; background: none; cursor: pointer; }
+.pile::after { content: ''; position: absolute; left: 50%; bottom: 0; margin-left: -8px; border: 8px solid transparent; border-bottom: 0; border-top: 11px solid #24322C; }
+.pile-fan { position: relative; width: 66px; height: 44px; border-radius: 22px; background: #FFFFFF; border: 3px solid #24322C; box-shadow: 2px 3px 0 rgba(36,50,44,.35); box-sizing: border-box; overflow: hidden; }
+.pile-fan img { position: absolute; top: 4px; width: 32px; height: 32px; object-fit: contain; margin-left: 2px; }
+.pile-count { position: absolute; right: -10px; top: -10px; min-width: 26px; height: 26px; padding: 0 6px; border-radius: 13px; background: #E4572E; color: #FFFFFF;
+  border: 2.5px solid #24322C; font: 800 14px/21px sans-serif; text-align: center; box-sizing: border-box; }
 </style>
 </head>
 <body>
@@ -613,8 +621,6 @@ function drawSpots() {
     el.appendChild(img);
     el.addEventListener('click', (e) => {
       e.stopPropagation();
-      // 멀리서 본 겹친 묶음이면 그 자리로 크게 (크게 보면 펼쳐진다)
-      if (el._pile) return map.flyTo({ center: el._pile, zoom: Math.max(SPREAD_ZOOM + 0.5, map.getZoom() + 2), speed: 1.6 });
       post({ type: 'tap', kind: it.kind, id: it.id });
     });
     const m = new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat([it.lng, it.lat]).addTo(map);
@@ -626,12 +632,39 @@ function drawSpots() {
 
 /**
  * 같은 자리(화면에서 30px 안)에 붙은 스티커가 겹치지 않게 한다.
- * · 크게 볼 때(SPREAD_ZOOM 이상)는 원래 자리 둘레로 꽃잎처럼 펼친다 (진짜 자리엔 작은 점)
- * · 멀리서 볼 때는 맨 위 하나만 보이고 개수 배지. 누르면 그 자리로 확대
+ * · 크게 볼 때(SPREAD_ZOOM 이상)는 원래 자리 둘레로 꽃잎처럼 펼친다 (진짜 자리엔 작은 흰 점)
+ * · 멀리서 볼 때는 스티커들을 숨기고, 묶인 스티커들의 가운데 자리에 숫자가 적힌 "묶음" 표시를 하나 세운다.
+ *   묶음 아래 뾰족한 꼬리가 그 자리를 가리키고, 누르면 그 자리로 확대해서 펼친다
  * 위치는 Marker.setOffset으로만 옮긴다 (바깥 요소에 transform을 걸면 자리가 틀어짐)
  */
 const SPREAD_ZOOM = 16;
 let pileDots = [];
+function pileMarker(center, members) {
+  const el = document.createElement('button');
+  el.type = 'button';
+  el.className = 'pile';
+  el.setAttribute('aria-label', '스티커 ' + members.length + '개 묶음, 눌러서 크게 보기');
+  // 묶인 스티커 중 앞의 셋을 작게 겹쳐 보여 주고, 그 위에 개수
+  const fan = document.createElement('div');
+  fan.className = 'pile-fan';
+  members.slice(0, 3).forEach((m, k) => {
+    const im = document.createElement('img');
+    im.src = m.getElement().querySelector('img').src;
+    im.alt = '';
+    im.style.left = (k * 13) + 'px';
+    fan.appendChild(im);
+  });
+  const n = document.createElement('span');
+  n.className = 'pile-count';
+  n.textContent = members.length;
+  el.appendChild(fan);
+  el.appendChild(n);
+  el.addEventListener('click', (e) => {
+    e.stopPropagation();
+    map.flyTo({ center, zoom: Math.max(SPREAD_ZOOM + 0.5, map.getZoom() + 2), speed: 1.6 });
+  });
+  return new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat(center).addTo(map);
+}
 function layoutSpots() {
   if (!map || !spotMarkers.length) return;
   pileDots.forEach((d) => d.remove());
@@ -654,36 +687,24 @@ function layoutSpots() {
   }
   const spread = map.getZoom() >= SPREAD_ZOOM;
   groups.forEach((g) => {
-    g.forEach((i, n) => {
-      const m = spotMarkers[i], el = m.getElement();
-      el._pile = null;
-      el.style.display = '';
-      const badge = el.querySelector('.pile-n');
-      if (badge) badge.remove();
-      if (g.length === 1) return m.setOffset([0, 0]);
-      if (spread) {
-        // 둘레로 펼치기: 개수가 많으면 원을 크게
+    const members = g.map((i) => spotMarkers[i]);
+    members.forEach((m) => { m.getElement().style.display = ''; m.setOffset([0, 0]); });
+    if (g.length === 1) return;
+    // 묶인 스티커들의 진짜 자리 가운데
+    const lng = members.reduce((a, m) => a + m.getLngLat().lng, 0) / g.length;
+    const lat = members.reduce((a, m) => a + m.getLngLat().lat, 0) / g.length;
+    if (spread) {
+      // 둘레로 펼치기: 개수가 많으면 원을 크게
+      members.forEach((m, n) => {
         const r = 26 + 5 * g.length, ang = -Math.PI / 2 + (2 * Math.PI * n) / g.length;
         m.setOffset([Math.round(r * Math.cos(ang)), Math.round(r * Math.sin(ang) + 18)]);
-      } else if (n === 0) {
-        m.setOffset([0, 0]);
-        const c = spotMarkers[g[0]].getLngLat();
-        el._pile = [c.lng, c.lat];
-        const b = document.createElement('span');
-        b.className = 'pile-n';
-        b.textContent = g.length;
-        b.style.cssText = 'position:absolute;right:-6px;top:-6px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#E4572E;color:#fff;border:2px solid #24322C;font:800 12px/16px sans-serif;text-align:center;box-sizing:border-box';
-        el.appendChild(b);
-      } else {
-        el.style.display = 'none';
-      }
-    });
-    if (spread && g.length > 1) {
-      // 펼친 스티커들의 진짜 자리 표시
-      const c = spotMarkers[g[0]].getLngLat();
+      });
       const dot = document.createElement('div');
       dot.style.cssText = 'width:10px;height:10px;border-radius:50%;background:#FFFFFF;border:3px solid #24322C;box-sizing:border-box';
-      pileDots.push(new maplibregl.Marker({ element: dot, anchor: 'center' }).setLngLat(c).addTo(map));
+      pileDots.push(new maplibregl.Marker({ element: dot, anchor: 'center' }).setLngLat([lng, lat]).addTo(map));
+    } else {
+      members.forEach((m) => { m.getElement().style.display = 'none'; });
+      pileDots.push(pileMarker([lng, lat], members));
     }
   });
 }
