@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../data/remote.dart';
+
 import '../data/store.dart';
 
 import 'feed.dart';
@@ -41,6 +43,8 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) _check(force: true);
+    // 앱을 내리면 아직 안 보낸 걸은 거리·밝힌 칸을 바로 서버로 (20초 기다리다 앱이 꺼지면 사라짐)
+    if (state == AppLifecycleState.paused) Remote.flushExplored();
   }
 
   void _check({bool force = false}) {

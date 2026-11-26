@@ -315,8 +315,13 @@ class AppStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  DateTime? _lastPosAt;
+
   Future<void> onPosition(LatLng p) async {
     final prev = lastPos;
+    final now = DateTime.now();
+    final secs = _lastPosAt == null ? 0.0 : now.difference(_lastPosAt!).inMilliseconds / 1000;
+    _lastPosAt = now;
     lastPos = p;
     if (home == null) {
       home = p;
@@ -338,11 +343,15 @@ class AppStore extends ChangeNotifier {
       // GPS가 크게 튀는 값(200m 넘게 순간이동)은 거리에 넣지 않는다.
       if (step < 200) {
         w.distanceM += step;
-        // 동네 리더보드: 지금 있는 동네에 걸은 거리를 더한다
-        if (areaHere != null) {
-          Remote.addAreaMeters(areaHere, step);
-        } else {
-          _untaggedMeters += step;
+        // 동네 리더보드: 지금 있는 동네에 걸은 거리를 더한다.
+        // 데모 걷기(가짜 걸음)와 차·버스처럼 빠른 이동(초속 7m, 시속 25km 넘음)은 순위에 넣지 않는다
+        final fast = secs > 0 && step / secs > 7;
+        if (_demoTimer == null && !fast) {
+          if (areaHere != null) {
+            Remote.addAreaMeters(areaHere, step);
+          } else {
+            _untaggedMeters += step;
+          }
         }
       }
       w.newCells += fresh.length;
