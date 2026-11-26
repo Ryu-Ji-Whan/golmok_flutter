@@ -68,7 +68,16 @@ class Places {
 
     final dong = pick(['quarter', 'suburb', 'village', 'neighbourhood', 'town', 'hamlet']);
     if (dong == null) return null;
-    final gu = pick(['borough', 'city_district', 'county']);
+    // 구·군만 받는다. 구가 없는 시(시흥시 등)는 행정동(배곧1동)이 이 자리에 섞여 들어와
+    // 같은 곳이 "시흥시 배곧1동 월곶동"·"시흥시 월곶동" 두 이름으로 갈라지던 문제가 있었다
+    String? gu;
+    for (final k in ['borough', 'city_district', 'county']) {
+      final v = address[k];
+      if (v is String && (v.trim().endsWith('구') || v.trim().endsWith('군'))) {
+        gu = v.trim();
+        break;
+      }
+    }
     final si = pick(['city', 'province', 'state']);
     final parts = <String>[];
     for (final p in [si, gu, dong]) {

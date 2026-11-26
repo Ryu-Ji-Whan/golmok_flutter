@@ -214,9 +214,9 @@ class _TownTabState extends State<TownTab> {
     }
     if (rows.isEmpty) return [_message('이번 주 이 동네를 걸은 사람이 아직 없어요\n첫 번째 골목대장이 되어 보세요!')];
     return [
+      // 1등은 늘 가운데. 2명뿐이어도 빈자리를 두어 1등이 오른쪽으로 밀리지 않게
       Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-        for (final i in [1, 0, 2])
-          if (i < rows.length) Expanded(child: _Podium(row: rows[i], place: i + 1)),
+        for (final i in [1, 0, 2]) Expanded(child: i < rows.length ? _Podium(row: rows[i], place: i + 1) : const SizedBox()),
       ]),
       SectionTitle('전체 순위', trailing: Text('이번 주 걸은 거리', style: TextStyle(fontSize: 12, color: C.muted))),
       for (var i = 0; i < rows.length; i++)
@@ -315,7 +315,7 @@ class _Podium extends StatelessWidget {
     return Column(children: [
       Avatar(row.character, size: place == 1 ? 64 : 52),
       const SizedBox(height: 4),
-      Text(row.isMe ? '나' : row.nickname, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+      Text(row.isMe ? '${row.nickname} (나)' : row.nickname, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
       const SizedBox(height: 4),
       Container(
         height: h,
