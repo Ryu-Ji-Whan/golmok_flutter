@@ -89,11 +89,11 @@ class SpotDetailScreen extends StatelessWidget {
         const SizedBox(height: 14),
         Text('위치 ${sp.lat.toStringAsFixed(5)}, ${sp.lng.toStringAsFixed(5)}', style: TextStyle(fontSize: 12, color: C.muted)),
         const SizedBox(height: 24),
-        PrimaryButton('친구에게 스티커 보내기', icon: Icons.send, color: C.orange,
+        // SNS 공유를 가장 크게: 카드 사진 한 장으로 카톡·인스타 등에 바로
+        _BigShareButton(onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ShareCardScreen(spot: sp)))),
+        const SizedBox(height: 12),
+        PrimaryButton('골목대장 친구에게 스티커 보내기', icon: Icons.send, color: C.orange,
             onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => SendStickerScreen(spot: sp)))),
-        const SizedBox(height: 10),
-        OutlineButton('카드 사진으로 공유하기', icon: Icons.image_outlined,
-            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ShareCardScreen(spot: sp)))),
         const SizedBox(height: 10),
         if (!sp.shared)
           PrimaryButton('골목 피드에 공유하기', icon: Icons.ios_share,
@@ -171,4 +171,41 @@ class _ShareScreenState extends State<ShareScreen> {
       ]),
     );
   }
+}
+
+/// 기록 화면의 큰 "SNS에 공유하기" 버튼
+class _BigShareButton extends StatelessWidget {
+  const _BigShareButton({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Material(
+        color: C.forest,
+        borderRadius: BorderRadius.circular(R.big),
+        elevation: 0,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(R.big),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 18, 16, 18),
+            child: Row(children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(color: C.white.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(16)),
+                child: Icon(Icons.ios_share, color: C.white, size: 28),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('SNS에 공유하기', style: jua(26, color: C.white)),
+                  const SizedBox(height: 2),
+                  Text('카톡·인스타에 스티커 카드 사진으로', style: TextStyle(fontSize: 13, color: C.white.withValues(alpha: 0.85))),
+                ]),
+              ),
+              Icon(Icons.chevron_right, color: C.white, size: 28),
+            ]),
+          ),
+        ),
+      );
 }

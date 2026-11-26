@@ -50,6 +50,7 @@ class _GiftReceiveScreenState extends State<GiftReceiveScreen> {
       _busy = false;
       _landed = g.fromName;
     });
+    if (s.photoMissed) toast(context, '스티커는 받았는데 사진은 받지 못했어요. 인터넷 연결을 확인해 주세요');
   }
 
   Future<void> _decline(Gift g) async {

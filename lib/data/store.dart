@@ -515,11 +515,21 @@ class AppStore extends ChangeNotifier {
   }
 
   /// 받기: 사진을 내려받아 내 기록으로 만든다. 받은 순간부터 내 것 (보낸 사람이 지워도 남음)
+  /// 받은 스티커를 내 기록으로. 보낸 사진이 있었는데 받지 못했으면 [photoMissed]가 true
+  bool photoMissed = false;
   Future<Spot> acceptGift(Gift g) async {
     String? photo;
+    photoMissed = false;
     if (g.photo != null) {
-      final bytes = await Remote.giftPhoto(g.photo!);
-      if (bytes != null) photo = await Photos.saveBytes(bytes, ext: g.photo!.toLowerCase().endsWith('.png') ? '.png' : '.jpg');
+      // 한 번 실패하면 잠깐 뒤 다시 (받으면 서버 사진은 지워지므로)
+      final bytes = await Remote.giftPhoto(g.photo!) ??
+          await Future.delayed(const Duration(seconds: 1), () => Remote.giftPhoto(g.photo!));
+      if (bytes != null) {
+        try {
+          photo = await Photos.saveBytes(bytes, ext: g.photo!.toLowerCase().endsWith('.png') ? '.png' : '.jpg');
+        } catch (_) {}
+      }
+      photoMissed = photo == null;
     }
     final sp = Spot(
       id: newId('spot'),

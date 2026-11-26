@@ -27,6 +27,9 @@ class _SendStickerScreenState extends State<SendStickerScreen> with SingleTicker
   Friend? _to;
   bool _busy = false;
   bool _sent = false;
+  late bool _withPhoto = _hasPhoto; // 사진도 같이 보낼지 (사진이 있으면 처음엔 켬)
+
+  bool get _hasPhoto => widget.spot.photo != null && widget.spot.photo!.startsWith('file:');
   late final AnimationController _fly = AnimationController(vsync: this, duration: const Duration(milliseconds: 1100));
 
   @override
@@ -54,14 +57,26 @@ class _SendStickerScreenState extends State<SendStickerScreen> with SingleTicker
     final sp = widget.spot;
     List<int>? bytes;
     var ext = '.jpg';
-    if (sp.photo != null && sp.photo!.startsWith('file:')) {
+    if (_withPhoto && _hasPhoto) {
+      // 사진을 같이 보내기로 했으면, 못 읽을 때 사진 없이 몰래 보내지 않고 알려 준다
+      String? problem;
       try {
         final f = File(Photos.resolve(sp.photo!));
-        if (await f.length() <= 10 * 1024 * 1024) {
+        if (await f.length() > 10 * 1024 * 1024) {
+          problem = '사진이 너무 커서(10MB 넘음) 보낼 수 없어요. 사진 없이 보내려면 "사진도 같이 보내기"를 꺼 주세요';
+        } else {
           bytes = await f.readAsBytes();
           if (sp.photo!.toLowerCase().endsWith('.png')) ext = '.png';
         }
-      } catch (_) {}
+      } catch (_) {
+        problem = '사진 파일을 찾지 못했어요. 사진 없이 보내려면 "사진도 같이 보내기"를 꺼 주세요';
+      }
+      if (problem != null) {
+        if (!mounted) return;
+        setState(() => _busy = false);
+        toast(context, problem);
+        return;
+      }
     }
     final err = await Remote.sendGift(toUser: to.id, spot: sp, photoBytes: bytes, photoExt: ext);
     if (!mounted) return;
@@ -118,7 +133,7 @@ class _SendStickerScreenState extends State<SendStickerScreen> with SingleTicker
                   ]),
               ]);
             },
-            child: _StickerPreview(sp),
+            child: _StickerPreview(sp, photo: _withPhoto),
           ),
         ),
         Expanded(child: _sent ? _done() : _picker()),
@@ -158,9 +173,25 @@ class _SendStickerScreenState extends State<SendStickerScreen> with SingleTicker
     return Column(children: [
       Padding(
         padding: EdgeInsets.fromLTRB(20, 4, 20, 6),
-        child: Text('누구에게 보낼까요? 이 기록의 정확한 위치와 사진이 함께 가요. 걸은 길은 가지 않아요.',
+        child: Text('누구에게 보낼까요? 이 기록의 정확한 위치·스티커·제목·메모가 가요. 걸은 길은 가지 않아요.',
             style: TextStyle(fontSize: 13, color: C.muted, height: 1.5)),
       ),
+      if (_hasPhoto)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+          child: CardBox(
+            padding: EdgeInsets.zero,
+            shadow: false,
+            child: SwitchListTile(
+              value: _withPhoto,
+              onChanged: _busy ? null : (v) => setState(() => _withPhoto = v),
+              activeTrackColor: C.leaf,
+              secondary: ClipRRect(borderRadius: BorderRadius.circular(8), child: SpotPhoto(widget.spot.photo!, width: 40, height: 40)),
+              title: const Text('사진도 같이 보내기', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+              subtitle: Text(_withPhoto ? '친구가 받으면 친구 폰에 사진이 저장돼요' : '사진은 보내지 않아요', style: const TextStyle(fontSize: 12)),
+            ),
+          ),
+        ),
       Expanded(
         child: ListView.separated(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
@@ -208,8 +239,9 @@ class _SendStickerScreenState extends State<SendStickerScreen> with SingleTicker
 
 /// 보낼 기록 미리보기 (스티커 + 사진 + 제목)
 class _StickerPreview extends StatelessWidget {
-  const _StickerPreview(this.sp);
+  const _StickerPreview(this.sp, {this.photo = true});
   final Spot sp;
+  final bool photo; // 사진도 보내는지
 
   @override
   Widget build(BuildContext context) => Column(mainAxisSize: MainAxisSize.min, children: [
@@ -217,7 +249,7 @@ class _StickerPreview extends StatelessWidget {
           width: 150,
           height: 140,
           child: Stack(clipBehavior: Clip.none, children: [
-            if (sp.photo != null)
+            if (sp.photo != null && photo)
               Positioned(
                 left: 0,
                 top: 8,
@@ -230,7 +262,7 @@ class _StickerPreview extends StatelessWidget {
                   ),
                 ),
               ),
-            Positioned(right: 0, bottom: 0, child: StickerImg(sp.stickerId, size: sp.photo != null ? 84 : 130)),
+            Positioned(right: 0, bottom: 0, child: StickerImg(sp.stickerId, size: sp.photo != null && photo ? 84 : 130)),
           ]),
         ),
         const SizedBox(height: 6),

@@ -76,7 +76,7 @@ class _ShareCardScreenState extends State<ShareCardScreen> {
   Widget build(BuildContext context) {
     final sp = widget.spot;
     return Scaffold(
-      appBar: AppBar(title: const Text('친구에게 보내기')),
+      appBar: AppBar(title: const Text('SNS에 공유하기')),
       body: ListView(padding: const EdgeInsets.fromLTRB(16, 4, 16, 24), children: [
         Text('이 카드 한 장이 사진으로 보내져요', style: TextStyle(fontSize: 13, color: C.muted)),
         const SizedBox(height: 10),
@@ -111,8 +111,9 @@ class _ShareCardScreenState extends State<ShareCardScreen> {
           ),
         const SizedBox(height: 16),
         PrimaryButton(
-          _busy ? '카드 만드는 중…' : '친구에게 보내기',
-          icon: Icons.send_outlined,
+          _busy ? '카드 만드는 중…' : '카톡·인스타 등에 공유하기',
+          icon: Icons.ios_share,
+          height: 64,
           onPressed: _busy ? null : () => _run((path) => ImageOut.share(path, text: '골목대장에서 남긴 골목 기록이에요 #골목대장')),
         ),
         const SizedBox(height: 10),
