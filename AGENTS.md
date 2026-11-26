@@ -19,7 +19,7 @@
   - 권한 문구, 로그인 복귀 주소 `golmok://login-callback`, 앱 아이콘(flutter_launcher_icons), 고정 서명 키는 이 워크플로에서 넣는다
 - `README.md`·`docs/`·`supabase/`만 바뀌면 앱 빌드 안 함
 - `docs/` = GitHub Pages: 디자인 시안 `docs/design/`, 이메일 인증 완료 페이지 `docs/auth/`
-  - 시안 화면 `docs/design/screens/*.dc.html`: 대부분 손으로 쓴 HTML + `screens/app.css` (2026-11-26에 앱과 맞춰 다시 씀, 아래 탭 줄은 `screens/tabbar.js` 5칸). 사진 꾸미기 일부(PhotoEdit·PhotoEditEmpty·PhotoLimit·PhotoSaved)·SignupCharacter·SignupNickname 외 몇 개는 아직 디자인 도구가 묶은 큰 파일
+  - 시안 화면 `docs/design/screens/*.dc.html`: 대부분 손으로 쓴 HTML + `screens/app.css` (2026-11-26에 앱과 맞춰 다시 씀, 아래 탭 줄은 `screens/tabbar.js` 5칸). PhotoEdit·PhotoEditEmpty·PhotoLimit·PhotoSaved·SignupCharacter 5개만 아직 디자인 도구가 묶은 큰 파일
   - 앱에 없는 화면은 보드에 두지 않는다 (기관 캠페인·제휴 가게·지도 꾸미기·회원가입 한눈에는 2026-11-26에 뺌). 앱 화면을 바꾸면 시안도 같이
   - `docs/design/map/index.html`은 앱 지도(`assets/map/cartoon_map.html`)를 그대로 복사한 것 → 지도를 고치면 같이 복사. 테마 미리보기 그림 `docs/design/img/theme-*.jpg`
 - `docs/design/` 바뀌면 `screenshots.yml`이 README용 PNG(`docs/screenshots/`)를 다시 찍는다
