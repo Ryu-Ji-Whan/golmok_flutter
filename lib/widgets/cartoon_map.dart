@@ -7,7 +7,6 @@ import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../data/geo.dart';
-import '../data/models.dart' show MapDeco;
 import '../data/store.dart';
 import '../theme.dart';
 
@@ -44,6 +43,20 @@ class MapMark {
   Map<String, Object> toJson() => {'id': id, 'lng': pos.lng, 'lat': pos.lat, 'sticker': sticker, 'kind': kind, 'label': label};
 }
 
+/// 친구 방 지도에 그릴 경로 하나
+class MapTrack {
+  const MapTrack(this.path, this.color, {this.name = ''});
+  final List<LatLng> path;
+  final Color color;
+  final String name;
+
+  Map<String, Object> toJson() => {
+        'coords': path.map((p) => p.toLngLat()).toList(),
+        'color': '#${(color.toARGB32() & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}',
+        'name': name,
+      };
+}
+
 /// 지도에 명령을 보내는 손잡이. 화면이 갖고 있다가 CartoonMap에 넘긴다.
 class MapHandle {
   WebViewController? _c;
@@ -78,9 +91,12 @@ class MapHandle {
   /// 기록 스티커를 도장처럼 콩 찍기. [fly]면 화면 위에서 날아와 붙는다 (친구에게 받은 스티커)
   Future<void> stamp(String spotId, {bool fly = false}) => _js('stamp', [spotId, fly]);
 
-  /// 지도 꾸미기 표시. [editing]이면 눌러서 고르고 끌어서 옮길 수 있다.
-  Future<void> setDecos(List<MapDeco> decos, {bool editing = false, String? selected}) =>
-      _js('setDecos', [decos.map((d) => d.toJson()).toList(), editing, selected]);
+  /// 친구 방: 사람마다 색이 다른 경로와 이름표
+  Future<void> setTracks(List<MapTrack> tracks) => _js('setTracks', [tracks.map((t) => t.toJson()).toList()]);
+
+  /// 점들이 한 화면에 다 들어오게 확대 (점 하나면 그 자리로 크게)
+  Future<void> fitTo(List<LatLng> points, {double? maxZoom}) =>
+      points.isEmpty ? Future.value() : _js('fitTo', [points.map((p) => p.toLngLat()).toList(), maxZoom]);
 }
 
 /// 만화풍 지도 (assets/map/cartoon_map.html 을 WebView로 띄운다)

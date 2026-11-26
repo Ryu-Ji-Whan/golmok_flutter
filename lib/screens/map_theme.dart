@@ -21,9 +21,7 @@ class _MapThemeScreenState extends State<MapThemeScreen> {
   Future<void> _ready() async {
     final s = StoreScope.read(context);
     await _map.setExplored(s.explored);
-    await _map.setOldPaths([for (final w in s.walks) w.path]);
     await _map.setMarks(buildMarks(s));
-    await _map.setDecos(s.decos);
     await _map.setMe(s.center);
     await _map.goTo(s.center, zoom: 16);
   }

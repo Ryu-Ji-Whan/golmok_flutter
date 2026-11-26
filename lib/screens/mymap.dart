@@ -7,12 +7,11 @@ import '../theme.dart';
 import '../widgets/cartoon_map.dart';
 import '../widgets/route_thumb.dart';
 import '../widgets/ui.dart';
-import 'map_decorate.dart';
 import 'map_theme.dart';
 import 'spot_detail.dart';
 import 'walk.dart';
 
-/// ③-2 내 지도: 지금까지 밝힌 골목 + 지난 산책 경로 + 붙인 스티커
+/// ③-2 내 지도: 지금까지 밝힌 골목 + 붙인 스티커. 목록에서 누르면 그곳을 크게, 산책은 고른 것의 경로만
 class MyMapTab extends StatefulWidget {
   const MyMapTab({super.key, required this.active});
   final bool active;
@@ -25,6 +24,8 @@ class _MyMapTabState extends State<MyMapTab> {
   final _map = MapHandle();
   int _view = 0; // 0 = 장소, 1 = 산책
   LatLng? _pick; // 지도에서 고른, 스티커 붙일 자리
+  String? _selWalk; // 경로를 보여 줄 산책
+  String? _selSpot; // 크게 보고 있는 스티커
 
   void _onMapEvent(Map<String, dynamic> msg) {
     if (msg['type'] != 'mapTap') return;
@@ -42,11 +43,38 @@ class _MyMapTabState extends State<MyMapTab> {
   Future<void> _sync() async {
     final s = StoreScope.read(context);
     await _map.setExplored(s.explored);
-    await _map.setOldPaths([for (final w in s.walks) w.path]);
+    await _map.setPath(_walkPath(s));
     await _map.setMarks(buildMarks(s));
     await _map.setMe(s.center);
-    await _map.setDecos(s.decos);
   }
+
+  List<LatLng> _walkPath(AppStore s) {
+    for (final w in s.walks) {
+      if (w.id == _selWalk) return w.path;
+    }
+    return const [];
+  }
+
+  /// 산책을 고르면 그 경로만 보이고 경로 전체가 들어오게 확대. 다시 누르면 경로를 지운다
+  void _showWalk(Walk w) {
+    final off = _selWalk == w.id;
+    setState(() => _selWalk = off ? null : w.id);
+    _map.setPath(off ? const [] : w.path);
+    if (!off) _map.fitTo(w.path);
+  }
+
+  /// 스티커를 고르면 그 자리를 크게 보고 콩 찍어 알려 준다. 고른 걸 한 번 더 누르면 자세히
+  void _showSpot(Spot sp) {
+    if (_selSpot == sp.id) {
+      _openSpot(sp);
+      return;
+    }
+    setState(() => _selSpot = sp.id);
+    _map.fitTo([sp.pos], maxZoom: 18);
+    Future.delayed(const Duration(milliseconds: 1000), () => _map.stamp(sp.id));
+  }
+
+  void _openSpot(Spot sp) => Navigator.of(context).push(MaterialPageRoute(builder: (_) => SpotDetailScreen(spotId: sp.id)));
 
   Future<void> _ready() async {
     final center = StoreScope.read(context).center;
@@ -73,15 +101,6 @@ class _MyMapTabState extends State<MyMapTab> {
             icon: Icon(Icons.palette_outlined, color: C.forest),
             onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MapThemeScreen())),
           ),
-          TextButton.icon(
-            onPressed: () async {
-              final saved = await Navigator.of(context).push<bool>(MaterialPageRoute(builder: (_) => const MapDecorateScreen()));
-              if (saved == true) _sync();
-            },
-            icon: const Icon(Icons.brush_outlined, size: 18),
-            label: const Text('꾸미기', style: TextStyle(fontWeight: FontWeight.w700)),
-            style: TextButton.styleFrom(foregroundColor: C.forest),
-          ),
           const SizedBox(width: 8),
         ],
       ),
@@ -95,6 +114,20 @@ class _MyMapTabState extends State<MyMapTab> {
               decoration: BoxDecoration(border: Border.all(color: C.ink, width: 2), borderRadius: BorderRadius.circular(R.big)),
               child: Stack(children: [
                 Positioned.fill(child: CartoonMap(handle: _map, onReady: _ready, onTap: (k, id) => openMark(context, k, id), onEvent: _onMapEvent)),
+                if (_selWalk != null && _pick == null)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: ActionChip(
+                      avatar: Icon(Icons.close, size: 16, color: C.forest),
+                      label: const Text('경로 지우기'),
+                      backgroundColor: C.white,
+                      onPressed: () {
+                        setState(() => _selWalk = null);
+                        _map.setPath(const []);
+                      },
+                    ),
+                  ),
                 if (_pick != null)
                   Positioned(
                     left: 8,
@@ -121,7 +154,11 @@ class _MyMapTabState extends State<MyMapTab> {
             ],
             selected: {_view},
             showSelectedIcon: false,
-            onSelectionChanged: (v) => setState(() => _view = v.first),
+            onSelectionChanged: (v) {
+              setState(() => _view = v.first);
+              // 산책 목록을 열면 가장 최근 산책 경로를 바로 보여 준다
+              if (v.first == 1 && _selWalk == null && s.walks.isNotEmpty && s.walks.first.path.length >= 2) _showWalk(s.walks.first);
+            },
             style: SegmentedButton.styleFrom(selectedBackgroundColor: C.mint, selectedForegroundColor: C.forest),
           ),
         ),
@@ -146,12 +183,11 @@ class _MyMapTabState extends State<MyMapTab> {
       separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (_, i) {
         final sp = s.spots[i];
+        final on = _selSpot == sp.id;
         return CardBox(
           padding: const EdgeInsets.all(12),
-          onTap: () {
-            _map.goTo(sp.pos, zoom: 17);
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => SpotDetailScreen(spotId: sp.id)));
-          },
+          color: on ? C.mint : null,
+          onTap: () => _showSpot(sp),
           child: Row(children: [
             Container(
               width: 56,
@@ -170,7 +206,12 @@ class _MyMapTabState extends State<MyMapTab> {
               ]),
             ),
             if (sp.photo != null) Icon(Icons.photo_outlined, color: C.leaf, size: 20),
-            Icon(Icons.chevron_right, color: C.muted),
+            IconButton(
+              tooltip: '자세히 보기',
+              visualDensity: VisualDensity.compact,
+              icon: Icon(Icons.chevron_right, color: on ? C.forest : C.muted),
+              onPressed: () => _openSpot(sp),
+            ),
           ]),
         );
       },
@@ -185,9 +226,11 @@ class _MyMapTabState extends State<MyMapTab> {
       separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (_, i) {
         final w = s.walks[i];
+        final on = _selWalk == w.id;
         return CardBox(
           padding: const EdgeInsets.all(14),
-          onTap: w.path.isEmpty ? null : () => _map.goTo(w.path.first, zoom: 16),
+          color: on ? C.mint : null,
+          onTap: w.path.length < 2 ? null : () => _showWalk(w),
           child: Row(children: [
             RouteThumb(w.path, size: 56),
             const SizedBox(width: 12),
@@ -198,6 +241,8 @@ class _MyMapTabState extends State<MyMapTab> {
                     style: TextStyle(fontSize: 12, color: C.muted)),
               ]),
             ),
+            if (w.path.length >= 2)
+              Pill(on ? '지도에 보는 중' : '경로 보기', bg: on ? C.forest : null, fg: on ? C.white : null),
           ]),
         );
       },

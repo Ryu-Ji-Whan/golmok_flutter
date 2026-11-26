@@ -6,6 +6,7 @@ import '../data/remote.dart';
 import '../data/store.dart';
 import '../theme.dart';
 import '../widgets/ui.dart';
+import 'rooms.dart';
 
 String _short(String area) => area.split(' ').last;
 
@@ -78,9 +79,28 @@ class _TownTabState extends State<TownTab> {
   Widget build(BuildContext context) {
     final s = StoreScope.of(context);
     final home = s.profile?.areaName;
-    return Scaffold(
-      appBar: AppBar(title: const Text('동네 리더보드')),
-      body: !Remote.signedIn
+    // 친구 방 | 리더보드
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('동네'),
+          bottom: TabBar(
+            labelColor: C.forest,
+            unselectedLabelColor: C.muted,
+            indicatorColor: C.forest,
+            labelStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+            tabs: const [Tab(text: '친구 방'), Tab(text: '리더보드')],
+          ),
+        ),
+        body: TabBarView(children: [const RoomsPane(), _leaderboard(s, home)]),
+      ),
+    );
+  }
+
+  Widget _leaderboard(AppStore s, String? home) {
+    return Container(
+      child: !Remote.signedIn
           ? _message('로그인하면 걸은 동네의 이웃과\n이번 주 순위를 겨룰 수 있어요')
           : RefreshIndicator(
               color: C.forest,

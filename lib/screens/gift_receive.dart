@@ -33,7 +33,6 @@ class _GiftReceiveScreenState extends State<GiftReceiveScreen> {
     _total = s.gifts.length;
     await _map.setExplored(s.explored);
     await _map.setMarks(buildMarks(s));
-    await _map.setDecos(s.decos);
     await _map.setMe(s.center);
     final g = _gift;
     await _map.goTo(g?.pos ?? s.center, zoom: 16.5);
