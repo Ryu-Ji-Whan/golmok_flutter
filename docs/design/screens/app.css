@@ -49,3 +49,14 @@ button { font-family: inherit; cursor: pointer; }
   text-shadow: -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff; }
 @keyframes ring { to { transform: scale(6); opacity: 0; } }
 @keyframes kongText { 0% { opacity: 0; transform: translate(-50%, 6px) scale(.6); } 30% { opacity: 1; transform: translate(-50%, -14px) scale(1.15); } 100% { opacity: 0; transform: translate(-50%, -30px); } }
+/* 아래 탭 줄 (앱 home.dart 와 같은 5칸: 산책·내 지도·피드·동네·상점). 쓰는 법:
+   <nav class="tabbar" data-on="feed"></nav> + <script src="tabbar.js"></script>  (data-on: walk | map | feed | town | shop) */
+.tabbar { position: absolute; left: 0; right: 0; bottom: 0; height: 84px; padding-bottom: 16px; background: var(--white);
+  border-top: 1px solid var(--lineSoft); display: flex; z-index: 50; }
+.tabbar a { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  font-size: 12px; font-weight: 500; color: var(--muted); text-decoration: none; }
+.tabbar a svg { width: 24px; height: 24px; }
+.tabbar a .ic { width: 56px; height: 30px; border-radius: 15px; display: flex; align-items: center; justify-content: center; }
+.tabbar a.on { color: var(--forest); font-weight: 700; }
+.tabbar a.on .ic { background: var(--mint); }
+.has-tabbar { padding-bottom: 84px; }

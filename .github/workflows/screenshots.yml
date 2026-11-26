@@ -50,7 +50,7 @@ jobs:
           # 대표 이미지
           shot showcase 1600 900 "http://localhost:8000/design/showcase.html"
           # 화면 한 장씩 (폰 틀 포함)
-          for s in WalkStart Explore Record PhotoEdit Detail MyMap Share Feed Leaderboard StickerShop Main SignupCharacter Profile Friends SendSticker GiftReceive MapTheme PickPlace; do
+          for s in WalkStart Explore Record PhotoEdit Detail MyMap Share Feed Leaderboard StickerShop Main SignupCharacter Profile Friends SendSticker GiftReceive MapTheme PickPlace Rooms Room; do
             shot "$s" 446 900 "http://localhost:8000/design/frame.html?s=$s"
           done
 

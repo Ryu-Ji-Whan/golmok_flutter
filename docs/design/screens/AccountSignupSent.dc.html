@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+<title>인증 메일 보냄</title>
+<style>
+  /* 앱 account_signup.dart 가입하기 뒤: 인증 메일 안내. "로그인하러 가기"를 누르면 로그인 칸에 아이디가 채워진다 */
+  .pad { padding: 24px 24px 0; text-align: center; }
+</style>
+</head>
+<body>
+<div class="status"><span>9:41</span><i></i></div>
+<div class="appbar"><button class="back" aria-label="뒤로">‹</button><h1>회원가입</h1></div>
+<div class="pad">
+  <img src="../img/c13.webp" alt="" style="width:130px;height:130px;object-fit:contain">
+  <h2 class="jua" style="font-size:26px;color:var(--forest);margin-top:16px">인증 메일을 보냈어요!</h2>
+  <p style="font-size:15px;font-weight:700;margin-top:10px">cat@example.com</p>
+  <div class="card" style="text-align:left;margin-top:16px;font-size:14px;line-height:1.7">1. 메일함에서 골목대장 인증 메일을 열어요 (스팸함도 봐 주세요)<br>2. 메일의 링크를 눌러 인증을 마쳐요<br>3. 앱으로 돌아와 아이디 "golmok_cat"로 로그인해요</div>
+  <button class="btn" style="margin-top:24px" onclick="location.href='Login.dc.html'">로그인하러 가기</button>
+  <div style="margin-top:8px;padding:10px;font-size:14px;font-weight:700;color:var(--forest)">메일이 안 왔어요 · 다시 보내기</div>
+</div>
+</body>
+</html>

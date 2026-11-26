@@ -35,8 +35,8 @@
   <tr>
     <td align="center" width="25%"><img src="docs/screenshots/Detail.png" width="200" alt="저장된 기록"><br><b>저장된 기록</b><br><sub>남긴 장소 다시 보기</sub></td>
     <td align="center" width="25%"><img src="docs/screenshots/MyMap.png" width="200" alt="내 지도"><br><b>내 지도</b><br><sub>동네별로 모아 보기</sub></td>
-    <td align="center" width="25%"><img src="docs/screenshots/Leaderboard.png" width="200" alt="동네"><br><b>동네</b><br><sub>친구 방과 리더보드</sub></td>
-    <td align="center" width="25%"><img src="docs/screenshots/Share.png" width="200" alt="기록 공유하기"><br><b>기록 공유하기</b><br><sub>피드와 SNS로</sub></td>
+    <td align="center" width="25%"><img src="docs/screenshots/Room.png" width="200" alt="친구 방"><br><b>친구 방</b><br><sub>오늘 걸은 길을 함께</sub></td>
+    <td align="center" width="25%"><img src="docs/screenshots/Share.png" width="200" alt="카드 사진으로 공유"><br><b>카드 사진으로 공유</b><br><sub>카톡·인스타로</sub></td>
   </tr>
   <tr>
     <td align="center" width="25%"><img src="docs/screenshots/Feed.png" width="200" alt="골목 피드"><br><b>골목 피드</b><br><sub>이웃이 나눈 골목</sub></td>

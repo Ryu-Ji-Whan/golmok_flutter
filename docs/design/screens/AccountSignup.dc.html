@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+<title>회원가입</title>
+<style>
+  /* 앱 account_signup.dart: 로그인 화면 "회원가입" → 아이디·비밀번호·이메일 → 인증 메일. 인증 뒤 첫 로그인에서 약관·닉네임·캐릭터·동네(1~4단계)로 이어진다 */
+  .pad { padding: 8px 24px 0; }
+  .fld { position: relative; height: 56px; border: 1px solid var(--line); border-radius: 14px; background: #fff; display: flex; align-items: center; padding: 0 16px; font-size: 16px; margin-top: 14px; }
+  .fld.focus { border: 2px solid var(--leaf); }
+  .fld label { position: absolute; left: 12px; top: -9px; padding: 0 4px; background: var(--cream); font-size: 12px; color: var(--muted); }
+  .fld.focus label { color: var(--leafText); }
+  .fld .eye { margin-left: auto; color: var(--muted); }
+  .help { font-size: 12px; color: var(--muted); margin: 4px 16px 0; }
+  .help.err { color: var(--danger); }
+  .fld.bad { border: 2px solid var(--danger); } .fld.bad label { color: var(--danger); }
+</style>
+</head>
+<body>
+<div class="status"><span>9:41</span><i></i></div>
+<div class="appbar"><button class="back" aria-label="뒤로" onclick="location.href='Login.dc.html'">‹</button><h1>회원가입</h1></div>
+<div class="pad">
+  <h2 class="jua" style="font-size:26px;color:var(--forest)">골목대장 계정 만들기</h2>
+  <p style="font-size:14px;color:var(--muted);line-height:1.5;margin-top:6px">아이디와 비밀번호로 로그인하고, 이메일은 본인 확인과 비밀번호 찾기에 써요.</p>
+  <div style="height:10px"></div>
+  <div class="fld"><label>아이디</label>golmok_cat</div>
+  <div class="help">영어 소문자·숫자·밑줄(_) 4~20자</div>
+  <div class="fld"><label>비밀번호</label><span style="letter-spacing:3px">••••••••</span><span class="eye">👁</span></div>
+  <div class="help">6자 이상</div>
+  <div class="fld bad"><label>비밀번호 확인</label><span style="letter-spacing:3px">•••••••</span></div>
+  <div class="help err">비밀번호가 서로 달라요</div>
+  <div class="fld focus"><label>이메일</label>cat@example.com</div>
+  <div class="help">인증 메일을 보내 드려요</div>
+  <button class="btn off" style="margin-top:28px" onclick="location.href='AccountSignupSent.dc.html'">가입하기</button>
+</div>
+</body>
+</html>
